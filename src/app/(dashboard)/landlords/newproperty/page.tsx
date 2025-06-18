@@ -140,6 +140,12 @@ interface Country {
   provinces: Province[];
 }
 
+interface FeatureDetail {
+  count?: number;
+  description?: string;
+  images?: File[]; // Feature-specific images
+}
+
 interface SellerPropertyFormData {
   name: string;
   description: string;
@@ -148,8 +154,6 @@ interface SellerPropertyFormData {
   propertyStatus: string;
   amenities: string[];
   highlights: string[];
-  beds: number;
-  baths: number;
   squareFeet: number;
   yearBuilt?: number | null;
   HOAFees?: number | null;
@@ -166,6 +170,7 @@ interface SellerPropertyFormData {
   country: string;
   postalCode: string;
   termsAgreed?: boolean;
+  features: { [key: string]: FeatureDetail };
 }
 
 const createSellerPropertyAPI = async (
@@ -201,8 +206,12 @@ const createSellerPropertyAPI = async (
 
 const NewSellerPropertyPage = () => {
   // Use the hook directly in the component
-  const { data: authUser, error: authQueryError, isLoading: authLoading } = useGetAuthUserQuery();
-  
+  const {
+    data: authUser,
+    error: authQueryError,
+    isLoading: authLoading,
+  } = useGetAuthUserQuery();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{
     type: "success" | "error";
@@ -212,6 +221,19 @@ const NewSellerPropertyPage = () => {
   const [allCountries, setAllCountries] = useState<Country[]>([]);
   const [currentProvinces, setCurrentProvinces] = useState<Province[]>([]);
   const [currentCities, setCurrentCities] = useState<string[]>([]);
+  const [availableFeatures] = useState([
+    "bedroom",
+    "bathroom",
+    "dining",
+    "kitchen",
+    "living_room",
+    "garage",
+    "garden",
+    "balcony",
+    "study",
+    "storage",
+  ]);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
 
   const form = useForm<SellerPropertyFormData>({
     defaultValues: {
@@ -220,8 +242,6 @@ const NewSellerPropertyPage = () => {
       salePrice: undefined,
       propertyType: "",
       propertyStatus: "For Sale",
-      beds: undefined,
-      baths: undefined,
       squareFeet: undefined,
       yearBuilt: null,
       HOAFees: null,
@@ -240,6 +260,7 @@ const NewSellerPropertyPage = () => {
       insuranceRecommendation: "",
       photos: [], // Default to empty array for FilePond
       agreementDocument: undefined,
+      features: {},
     },
   });
 
@@ -347,8 +368,7 @@ const NewSellerPropertyPage = () => {
   ) => {
     setIsSubmitting(true);
     setSubmitMessage(null);
-    
-    // Check if we have the authenticated user data
+
     if (!authUser?.cognitoInfo?.userId) {
       setSubmitMessage({
         type: "error",
@@ -369,9 +389,12 @@ const NewSellerPropertyPage = () => {
     if (!Array.isArray(processedData.photos)) processedData.photos = [];
 
     const formDataToSubmit = new FormData();
+
+    // Handle regular fields
     Object.entries(processedData).forEach(([key, value]) => {
       const K = key as keyof SellerPropertyFormData;
-      if (K === "photos" || K === "agreementDocument") return;
+      if (K === "photos" || K === "agreementDocument" || K === "features")
+        return;
       if (K === "amenities" || K === "highlights") {
         formDataToSubmit.append(K, JSON.stringify(value || []));
       } else if (K === "openHouseDates") {
@@ -395,6 +418,20 @@ const NewSellerPropertyPage = () => {
       }
     });
 
+    // Handle features - prepare features object without images for JSON
+    const featuresForJson: { [key: string]: Omit<FeatureDetail, "images"> } =
+      {};
+    Object.entries(processedData.features || {}).forEach(
+      ([featureKey, featureDetail]) => {
+        featuresForJson[featureKey] = {
+          count: featureDetail.count,
+          description: featureDetail.description,
+        };
+      }
+    );
+    formDataToSubmit.append("features", JSON.stringify(featuresForJson));
+
+    // Handle main property photos
     if (processedData.photos && processedData.photos.length > 0) {
       processedData.photos.forEach((file) => {
         if (file instanceof File) {
@@ -403,6 +440,20 @@ const NewSellerPropertyPage = () => {
       });
     }
 
+    // Handle feature-specific images
+    Object.entries(processedData.features || {}).forEach(
+      ([featureKey, featureDetail]) => {
+        if (featureDetail.images && featureDetail.images.length > 0) {
+          featureDetail.images.forEach((file) => {
+            if (file instanceof File) {
+              formDataToSubmit.append(`features[${featureKey}][images]`, file);
+            }
+          });
+        }
+      }
+    );
+
+    // Handle agreement document
     if (
       processedData.agreementDocument &&
       processedData.agreementDocument.length > 0
@@ -413,7 +464,7 @@ const NewSellerPropertyPage = () => {
       );
     }
 
-    // Add the cognito ID to the form data
+    // Add the cognito ID
     formDataToSubmit.append("sellerCognitoId", authUser.cognitoInfo.userId);
 
     console.log("Submitting with Cognito ID:", authUser.cognitoInfo.userId);
@@ -424,7 +475,8 @@ const NewSellerPropertyPage = () => {
         type: "success",
         text: response.message || "Property listed successfully!",
       });
-      reset(); // Resets form, including photos to its default value ([])
+      reset();
+      setSelectedFeatures([]); // Reset selected features
     } else {
       setSubmitMessage({
         type: "error",
@@ -455,7 +507,9 @@ const NewSellerPropertyPage = () => {
     return (
       <div className="flex justify-center items-center h-screen">
         <p className="text-red-500">
-          {authQueryError ? "Error loading user information. Please try refreshing the page." : "Failed to load user info."}
+          {authQueryError
+            ? "Error loading user information. Please try refreshing the page."
+            : "Failed to load user info."}
         </p>
       </div>
     );
@@ -516,9 +570,11 @@ const NewSellerPropertyPage = () => {
           </div>
 
           {/* Sale Details */}
+          {/* Sale Details */}
           <div className={sectionCardClassName}>
             <h2 className={sectionTitleClassName}>Sale Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Change grid-cols-2 to grid-cols-3 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="salePrice" className={labelClassName}>
                   Asking Price (THB)
@@ -542,48 +598,8 @@ const NewSellerPropertyPage = () => {
                   className={inputClassName}
                 />
               </div>
-            </div>
-          </div>
 
-          {/* Property Specifics */}
-          <div className={sectionCardClassName}>
-            <h2 className={sectionTitleClassName}>Property Specifics</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div>
-                <label htmlFor="beds" className={labelClassName}>
-                  Bedrooms
-                </label>
-                <input
-                  type="number"
-                  id="beds"
-                  {...register("beds", { valueAsNumber: true })}
-                  className={inputClassName}
-                />
-              </div>
-              <div>
-                <label htmlFor="baths" className={labelClassName}>
-                  Bathrooms
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  id="baths"
-                  {...register("baths", { valueAsNumber: true })}
-                  className={inputClassName}
-                />
-              </div>
-              <div>
-                <label htmlFor="squareFeet" className={labelClassName}>
-                  Square Feet (approx.)
-                </label>
-                <input
-                  type="number"
-                  id="squareFeet"
-                  step="100"
-                  {...register("squareFeet", { valueAsNumber: true })}
-                  className={inputClassName}
-                />
-              </div>
+              {/* --- PASTE THE MISSING CODE HERE --- */}
               <div>
                 <label htmlFor="propertyType" className={labelClassName}>
                   Property Type
@@ -604,28 +620,186 @@ const NewSellerPropertyPage = () => {
                   ))}
                 </select>
               </div>
-              <div>
-                <label htmlFor="yearBuilt" className={labelClassName}>
-                  Year Built
-                </label>
-                <input
-                  type="number"
-                  id="yearBuilt"
-                  {...register("yearBuilt", { valueAsNumber: true })}
-                  className={inputClassName}
-                />
+              {/* --- END OF PASTED CODE --- */}
+            </div>
+          </div>
+
+          {/* Property Features Section */}
+          <div className={sectionCardClassName}>
+            <h2 className={sectionTitleClassName}>Property Features</h2>
+            <p className={sectionDescriptionClassName}>
+              Select features your property has and specify details for each.
+            </p>
+
+            {/* Feature Selection */}
+            <div className="mb-6">
+              <label className={`${labelClassName} mb-3`}>
+                Available Features
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {availableFeatures.map((feature) => (
+                  <div key={feature} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`feature-${feature}`}
+                      checked={selectedFeatures.includes(feature)}
+                      onChange={(e) => {
+                        const currentFeatures = getValues("features") || {};
+                        if (e.target.checked) {
+                          setSelectedFeatures([...selectedFeatures, feature]);
+                          setValue(`features.${feature}`, {
+                            count: 1,
+                            description: "",
+                            images: [],
+                          });
+                        } else {
+                          setSelectedFeatures(
+                            selectedFeatures.filter((f) => f !== feature)
+                          );
+                          const newFeatures = { ...currentFeatures };
+                          delete newFeatures[feature];
+                          setValue("features", newFeatures);
+                        }
+                      }}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <label
+                      htmlFor={`feature-${feature}`}
+                      className="ml-2 text-sm text-gray-700 cursor-pointer select-none capitalize"
+                    >
+                      {feature.replace("_", " ")}
+                    </label>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label htmlFor="HOAFees" className={labelClassName}>
-                  HOA Fees (per month, if any)
-                </label>
-                <input
-                  type="number"
-                  id="HOAFees"
-                  {...register("HOAFees", { valueAsNumber: true })}
-                  className={inputClassName}
-                />
+            </div>
+
+            {/* Feature Details */}
+            {selectedFeatures.map((feature) => (
+              <div
+                key={feature}
+                className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50"
+              >
+                <h3 className="text-lg font-medium text-gray-900 mb-4 capitalize">
+                  {feature.replace("_", " ")} Details
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* Count */}
+                  <div>
+                    <label
+                      htmlFor={`${feature}-count`}
+                      className={labelClassName}
+                    >
+                      Number of {feature.replace("_", " ")}s
+                    </label>
+                    <input
+                      type="number"
+                      id={`${feature}-count`}
+                      min="1"
+                      {...register(`features.${feature}.count` as any, {
+                        valueAsNumber: true,
+                      })}
+                      className={inputClassName}
+                      defaultValue={1}
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label
+                      htmlFor={`${feature}-description`}
+                      className={labelClassName}
+                    >
+                      Description (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      id={`${feature}-description`}
+                      {...register(`features.${feature}.description` as any)}
+                      className={inputClassName}
+                      placeholder={`Describe the ${feature.replace(
+                        "_",
+                        " "
+                      )}...`}
+                    />
+                  </div>
+                </div>
+
+                {/* Feature Images */}
+                <div>
+                  <FormLabel className={`${labelClassName} mb-2`}>
+                    {feature.replace("_", " ").charAt(0).toUpperCase() +
+                      feature.replace("_", " ").slice(1)}{" "}
+                    Photos
+                  </FormLabel>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Upload images specific to this {feature.replace("_", " ")}.
+                    Max 5 images, 5MB each.
+                  </p>
+                  <FormField
+                    control={control}
+                    name={`features.${feature}.images` as any}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <FilePond
+                            files={(field.value as File[]) || []}
+                            onupdatefiles={(fileItems) => {
+                              const files = fileItems.map(
+                                (fileItem) => fileItem.file as File
+                              );
+                              field.onChange(files);
+                            }}
+                            allowMultiple={true}
+                            maxFiles={5}
+                            name={`${feature}-images`}
+                            labelIdle={`Drag & Drop ${feature.replace(
+                              "_",
+                              " "
+                            )} images or <span class="filepond--label-action">Browse</span>`}
+                            allowImagePreview={true}
+                            imagePreviewHeight={120}
+                            imagePreviewMaxFileSize="5MB"
+                            acceptedFileTypes={[
+                              "image/png",
+                              "image/jpeg",
+                              "image/webp",
+                            ]}
+                            labelFileTypeNotAllowed="Invalid file type"
+                            fileValidateTypeLabelExpectedTypes="Expects PNG, JPG, or WEBP"
+                            allowFileSizeValidation={true}
+                            maxFileSize="5MB"
+                            labelMaxFileSizeExceeded="File is too large"
+                            labelMaxFileSize="Maximum file size is {filesize}"
+                            credits={false}
+                          />
+                        </FormControl>
+                        <FormMessage>
+                          {
+                            errors.features?.[feature]?.images
+                              ?.message as React.ReactNode
+                          }
+                        </FormMessage>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+            ))}
+
+            {/* Square Feet - moved here */}
+            <div className="mt-6">
+              <label htmlFor="squareFeet" className={labelClassName}>
+                Total Square Feet (approx.)
+              </label>
+              <input
+                type="number"
+                id="squareFeet"
+                step="100"
+                {...register("squareFeet", { valueAsNumber: true })}
+                className={inputClassName}
+              />
             </div>
           </div>
 

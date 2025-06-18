@@ -1,5 +1,18 @@
 import mongoose , {Schema} from 'mongoose';
 
+const FeatureDetailSchema = new mongoose.Schema({
+  count: { 
+    type: Number,
+  },
+  description: {
+    type: String,
+  },
+  images: {
+    type: [String],
+    default: [],
+  }
+}, { _id: false });
+
 const SellerPropertySchema : Schema = new mongoose.Schema({
   id: {
     type: Number,
@@ -26,13 +39,10 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
     default: 'For Sale',
     required: true,
   },
-  beds: {
-    type: Number,
-    required: [true, 'Number of beds is required.'],
-  },
-  baths: {
-    type: Number,
-    required: [true, 'Number of baths is required.'],
+   features: {
+    type: Map,
+    of: FeatureDetailSchema,
+    default: {},
   },
   squareFeet: {
     type: Number,

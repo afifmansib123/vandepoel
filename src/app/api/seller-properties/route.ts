@@ -28,17 +28,36 @@ interface FormattedLocationForResponse {
 
 // Interface for data from frontend (matches SellerPropertyFormData keys)
 // Used for constructing the object to save.
-interface SellerPropertyDataFromFrontend {
-  name: string; description: string; salePrice: number; propertyType: string; propertyStatus: string;
-  beds: number; baths: number; squareFeet: number; yearBuilt?: number | null; HOAFees?: number | null;
-  amenities: string[]; highlights: string[];
-  openHouseDates?: string; // Frontend processes this into string[] for FormData
-  sellerNotes?: string; allowBuyerApplications: boolean;
-  preferredFinancingInfo?: string; insuranceRecommendation?: string;
-  address: string; city: string; state: string; country: string; postalCode: string;
-  // sellerCognitoId is added separately from auth
+interface FeatureDetail {
+  count?: number;
+  description?: string;
+  images?: string[]; // URLs will be populated on the server
 }
 
+interface SellerPropertyDataFromFrontend {
+  name: string; 
+  description: string; 
+  salePrice: number; 
+  propertyType: string; 
+  propertyStatus: string;
+  squareFeet: number; 
+  yearBuilt?: number | null; 
+  HOAFees?: number | null;
+  features: { [key: string]: FeatureDetail };
+  amenities: string[]; 
+  highlights: string[];
+  openHouseDates?: string[]; // Changed to string[] for consistency
+  sellerNotes?: string; 
+  allowBuyerApplications: boolean;
+  preferredFinancingInfo?: string; 
+  insuranceRecommendation?: string;
+  address: string; 
+  city: string; 
+  state: string; 
+  country: string; 
+  postalCode: string;
+  // sellerCognitoId is added separately from auth
+}
 
 // For the SellerProperty document after saving
 interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
@@ -52,20 +71,21 @@ interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
   createdAt: Date;
   updatedAt: Date;
   buyerInquiries: any[]; // Or a more specific type
-  openHouseDates?: string; // Schema stores as array of strings now
+  openHouseDates?: string[]; // Schema stores as array of strings now
 }
 
 // For the final API response
-interface CreatedSellerPropertyResponse extends Omit<SavedSellerPropertyDocument, '_id' | 'locationId' | 'photos' | 'agreementDocument'> {
+interface CreatedSellerPropertyResponse extends Omit<SavedSellerPropertyDocument, '_id' | 'locationId'> {
   _id: string;
   location: FormattedLocationForResponse;
 }
 
-
 interface MongooseValidationError {
-  name: 'ValidationError'; message: string;
+  name: 'ValidationError'; 
+  message: string;
   errors: { [key: string]: { message: string; [key: string]: any } };
 }
+
 function isMongooseValidationError(error: any): error is MongooseValidationError {
   return error && error.name === 'ValidationError' && typeof error.errors === 'object' && error.errors !== null;
 }
@@ -78,7 +98,6 @@ const s3Client = new S3Client({
   }
 });
 const S3_BUCKET_NAME = process.env.S3_SELLER_PROPERTY_BUCKET_NAME || process.env.S3_BUCKET_NAME!;
-
 
 const getBooleanFormValue = (formData: FormData, key: string, defaultValue: boolean = false): boolean => {
     const value = formData.get(key) as string | null;
@@ -94,7 +113,6 @@ const getNumericFormValue = (formData: FormData, key: string, isFloat: boolean =
     return isNaN(num) ? undefined : num;
 };
 
-
 export async function POST(request: NextRequest) {
   await dbConnect();
   console.log("POST /api/seller-properties called (simplified)");
@@ -107,14 +125,17 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     
+    // Parse features from form data
+    const featuresString = formData.get('features') as string || '{}';
+    const features = JSON.parse(featuresString) as { [key: string]: FeatureDetail };
+    
     const dataForDb: Omit<SavedSellerPropertyDocument, '_id' | 'id' | 'locationId' | 'photoUrls' | 'agreementDocumentUrl' | 'postedDate' | 'createdAt' | 'updatedAt' | 'buyerInquiries' | 'sellerCognitoId'> & { sellerCognitoId: string } = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       salePrice: getNumericFormValue(formData, 'salePrice', true)!,
       propertyType: formData.get('propertyType') as string, // Will be stored as sent
       propertyStatus: formData.get('propertyStatus') as string, // Will be stored as sent
-      beds: getNumericFormValue(formData, 'beds')!,
-      baths: getNumericFormValue(formData, 'baths', true)!,
+      features: features, // Use the parsed features
       squareFeet: getNumericFormValue(formData, 'squareFeet')!,
       yearBuilt: getNumericFormValue(formData, 'yearBuilt'), // Optional
       HOAFees: getNumericFormValue(formData, 'HOAFees', true),   // Optional
@@ -137,12 +158,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Seller authentication ID is missing from form data.' }, { status: 400 });
     }
 
-    // File Uploads to S3 (same logic as before)
+    // File Uploads to S3 - Main property photos
     const photoFiles = formData.getAll('photos') as File[];
     const agreementFile = formData.get('agreementDocument') as File | null;
     const uploadedPhotoUrls: string[] = [];
     let agreementDocumentUrl: string | undefined;
 
+    // Upload main property photos
     for (const file of photoFiles) {
         if (file.size > 0) {
           const uploadParams = {
@@ -157,8 +179,39 @@ export async function POST(request: NextRequest) {
             uploadedPhotoUrls.push((result as { Location: string }).Location);
           }
         }
-      }
+    }
 
+    // Upload feature-specific images
+    for (const featureKey of Object.keys(features)) {
+        // The key in formData will be e.g., 'features[bedroom][images]'
+        const featureImageFiles = formData.getAll(`features[${featureKey}][images]`) as File[];
+        
+        if (featureImageFiles.length > 0) {
+            const uploadedFeatureImageUrls: string[] = [];
+            for (const file of featureImageFiles) {
+                if (file.size > 0) {
+                    const uploadParams = {
+                        Bucket: S3_BUCKET_NAME,
+                        Key: `seller-properties/features/${featureKey}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
+                        Body: Buffer.from(await file.arrayBuffer()),
+                        ContentType: file.type,
+                    };
+                    const upload = new Upload({ client: s3Client, params: uploadParams });
+                    const result = await upload.done();
+                    if ((result as { Location?: string }).Location) {
+                        uploadedFeatureImageUrls.push((result as { Location: string }).Location);
+                    }
+                }
+            }
+            // Add the uploaded URLs back to our features object
+            if (!features[featureKey].images) {
+                features[featureKey].images = [];
+            }
+            features[featureKey].images = [...(features[featureKey].images || []), ...uploadedFeatureImageUrls];
+        }
+    }
+
+    // Upload agreement document
     if (agreementFile && agreementFile.size > 0) {
       const uploadParams = {
         Bucket: S3_BUCKET_NAME,
@@ -173,16 +226,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Geocoding and Location Handling (same logic as before)
+    // Geocoding and Location Handling
     let longitude = 0, latitude = 0;
     try {
       const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
-        street: dataForDb.address, city: dataForDb.city, country: dataForDb.country,
-        postalcode: dataForDb.postalCode, format: "json", limit: "1",
+        street: dataForDb.address, 
+        city: dataForDb.city, 
+        country: dataForDb.country,
+        postalcode: dataForDb.postalCode, 
+        format: "json", 
+        limit: "1",
       }).toString()}`;
+      
       const geocodingResponse: AxiosResponse<NominatimResult[]> = await axios.get(geocodingUrl, {
-        headers: { 'User-Agent': 'YourAppName/1.0 (yourcontact@example.com)' }, // Be a good API citizen
+        headers: { 'User-Agent': 'YourAppName/1.0 (yourcontact@example.com)' },
       });
+      
       if (geocodingResponse.data && geocodingResponse.data[0]?.lon && geocodingResponse.data[0]?.lat) {
         longitude = parseFloat(geocodingResponse.data[0].lon);
         latitude = parseFloat(geocodingResponse.data[0].lat);
@@ -190,14 +249,21 @@ export async function POST(request: NextRequest) {
     } catch (geoError: any) {
       console.error("Geocoding API error:", geoError.message);
     }
+    
     const wktCoordinates = `POINT(${longitude} ${latitude})`;
 
+    // Create Location
     const lastLocation = await Location.findOne().sort({ id: -1 }).select('id').lean().exec() as { id?: number } | null;
     const nextLocationId = (lastLocation?.id ?? 0) + 1;
 
     const newLocation = new Location({
-      id: nextLocationId, address: dataForDb.address, city: dataForDb.city, state: dataForDb.state,
-      country: dataForDb.country, postalCode: dataForDb.postalCode, coordinates: wktCoordinates,
+      id: nextLocationId, 
+      address: dataForDb.address, 
+      city: dataForDb.city, 
+      state: dataForDb.state,
+      country: dataForDb.country, 
+      postalCode: dataForDb.postalCode, 
+      coordinates: wktCoordinates,
     });
     await newLocation.save();
 
@@ -209,6 +275,7 @@ export async function POST(request: NextRequest) {
       ...dataForDb,
       id: nextSellerPropertyId,
       locationId: newLocation.id,
+      features: features, // Use the updated features object with image URLs
       photoUrls: uploadedPhotoUrls,
       agreementDocumentUrl: agreementDocumentUrl,
       // Mongoose schema defaults will handle `postedDate`, `buyerInquiries`
@@ -218,16 +285,18 @@ export async function POST(request: NextRequest) {
 
     // Prepare Response
     const propertyDocObject = savedSellerProperty.toObject({ virtuals: true }) as SavedSellerPropertyDocument;
-    const { _id: propMongoId, locationId: propLocId, photoUrls: respPhotoUrls, agreementDocumentUrl: respAgreementUrl, ...restOfSavedProp } = propertyDocObject;
+    const { _id: propMongoId, locationId: propLocId, ...restOfSavedProp } = propertyDocObject;
 
     const responseData: CreatedSellerPropertyResponse = {
       ...restOfSavedProp,
       _id: propMongoId.toString(),
-      photoUrls: respPhotoUrls, // Include in response if frontend needs them immediately
-      agreementDocumentUrl: respAgreementUrl,
       location: {
-        id: newLocation.id, address: newLocation.address!, city: newLocation.city!,
-        state: newLocation.state!, country: newLocation.country!, postalCode: newLocation.postalCode!,
+        id: newLocation.id, 
+        address: newLocation.address!, 
+        city: newLocation.city!,
+        state: newLocation.state!, 
+        country: newLocation.country!, 
+        postalCode: newLocation.postalCode!,
         coordinates: { longitude, latitude },
       },
     };
