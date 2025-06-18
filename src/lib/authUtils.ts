@@ -5,7 +5,6 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 interface DecodedToken extends JwtPayload {
   sub: string;
   'custom:role'?: string;
-  // Potentially other claims like 'token_use'
 }
 
 export interface AuthenticatedUser {

@@ -1,5 +1,6 @@
 import * as z from "zod";
-import { PropertyTypeEnum } from "@/lib/constants";
+import { PropertyTypeEnum } from "./constants";
+import SellerProperty from "@/app/models/SellerProperty";
 
 export const propertySchema = z.object({
   name: z.string().min(1, "Name is required"),

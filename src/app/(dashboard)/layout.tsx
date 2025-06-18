@@ -3,7 +3,7 @@
 import Navbar from "@/components/Navbar";
 import { SidebarProvider } from "@/components/ui/sidebar"; // Assuming this is generic
 import Sidebar from "@/components/AppSidebar"; // Assuming this can handle new user types
-import { NAVBAR_HEIGHT } from "@/lib/constants";
+import { NAVBAR_HEIGHT } from "../../lib/constants";
 import React, { useEffect, useState } from "react";
 import { useGetAuthUserQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";

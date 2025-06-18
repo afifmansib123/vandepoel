@@ -25,7 +25,7 @@ import {
   ShieldCheck,
   User,   // Example for Admin/MasterAdmin if you add that later
 } from "lucide-react";
-import { NAVBAR_HEIGHT } from "@/lib/constants";
+import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 

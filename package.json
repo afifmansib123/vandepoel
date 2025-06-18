@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.17",
     "@types/node": "^20.17.16",
     "@types/react": "^19",

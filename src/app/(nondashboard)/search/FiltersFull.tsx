@@ -8,7 +8,7 @@ import { cleanParams, cn, formatEnumString } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { AmenityIcons, PropertyTypeIcons } from "@/lib/constants";
+import { AmenityIcons, PropertyTypeIcons } from "../../../lib/constants";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,

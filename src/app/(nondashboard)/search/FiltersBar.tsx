@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PropertyTypeIcons } from "@/lib/constants";
+import { PropertyTypeIcons } from "../../../lib/constants";
 
 const FiltersBar = () => {
   const dispatch = useDispatch();

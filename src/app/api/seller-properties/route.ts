@@ -52,7 +52,7 @@ interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
   createdAt: Date;
   updatedAt: Date;
   buyerInquiries: any[]; // Or a more specific type
-  openHouseDates: string[]; // Schema stores as array of strings now
+  openHouseDates?: string; // Schema stores as array of strings now
 }
 
 // For the final API response
@@ -106,10 +106,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const formData = await request.formData();
-
-    // Extract and Parse Data from FormData
-    // Frontend pre-processing ensures these fields are present and have placeholder values.
-    // Mongoose `required:true` will catch truly missing fields if frontend logic fails.
+    
     const dataForDb: Omit<SavedSellerPropertyDocument, '_id' | 'id' | 'locationId' | 'photoUrls' | 'agreementDocumentUrl' | 'postedDate' | 'createdAt' | 'updatedAt' | 'buyerInquiries' | 'sellerCognitoId'> & { sellerCognitoId: string } = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
@@ -258,7 +255,7 @@ export async function GET() {
     const locations = await Location.find({ id: { $in: locationIds } }).lean();
 
     // Format each property with corresponding location
-    const response: CreatedSellerPropertyResponse[] = properties.map(property => {
+    const response = properties.map(property => {
       const location = locations.find(loc => loc.id === property.locationId);
 
       const formattedLocation: FormattedLocationForResponse = {
@@ -278,7 +275,7 @@ export async function GET() {
 
       return {
         ...property,
-        _id: property._id.toString(),
+        _id: property?._id?.toString(),
         location: formattedLocation,
       };
     });
