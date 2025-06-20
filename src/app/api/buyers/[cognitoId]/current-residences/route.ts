@@ -4,7 +4,7 @@ import dbConnect from '../../../../../utils/dbConnect';
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 import Location from '@/app/models/Location'; // Your Mongoose Location model
 import Lease from '@/app/models/Lease';       // Your Mongoose Lease model
-import Buyer from '@/lib/models/Buyer';     // Your Mongoose buyer model
+import Buyer from "@/app/models/Buyer"    // Your Mongoose buyer model
 import mongoose from 'mongoose';
 
 interface buyer{

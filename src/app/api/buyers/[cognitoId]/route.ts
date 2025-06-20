@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId
 import dbConnect from '../../../../utils/dbConnect';
 import Buyer from "@/app/models/Buyer";     // Your Mongoose buyer model
-import Property from '@/app/models/Property'; // Your Mongoose Property model
+import SellerProperty from '@/app/models/SellerProperty'; // Your Mongoose Property model
 
 interface PropertyDocument {
   _id: Types.ObjectId | string; // Mongoose's default ObjectId, or string after serialization/lean
@@ -47,7 +47,7 @@ interface buyerPutRequestBody {
 interface buyerUpdateData {
   name?: string;
   email?: string;
-  // phoneNumber is intentionally omitted as per original logic
+  phoneNumber?: string;
 }
 
 // Simplified type for Mongoose Validation Error structure
@@ -118,7 +118,7 @@ export async function GET(
 
     if (favoritePropertyIds && Array.isArray(favoritePropertyIds) && favoritePropertyIds.length > 0) {
       // **FIX APPLIED HERE**
-      const favoriteProperties = await Property.find({
+      const favoriteProperties = await SellerProperty.find({
         id: { $in: favoritePropertyIds }
       }).lean().exec() as unknown as PropertyDocument[]; // Cast via unknown
       populatedbuyerResponse.favorites = favoriteProperties.map(p => ({
@@ -181,6 +181,9 @@ export async function PUT(
     if (updatePayload.email !== undefined) {
       dataToUpdate.email = updatePayload.email;
     }
+    if(updatePayload.phoneNumber !== undefined) {
+      dataToUpdate.phoneNumber = updatePayload.phoneNumber;
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       return NextResponse.json({ message: 'No valid fields provided for update' }, { status: 400 });
@@ -208,7 +211,7 @@ export async function PUT(
 
     if (favoritePropertyIdsFromUpdate && Array.isArray(favoritePropertyIdsFromUpdate) && favoritePropertyIdsFromUpdate.length > 0) {
         // **FIX APPLIED HERE**
-        const favoriteProperties = await Property.find({
+        const favoriteProperties = await SellerProperty.find({
              id: { $in: favoritePropertyIdsFromUpdate }
         }).lean().exec() as unknown as PropertyDocument[]; // Cast via unknown
         populatedUpdatedbuyerResponse.favorites = favoriteProperties.map(p => ({

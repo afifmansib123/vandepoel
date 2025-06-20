@@ -9,6 +9,7 @@ import {
   Tenant,
   // User, // Assuming you'll import this or use the hardcoded one below
 } from "@/types/prismaTypes";
+import SellerProperty from "@/app/models/SellerProperty";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 import { FiltersState } from ".";
@@ -24,7 +25,7 @@ interface Landlord {
   updatedAt?: string | Date;
 }
 
-interface Buyer{
+interface Buyer {
   id: string | number;
   cognitoId: string;
   name?: string;
@@ -34,16 +35,19 @@ interface Buyer{
   updatedAt?: string | Date;
 }
 
-interface CognitoUserInfo { // Basic structure for Cognito user info
+interface CognitoUserInfo {
+  // Basic structure for Cognito user info
   userId: string;
   username: string;
   // You might have more attributes from getCurrentUser().signInDetails or .attributes
 }
 
-interface User { // The structure returned by getAuthUser
+interface User {
+  // The structure returned by getAuthUser
   cognitoInfo: CognitoUserInfo; // Or more specific type from Amplify like `AuthUser`
   userInfo: Tenant | Manager | Landlord | Buyer; // Using the hardcoded types for now
   userRole: string;
+  favorites?: Number[];
 }
 // --- END Hardcoded Types ---
 
@@ -71,7 +75,8 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: [ // Ensure "Landlords" is actually in this array
+  tagTypes: [
+    // Ensure "Landlords" is actually in this array
     "Managers",
     "Tenants",
     "Landlords", // <<< --- FIX #1: Ensure "Landlords" is present
@@ -83,13 +88,14 @@ export const api = createApi({
     "Applications",
   ] as AppTag[],
   endpoints: (build) => ({
-    getAuthUser: build.query<User, void>({ // Using the hardcoded User type
+    getAuthUser: build.query<User, void>({
+      // Using the hardcoded User type
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
         try {
           const session = await fetchAuthSession();
           const { idToken } = session.tokens ?? {};
           // Get the user object from Amplify. It has userId, username, etc.
-          const amplifyUser = await getCurrentUser(); 
+          const amplifyUser = await getCurrentUser();
           const userRole = idToken?.payload["custom:role"] as string;
 
           let endpoint = "";
@@ -99,9 +105,9 @@ export const api = createApi({
             endpoint = `/tenants/${amplifyUser.userId}`;
           } else if (userRole === "landlord") {
             endpoint = `/landlords/${amplifyUser.userId}`;
-          }else if (userRole === "buyer") {
-  endpoint = `/buyers/${amplifyUser.userId}`;
-} else {
+          } else if (userRole === "buyer") {
+            endpoint = `/buyers/${amplifyUser.userId}`;
+          } else {
             return {
               error:
                 "Unknown user role or role not supported for details fetching.",
@@ -121,7 +127,7 @@ export const api = createApi({
               fetchWithBQ
             );
           }
-          
+
           // Construct the cognitoInfo part from the amplifyUser object
           const cognitoInfoForApp: CognitoUserInfo = {
             userId: amplifyUser.userId,
@@ -143,7 +149,7 @@ export const api = createApi({
     }),
 
     // ... (rest of your existing endpoints: getProperties, getProperty, tenant endpoints, manager endpoints) ...
-    
+
     // property related endpoints (no changes needed here based on last diff)
     getProperties: build.query<
       Property[],
@@ -184,7 +190,9 @@ export const api = createApi({
 
     getProperty: build.query<Property, number>({
       query: (id) => `properties/${id}`,
-      providesTags: (result, error, id) => [{ type: "PropertyDetails" as AppTag, id }], // Using AppTag
+      providesTags: (result, error, id) => [
+        { type: "PropertyDetails" as AppTag, id },
+      ], // Using AppTag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to load property details.",
@@ -195,7 +203,8 @@ export const api = createApi({
     // tenant related endpoints (no changes needed here based on last diff)
     getTenant: build.query<Tenant, string>({
       query: (cognitoId) => `tenants/${cognitoId}`,
-      providesTags: (result) => result ? [{ type: "Tenants" as AppTag, id: result.id }] : [], // Using AppTag
+      providesTags: (result) =>
+        result ? [{ type: "Tenants" as AppTag, id: result.id }] : [], // Using AppTag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to load tenant profile.",
@@ -205,7 +214,8 @@ export const api = createApi({
 
     getBuyer: build.query<Buyer, string>({
       query: (cognitoId) => `buyers/${cognitoId}`,
-      providesTags: (result) => result ? [{ type: "Buyers" as AppTag, id: result.id }] : [], // Using AppTag
+      providesTags: (result) =>
+        result ? [{ type: "Buyers" as AppTag, id: result.id }] : [], // Using AppTag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to load tenant profile.",
@@ -229,7 +239,7 @@ export const api = createApi({
       },
     }),
 
-        getCurrentResidencesbuyer: build.query<Property[], string>({
+    getCurrentResidencesbuyer: build.query<Property[], string>({
       query: (cognitoId) => `buyers/${cognitoId}/current-residences`,
       providesTags: (result) =>
         result
@@ -254,7 +264,8 @@ export const api = createApi({
         method: "PUT",
         body: updatedTenant,
       }),
-      invalidatesTags: (result) => result ? [{ type: "Tenants" as AppTag, id: result.id }] : [], // Using AppTag
+      invalidatesTags: (result) =>
+        result ? [{ type: "Tenants" as AppTag, id: result.id }] : [], // Using AppTag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Settings updated successfully!",
@@ -263,17 +274,28 @@ export const api = createApi({
       },
     }),
 
-
-
-// In your api.ts file, within the `endpoints: (build) => ({ ... })` section:
-
-// Make sure Tenant and Buyer types are correctly imported or defined
-// import { Tenant, Property } from "@/types/prismaTypes";
-// Assuming Buyer type is defined locally or imported, and includes `id` and `favorites`
+    updateBuyerSettings: build.mutation<
+      Buyer,
+      { cognitoId: string } & Partial<Buyer>
+    >({
+      query: ({ cognitoId, ...updatedBuyer }) => ({
+        url: `buyers/${cognitoId}`,
+        method: "PUT",
+        body: updatedBuyer,
+      }),
+      invalidatesTags: (result) =>
+        result ? [{ type: "Buyers" as AppTag, id: result.id }] : [], // Using AppTag
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Settings updated successfully!",
+          error: "Failed to update settings.",
+        });
+      },
+    }),
 
     addFavoriteProperty: build.mutation<
       Tenant | Buyer, // The mutation can return either a Tenant or a Buyer object
-      { cognitoId: string; propertyId: number; userRole: 'tenant' | 'buyer' } // Added userRole to args
+      { cognitoId: string; propertyId: number; userRole: "tenant" | "buyer" } // Added userRole to args
     >({
       query: ({ cognitoId, propertyId, userRole }) => ({
         // Dynamically construct the URL based on userRole
@@ -284,7 +306,8 @@ export const api = createApi({
         // result is the Tenant or Buyer object returned by the API after adding the favorite
         // { userRole } is destructured from the arguments passed to the mutation
         if (result && result.id) {
-          const userSpecificTagType = userRole === "tenant" ? "Tenants" : "Buyers";
+          const userSpecificTagType =
+            userRole === "tenant" ? "Tenants" : "Buyers";
           return [
             { type: userSpecificTagType as AppTag, id: result.id }, // Invalidate specific tenant or buyer cache
             { type: "Properties" as AppTag, id: "LIST" }, // May still be useful if favorite lists affect property list views
@@ -302,7 +325,7 @@ export const api = createApi({
 
     removeFavoriteProperty: build.mutation<
       Tenant | Buyer, // The mutation can return either a Tenant or a Buyer object
-      { cognitoId: string; propertyId: number; userRole: 'tenant' | 'buyer' } // Added userRole to args
+      { cognitoId: string; propertyId: number; userRole: "tenant" | "buyer" } // Added userRole to args
     >({
       query: ({ cognitoId, propertyId, userRole }) => ({
         // Dynamically construct the URL based on userRole
@@ -310,10 +333,9 @@ export const api = createApi({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, { userRole }) => {
-        // result is the Tenant or Buyer object returned by the API after removing the favorite
-        // { userRole } is destructured from the arguments passed to the mutation
         if (result && result.id) {
-          const userSpecificTagType = userRole === "tenant" ? "Tenants" : "Buyers";
+          const userSpecificTagType =
+            userRole === "tenant" ? "Tenants" : "Buyers";
           return [
             { type: userSpecificTagType as AppTag, id: result.id }, // Invalidate specific tenant or buyer cache
             { type: "Properties" as AppTag, id: "LIST" },
@@ -328,7 +350,6 @@ export const api = createApi({
         });
       },
     }),
-
     // manager related endpoints (no changes needed here based on last diff)
     getManagerProperties: build.query<Property[], string>({
       query: (cognitoId) => `managers/${cognitoId}/properties`,
@@ -355,7 +376,8 @@ export const api = createApi({
         method: "PUT",
         body: updatedManager,
       }),
-      invalidatesTags: (result) => result ? [{ type: "Managers" as AppTag, id: result.id }] : [], // Using AppTag
+      invalidatesTags: (result) =>
+        result ? [{ type: "Managers" as AppTag, id: result.id }] : [], // Using AppTag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Settings updated successfully!",
@@ -372,16 +394,20 @@ export const api = createApi({
       }),
       invalidatesTags: (result) => {
         const tags: AppTag[] = ["Properties" as AppTag]; // Initialize with base tag
-        if (result?.manager?.id) { // Check if manager info is in result
-            // This needs a type for result.manager.id, assuming string or number
-            tags.push({ type: "Managers" as AppTag, id: result.manager.id } as any); // `as any` if id type mismatch, better to align types
+        if (result?.manager?.id) {
+          // Check if manager info is in result
+          // This needs a type for result.manager.id, assuming string or number
+          tags.push({
+            type: "Managers" as AppTag,
+            id: result.manager.id,
+          } as any); // `as any` if id type mismatch, better to align types
         }
         // Add similar for landlord if result can contain landlord info
         // if (result?.landlord?.id) {
         //   tags.push({ type: "Landlords" as AppTag, id: result.landlord.id } as any);
         // }
         return tags;
-    },
+      },
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Property created successfully!",
@@ -391,9 +417,10 @@ export const api = createApi({
     }),
 
     // lease related enpoints (no changes needed here based on last diff)
-    getLeases: build.query<Lease[], void>({ // Changed number to void as query() takes no arg
+    getLeases: build.query<Lease[], void>({
+      // Changed number to void as query() takes no arg
       query: () => "leases",
-      providesTags: [{type: "Leases" as AppTag, id: 'LIST'}], // Provide a general list tag
+      providesTags: [{ type: "Leases" as AppTag, id: "LIST" }], // Provide a general list tag
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to fetch leases.",
@@ -403,11 +430,16 @@ export const api = createApi({
 
     getPropertyLeases: build.query<Lease[], number>({
       query: (propertyId) => `properties/${propertyId}/leases`,
-      providesTags: (result, error, propertyId) => 
-        result ? [
-            ...result.map(lease => ({ type: 'Leases' as AppTag, id: lease.id })),
-            { type: 'Leases' as AppTag, id: 'LIST' } // Also invalidate/provide general list
-        ] : [{ type: 'Leases' as AppTag, id: 'LIST' }],
+      providesTags: (result, error, propertyId) =>
+        result
+          ? [
+              ...result.map((lease) => ({
+                type: "Leases" as AppTag,
+                id: lease.id,
+              })),
+              { type: "Leases" as AppTag, id: "LIST" }, // Also invalidate/provide general list
+            ]
+          : [{ type: "Leases" as AppTag, id: "LIST" }],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to fetch property leases.",
@@ -417,11 +449,16 @@ export const api = createApi({
 
     getPayments: build.query<Payment[], number>({
       query: (leaseId) => `leases/${leaseId}/payments`,
-      providesTags: (result, error, leaseId) => 
-        result ? [
-            ...result.map(payment => ({ type: 'Payments' as AppTag, id: payment.id })),
-            { type: 'Payments' as AppTag, id: 'LIST' }
-        ] : [{ type: 'Payments' as AppTag, id: 'LIST' }],
+      providesTags: (result, error, leaseId) =>
+        result
+          ? [
+              ...result.map((payment) => ({
+                type: "Payments" as AppTag,
+                id: payment.id,
+              })),
+              { type: "Payments" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "Payments" as AppTag, id: "LIST" }],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to fetch payment info.",
@@ -445,7 +482,7 @@ export const api = createApi({
 
         return `applications?${queryParams.toString()}`;
       },
-      providesTags: [{type: "Applications" as AppTag, id: 'LIST'}],
+      providesTags: [{ type: "Applications" as AppTag, id: "LIST" }],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to fetch applications.",
@@ -462,7 +499,10 @@ export const api = createApi({
         method: "PUT",
         body: { status },
       }),
-      invalidatesTags: [{type:"Applications" as AppTag, id: 'LIST'}, {type:"Leases" as AppTag, id: 'LIST'}],
+      invalidatesTags: [
+        { type: "Applications" as AppTag, id: "LIST" },
+        { type: "Leases" as AppTag, id: "LIST" },
+      ],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Application status updated successfully!",
@@ -477,7 +517,7 @@ export const api = createApi({
         method: "POST",
         body: body,
       }),
-      invalidatesTags: [{type: "Applications" as AppTag, id: 'LIST'}],
+      invalidatesTags: [{ type: "Applications" as AppTag, id: "LIST" }],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           success: "Application created successfully!",
@@ -488,20 +528,20 @@ export const api = createApi({
 
     // --- START Landlord Endpoints (already added from previous step) ---
     getLandlordProperties: build.query<Property[], void>({
-  query: () => `seller-properties`,
-  providesTags: (result) =>
-    result
-      ? [
-          ...result.map(({ id }) => ({ type: "Properties" as AppTag, id })),
-          { type: "Properties" as AppTag, id: "LIST" },
-        ]
-      : [{ type: "Properties" as AppTag, id: "LIST" }],
-  async onQueryStarted(_, { queryFulfilled }) {
-    await withToast(queryFulfilled, {
-      error: "Failed to load landlord properties.",
-    });
-  },
-}),
+      query: () => `seller-properties`,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Properties" as AppTag, id })),
+              { type: "Properties" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "Properties" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load landlord properties.",
+        });
+      },
+    }),
 
     updateLandlordSettings: build.mutation<
       Landlord,
@@ -528,6 +568,7 @@ export const api = createApi({
 export const {
   useGetAuthUserQuery,
   useUpdateTenantSettingsMutation,
+  useUpdateBuyerSettingsMutation,
   useUpdateManagerSettingsMutation,
   useUpdateLandlordSettingsMutation, // <<< --- FIX #3: Add this export
   useGetPropertiesQuery,

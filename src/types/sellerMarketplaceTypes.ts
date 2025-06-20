@@ -13,9 +13,10 @@ export interface SellerPropertyLocation {
 }
 
 export interface SellerProperty {
-  _id: string; // Or just string, depending on your DB ObjectId handling
+  _id?: string; // Or just string, depending on your DB ObjectId handling
+  id : string | number,
   name: string;
-  description: string;
+  description?: string;
   salePrice: number;
   propertyType: string;
   beds: number;
@@ -23,8 +24,8 @@ export interface SellerProperty {
   squareFeet: number; // Assuming you have this
   photoUrls: string[];
   location: SellerPropertyLocation; // Use the interface defined above
-  // Add any other fields your SellerPropertyCard or map might need
-  // e.g., yearBuilt, HOAFees, amenities, highlights etc.
+  propertyStatus:string;
+  sellerCognitoId: string;
 }
 
 // Updated filters interface

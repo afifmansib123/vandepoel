@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId
 import dbConnect from '../../../../utils/dbConnect';
 import Tenant from '@/app/models/Tenant';     // Your Mongoose Tenant model
-import Property from '@/app/models/Property'; // Your Mongoose Property model
+import SellerProperty from '@/app/models/SellerProperty'; // Your Mongoose Property model
 
 // --- START Standard Type Definitions ---
 
@@ -11,9 +11,6 @@ import Property from '@/app/models/Property'; // Your Mongoose Property model
 interface PropertyDocument {
   _id: Types.ObjectId | string; // Mongoose's default ObjectId, or string after serialization/lean
   id: number;                    // Custom numeric ID used for relations
-  // Add other known fields from your Property schema if available, e.g.:
-  // address?: string;
-  // price?: number;
   [key: string]: any;            // Allows for other fields not explicitly typed
 }
 
@@ -25,15 +22,8 @@ interface TenantDocument {
   email?: string;
   phoneNumber?: string;
   favorites?: number[];         // Array of numeric Property IDs, optional
-  // Add other known fields from your Tenant schema if available, e.g.:
-  // createdAt?: Date;
-  // updatedAt?: Date;
   [key: string]: any;            // Allows for other fields not explicitly typed
 }
-
-// Represents a Tenant document for API responses, where 'favorites' (Property IDs)
-// have been populated with actual PropertyDocument objects.
-// NextResponse.json will handle serialization of _id (ObjectId to string).
 interface PopulatedTenantResponse extends Omit<TenantDocument, 'favorites' | '_id'> {
   _id: string; // After NextResponse.json, _id is usually a string
   favorites: PropertyDocument[];
@@ -59,7 +49,7 @@ interface TenantPutRequestBody {
 interface TenantUpdateData {
   name?: string;
   email?: string;
-  // phoneNumber is intentionally omitted as per original logic
+  phoneNumber?: string;
 }
 
 // Simplified type for Mongoose Validation Error structure
@@ -87,23 +77,22 @@ function isMongooseValidationError(error: any): error is MongooseValidationError
 // --- GET Handler (Get Tenant by Cognito ID) ---
 export async function GET(
   request: NextRequest,
-  context: HandlerContext
+  { params }: { params: Promise<{ cognitoId: string }> }
 ) {
   // --- Start Debug Logging ---
   console.log("--- GET /api/tenants/[cognitoId] ---");
-  console.log("Received context:", context);
-  console.log("Type of context.params:", typeof context.params);
-  if (context.params) {
-    console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-    console.log("Value of context.params.cognitoId:", context.params.cognitoId);
-  } else {
-    console.log("context.params is undefined or null");
-  }
+  console.log("Received params (Promise):", params);
+  
+  // Await the params Promise
+  const resolvedParams = await params;
+  console.log("Resolved params:", resolvedParams);
+  console.log("Type of resolvedParams.cognitoId:", typeof resolvedParams.cognitoId);
+  console.log("Value of resolvedParams.cognitoId:", resolvedParams.cognitoId);
   // --- End Debug Logging ---
 
   await dbConnect();
 
-  const routeCognitoId: string = context.params.cognitoId;
+  const routeCognitoId: string = resolvedParams.cognitoId;
 
   if (!routeCognitoId) {
     console.error("Error: routeCognitoId is missing from context.params");
@@ -134,7 +123,7 @@ export async function GET(
 
     if (favoritePropertyIds && Array.isArray(favoritePropertyIds) && favoritePropertyIds.length > 0) {
       // **FIX APPLIED HERE**
-      const favoriteProperties = await Property.find({
+      const favoriteProperties = await SellerProperty.find({
         id: { $in: favoritePropertyIds }
       }).lean().exec() as unknown as PropertyDocument[]; // Cast via unknown
       populatedTenantResponse.favorites = favoriteProperties.map(p => ({
@@ -161,17 +150,22 @@ export async function PUT(
   console.log("--- PUT /api/tenants/[cognitoId] ---");
   console.log("Received context:", context);
   console.log("Type of context.params:", typeof context.params);
-  if (context.params) {
-    console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-    console.log("Value of context.params.cognitoId:", context.params.cognitoId);
+  
+  // Handle both Promise and direct params
+  const params = await Promise.resolve(context.params);
+  
+  if (params) {
+    console.log("Type of params.cognitoId:", typeof params.cognitoId);
+    console.log("Value of params.cognitoId:", params.cognitoId);
   } else {
-    console.log("context.params is undefined or null");
+    console.log("params is undefined or null");
   }
   // --- End Debug Logging ---
 
   await dbConnect();
 
-  const routeCognitoId: string = context.params.cognitoId;
+  // Extract cognitoId safely
+  const routeCognitoId: string = params?.cognitoId;
 
   if (!routeCognitoId) {
     console.error("Error: routeCognitoId is missing from context.params in PUT request");
@@ -195,6 +189,9 @@ export async function PUT(
     if (updatePayload.email !== undefined) {
       dataToUpdate.email = updatePayload.email;
     }
+    if (updatePayload.phoneNumber !== undefined) {
+  dataToUpdate.phoneNumber = updatePayload.phoneNumber;
+}
 
     if (Object.keys(dataToUpdate).length === 0) {
       return NextResponse.json({ message: 'No valid fields provided for update' }, { status: 400 });
@@ -222,7 +219,7 @@ export async function PUT(
 
     if (favoritePropertyIdsFromUpdate && Array.isArray(favoritePropertyIdsFromUpdate) && favoritePropertyIdsFromUpdate.length > 0) {
         // **FIX APPLIED HERE**
-        const favoriteProperties = await Property.find({
+        const favoriteProperties = await SellerProperty.find({
              id: { $in: favoritePropertyIdsFromUpdate }
         }).lean().exec() as unknown as PropertyDocument[]; // Cast via unknown
         populatedUpdatedTenantResponse.favorites = favoriteProperties.map(p => ({

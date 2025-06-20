@@ -1,61 +1,68 @@
 // src/app/api/buyers/[cognitoId]/favorites/[propertyId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../../../utils/dbConnect';
-import Buyer from '@/lib/models/Buyer';     // Your Mongoose buyer model
-import Property from '@/app/models/Property'; // Your Mongoose Property model
+import Buyer from "@/app/models/Buyer"
+import SellerProperty from '@/app/models/SellerProperty';
 
-async function getbuyerAndProperty(cognitoId: string, propertyIdStr: string) {
+async function getBuyerAndProperty(cognitoId: string, propertyIdStr: string) {
     const propertyIdNum = Number(propertyIdStr);
     if (isNaN(propertyIdNum)) {
         return { error: NextResponse.json({ message: 'Invalid Property ID format' }, { status: 400 }) };
     }
 
-    const buyer = await Buyer.findOne({ cognitoId }).exec(); // Not .lean() as we will modify and save
+    const buyer = await Buyer.findOne({ cognitoId }).exec();
     if (!buyer) {
-        return { error: NextResponse.json({ message: 'buyer not found' }, { status: 404 }) };
+        return { error: NextResponse.json({ message: 'Buyer not found' }, { status: 404 }) };
     }
 
-    // Check if property exists (optional, but good practice)
-    const property = await Property.findOne({ id: propertyIdNum }).select('_id id').lean().exec();
+    const property = await SellerProperty.findOne({ id: propertyIdNum }).select('_id id').lean().exec();
     if (!property) {
         return { error: NextResponse.json({ message: 'Property not found' }, { status: 404 }) };
     }
+    
     return { buyer, propertyId: propertyIdNum, propertyExists: true };
+}
+
+async function getPopulatedBuyer(buyer: any) {
+    const populatedBuyer = buyer.toObject();
+    if (populatedBuyer.favorites && populatedBuyer.favorites.length > 0) {
+        const favoriteProperties = await SellerProperty.find({ 
+            id: { $in: populatedBuyer.favorites as number[] } 
+        }).lean().exec();
+        populatedBuyer.favorites = favoriteProperties;
+    } else {
+        populatedBuyer.favorites = [];
+    }
+    return populatedBuyer;
 }
 
 // --- POST Handler (Add Favorite Property) ---
 export async function POST(
   request: NextRequest,
-  { params }: { params: { cognitoId: string; propertyId: string } }
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
 ) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
-  const result = await getbuyerAndProperty(cognitoId, propertyIdStr);
+  const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
   if (result.error) return result.error;
   const { buyer, propertyId } = result;
 
   try {
-    // Add to favorites using $addToSet to prevent duplicates
-    // Assumes buyer.favorites is an array of numeric Property IDs
-    if (!buyer!.favorites.includes(propertyId!)) {
-        buyer!.favorites.push(propertyId!); // Mongoose $addToSet equivalent for simple array
-        await buyer!.save();
-    } else {
-        // Already a favorite, consider if this is an error or just a no-op
-        // For simplicity, let's just return the buyer as if it was just added or already there.
+    // Use MongoDB's $addToSet to prevent duplicates at the database level
+    const updateResult = await Buyer.findOneAndUpdate(
+      { cognitoId },
+      { $addToSet: { favorites: propertyId } }, // $addToSet only adds if not already present
+      { new: true } // Return the updated document
+    ).exec();
+
+    if (!updateResult) {
+      return NextResponse.json({ message: 'Failed to update favorites' }, { status: 500 });
     }
 
-    // Repopulate favorites for the response to match GET /buyer/:cognitoId structure
-    let populatedbuyer: any = buyer!.toObject(); // toObject to get a plain object
-    if (populatedbuyer.favorites && populatedbuyer.favorites.length > 0) {
-        const favoriteProperties = await Property.find({ id: { $in: populatedbuyer.favorites as number[] } }).lean().exec();
-        populatedbuyer.favorites = favoriteProperties;
-    } else {
-        populatedbuyer.favorites = [];
-    }
-
-    return NextResponse.json(populatedbuyer, { status: 200 });
+    // Get populated buyer for response
+    const populatedBuyer = await getPopulatedBuyer(updateResult);
+    return NextResponse.json(populatedBuyer, { status: 200 });
 
   } catch (error: any) {
     console.error(`Error adding favorite for buyer ${cognitoId}:`, error);
@@ -66,35 +73,30 @@ export async function POST(
 // --- DELETE Handler (Remove Favorite Property) ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { cognitoId: string; propertyId: string } }
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
 ) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
-  const result = await getbuyerAndProperty(cognitoId, propertyIdStr);
+  const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
   if (result.error) return result.error;
   const { buyer, propertyId } = result;
 
   try {
-    // Remove from favorites using $pull
-    // Assumes buyer.favorites is an array of numeric Property IDs
-    const initialFavCount = buyer!.favorites.length;
-    buyer!.favorites = buyer!.favorites.filter((favId : number) => favId !== propertyId!);
+    // Use MongoDB's $pull to remove the property ID from favorites
+    const updateResult = await Buyer.findOneAndUpdate(
+      { cognitoId },
+      { $pull: { favorites: propertyId } }, // $pull removes all instances of the value
+      { new: true } // Return the updated document
+    ).exec();
 
-    if (buyer!.favorites.length < initialFavCount) { // Check if something was actually removed
-        await buyer!.save();
+    if (!updateResult) {
+      return NextResponse.json({ message: 'Failed to update favorites' }, { status: 500 });
     }
 
-    // Repopulate favorites for the response
-    let populatedbuyer: any = buyer!.toObject();
-    if (populatedbuyer.favorites && populatedbuyer.favorites.length > 0) {
-        const favoriteProperties = await Property.find({ id: { $in: populatedbuyer.favorites as number[] } }).lean().exec();
-        populatedbuyer.favorites = favoriteProperties;
-    } else {
-        populatedbuyer.favorites = [];
-    }
-
-    return NextResponse.json(populatedbuyer, { status: 200 });
+    // Get populated buyer for response
+    const populatedBuyer = await getPopulatedBuyer(updateResult);
+    return NextResponse.json(populatedBuyer, { status: 200 });
 
   } catch (error: any) {
     console.error(`Error removing favorite for buyer ${cognitoId}:`, error);

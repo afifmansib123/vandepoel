@@ -90,7 +90,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
     case "buyer":
       sidebarTitle = "Buyer View";
       navLinks = [
-        { icon: User, label: "Profile", href: "/buerys/profile" },
+        { icon: User, label: "Profile", href: "/buyers/profile" },
         { icon: Search, label: "Search Properties", href: "/buyers/search" }, // Or just "/properties" if search is public but this is buyer dashboard
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
         // Example: Saved searches or alerts
