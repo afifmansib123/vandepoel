@@ -44,9 +44,9 @@ interface LandlordResponse {
 
 // Type for the Next.js route handler context parameters
 interface HandlerContext {
-  params: {
+  params: Promise<{
     cognitoId: string;
-  };
+  }>;
 }
 
 // Type for the request body when updating a Landlord (PUT request)
@@ -97,8 +97,6 @@ function isMongooseValidationError(error: any): error is MongooseValidationError
   return error && error.name === 'ValidationError' && typeof error.errors === 'object' && error.errors !== null;
 }
 
-// --- END Standard Type Definitions ---
-
 // --- GET Handler (Get Landlord by Cognito ID) ---
 export async function GET(
   request: NextRequest,
@@ -106,9 +104,9 @@ export async function GET(
 ) {
   console.log("--- GET /api/landlords/[cognitoId] ---");
   console.log("Received context:", context);
-  console.log("Value of context.params.cognitoId:", context.params.cognitoId);
 
-  const cognitoIdFromPath: string = context.params.cognitoId;
+  const params = await context.params;
+  const cognitoIdFromPath = params.cognitoId;
 
   console.log(`[API /landlords/:id GET] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
@@ -155,11 +153,9 @@ export async function PUT(
   request: NextRequest,
   context: HandlerContext
 ) {
-  console.log("--- PUT /api/landlords/[cognitoId] ---");
-  console.log("Received context:", context);
-  console.log("Value of context.params.cognitoId:", context.params.cognitoId);
 
-  const cognitoIdFromPath: string = context.params.cognitoId;
+  const params = await context.params;
+  const cognitoIdFromPath: string = params.cognitoId;
   console.log(`[API /landlords/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
   // Basic validation for cognitoId
