@@ -68,11 +68,11 @@ interface LandlordUpdateData {
   name?: string;
   email?: string;
   companyName?: string;
-  phone?: string;
+  phoneNumber?: string;
   address?: string;
   description?: string;
   businessLicense?: string;
-  profileImage?: string;
+  profileImage?: string; 
   status?: string;
   updatedAt?: Date;
 }
@@ -175,7 +175,7 @@ export async function PUT(
       name, 
       email, 
       companyName, 
-      phone, 
+      phoneNumber, 
       address, 
       description, 
       businessLicense, 
@@ -187,7 +187,7 @@ export async function PUT(
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (companyName !== undefined) updateData.companyName = companyName;
-    if (phone !== undefined) updateData.phone = phone;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
     if (address !== undefined) updateData.address = address;
     if (description !== undefined) updateData.description = description;
     if (businessLicense !== undefined) updateData.businessLicense = businessLicense;

@@ -28,7 +28,7 @@ const LandlordSettings = () => {
   const initialData = {
     name: authUser.userInfo.name || "",
     email: authUser.userInfo.email || "",
-    phoneNumber: authUser.userInfo.phoneNumber || "",
+    phone: authUser.userInfo.phoneNumber || "",
   };
 
   const handleSubmit = async (data: typeof initialData) => {
