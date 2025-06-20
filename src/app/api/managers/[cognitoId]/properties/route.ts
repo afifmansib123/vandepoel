@@ -1,7 +1,7 @@
 // src/app/api/managers/[cognitoId]/properties/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId
-import dbConnect from '../../../../../../trash/dbConnect';
+import dbConnect from '../../../../../utils/dbConnect';
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 import Location from '@/app/models/Location'; // Your Mongoose Location model
 import Manager from '@/app/models/Manager';   // Your Mongoose Manager model

@@ -1,7 +1,7 @@
 // src/app/api/buyers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../trash/dbConnect';
-import Buyer from '@/lib/models/Buyer'; // Your Mongoose buyer model
+import dbConnect from '../../../utils/dbConnect';
+import Buyer from '@/app/models/Buyer'; // Your Mongoose buyer model
 
 interface buyerIdResult {
   id: number;

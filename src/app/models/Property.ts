@@ -1,6 +1,6 @@
 // src/lib/models/Property.js
 import mongoose , {Schema} from 'mongoose';
-import { HighlightEnum, AmenityEnum, PropertyTypeEnum } from './Enums.js'; // Assuming Enums.js is in the same directory
+import { HighlightEnum, AmenityEnum, PropertyTypeEnum } from './Enums'; // Assuming Enums.js is in the same directory
 
 const PropertySchema : Schema= new mongoose.Schema({
   id: {

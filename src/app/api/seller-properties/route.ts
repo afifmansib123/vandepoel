@@ -1,7 +1,7 @@
 // src/app/api/seller-properties/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // Keep for _id typing
-import dbConnect from '../../../../trash/dbConnect';
+import dbConnect from '../../../utils/dbConnect';
 import SellerProperty from '@/app/models/SellerProperty'; // Your simplified Mongoose model
 import Location from '@/app/models/Location';
 import { S3Client } from "@aws-sdk/client-s3";

@@ -1,6 +1,6 @@
 // src/app/api/buyers/[cognitoId]/favorites/[propertyId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../../../../trash/dbConnect';
+import dbConnect from '../../../../../../utils/dbConnect';
 import Buyer from '@/lib/models/Buyer';     // Your Mongoose buyer model
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 

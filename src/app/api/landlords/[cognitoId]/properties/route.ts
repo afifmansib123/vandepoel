@@ -1,7 +1,7 @@
 // src/app/api/landlords/[cognitoId]/properties/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
-import dbConnect from '../../../../../../trash/dbConnect';
+import dbConnect from '../../../../../utils/dbConnect';
 import Property from '@/app/models/Property';
 import Location from '@/app/models/Location';
 import Landlord from '@/app/models/Landlord';

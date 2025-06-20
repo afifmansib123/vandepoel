@@ -1,6 +1,6 @@
 // src/app/api/tenants/[cognitoId]/current-residences/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../../../trash/dbConnect';
+import dbConnect from '../../../../../utils/dbConnect';
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 import Location from '@/app/models/Location'; // Your Mongoose Location model
 import Lease from '@/app/models/Lease';       // Your Mongoose Lease model

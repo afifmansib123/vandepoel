@@ -1,6 +1,6 @@
 // src/app/api/managers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../trash/dbConnect';
+import dbConnect from '../../../utils/dbConnect';
 import Manager from '@/app/models/Manager'; // Your Mongoose Manager model
 import mongoose from 'mongoose';
 

@@ -1,6 +1,6 @@
 // src/app/api/tenants/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../trash/dbConnect';
+import dbConnect from '../../../utils/dbConnect';
 import Tenant from '@/app/models/Tenant'; // Your Mongoose Tenant model
 
 interface TenantIdResult {

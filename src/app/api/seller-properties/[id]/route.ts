@@ -1,7 +1,7 @@
 // src/app/api/seller-properties/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
-import dbConnect from '../../../../../trash/dbConnect';
+import dbConnect from '../../../../utils/dbConnect';
 import SellerProperty from '@/app/models/SellerProperty'; // Your SellerProperty model
 import Location from '@/app/models/Location';             // Your Location model
 

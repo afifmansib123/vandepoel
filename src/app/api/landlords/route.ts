@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '../../../../trash/dbConnect';
+import dbConnect from '../../../utils/dbConnect';
 import Landlord from '@/app/models/Landlord'; 
 import mongoose from 'mongoose';
 

@@ -1,7 +1,7 @@
 // src/app/api/tenants/[cognitoId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId
-import dbConnect from '../../../../../trash/dbConnect';
+import dbConnect from '../../../../utils/dbConnect';
 import Tenant from '@/app/models/Tenant';     // Your Mongoose Tenant model
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 

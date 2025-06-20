@@ -1,7 +1,7 @@
 // src/app/api/landlords/[cognitoId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId type
-import dbConnect from '../../../../../trash/dbConnect';
+import dbConnect from '../../../../utils/dbConnect';
 import Landlord from '@/app/models/Landlord';
 
 // --- START Standard Type Definitions ---

@@ -1,19 +1,13 @@
 // src/app/api/buyers/[cognitoId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId
-import dbConnect from '../../../../../trash/dbConnect';
-import Buyer from '@/lib/models/Buyer';     // Your Mongoose buyer model
+import dbConnect from '../../../../utils/dbConnect';
+import Buyer from "@/app/models/Buyer";     // Your Mongoose buyer model
 import Property from '@/app/models/Property'; // Your Mongoose Property model
 
-// --- START Standard Type Definitions ---
-
-// Represents the structure of a Property document from the database (after .lean())
 interface PropertyDocument {
   _id: Types.ObjectId | string; // Mongoose's default ObjectId, or string after serialization/lean
   id: number;                    // Custom numeric ID used for relations
-  // Add other known fields from your Property schema if available, e.g.:
-  // address?: string;
-  // price?: number;
   [key: string]: any;            // Allows for other fields not explicitly typed
 }
 
@@ -25,15 +19,9 @@ interface buyerDocument {
   email?: string;
   phoneNumber?: string;
   favorites?: number[];         // Array of numeric Property IDs, optional
-  // Add other known fields from your buyer schema if available, e.g.:
-  // createdAt?: Date;
-  // updatedAt?: Date;
-  [key: string]: any;            // Allows for other fields not explicitly typed
+  [key: string]: any;            
 }
 
-// Represents a buyer document for API responses, where 'favorites' (Property IDs)
-// have been populated with actual PropertyDocument objects.
-// NextResponse.json will handle serialization of _id (ObjectId to string).
 interface PopulatedbuyerResponse extends Omit<buyerDocument, 'favorites' | '_id'> {
   _id: string; // After NextResponse.json, _id is usually a string
   favorites: PropertyDocument[];
@@ -41,9 +29,9 @@ interface PopulatedbuyerResponse extends Omit<buyerDocument, 'favorites' | '_id'
 
 // Type for the Next.js route handler context parameters
 interface HandlerContext {
-  params: {
+  params: Promise<{
     cognitoId: string;
-  };
+  }>;
 }
 
 // Type for the request body when updating a buyer (PUT request)
@@ -89,21 +77,23 @@ export async function GET(
   request: NextRequest,
   context: HandlerContext
 ) {
-  // --- Start Debug Logging ---
-  if (context.params) {
-    console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-    console.log("Value of context.params.cognitoId:", context.params.cognitoId);
+  
+  const params = await context.params;
+  
+  if (params) {
+    console.log("Type of params.cognitoId:", typeof params.cognitoId);
+    console.log("Value of params.cognitoId:", params.cognitoId);
   } else {
-    console.log("context.params is undefined or null");
+    console.log("params is undefined or null");
   }
   // --- End Debug Logging ---
 
   await dbConnect();
 
-  const routeCognitoId: string = context.params.cognitoId;
+  const routeCognitoId: string = params.cognitoId;
 
   if (!routeCognitoId) {
-    console.error("Error: routeCognitoId is missing from context.params");
+    console.error("Error: routeCognitoId is missing from params");
     return NextResponse.json({ message: 'Cognito ID is required in path parameters' }, { status: 400 });
   }
 
@@ -117,7 +107,6 @@ export async function GET(
     if (!buyer) {
       return NextResponse.json({ message: 'buyer not found' }, { status: 404 });
     }
-
 
     const { favorites: favoritePropertyIds, ...restOfbuyer } = buyer;
     // Prepare the response object, ensuring _id is a string if it's ObjectId
@@ -155,21 +144,23 @@ export async function PUT(
   // --- Start Debug Logging ---
   console.log("--- PUT /api/buyers/[cognitoId] ---");
   console.log("Received context:", context);
-  console.log("Type of context.params:", typeof context.params);
-  if (context.params) {
-    console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-    console.log("Value of context.params.cognitoId:", context.params.cognitoId);
+  
+  const params = await context.params;
+  console.log("Type of params:", typeof params);
+  if (params) {
+    console.log("Type of params.cognitoId:", typeof params.cognitoId);
+    console.log("Value of params.cognitoId:", params.cognitoId);
   } else {
-    console.log("context.params is undefined or null");
+    console.log("params is undefined or null");
   }
   // --- End Debug Logging ---
 
   await dbConnect();
 
-  const routeCognitoId: string = context.params.cognitoId;
+  const routeCognitoId: string = params.cognitoId;
 
   if (!routeCognitoId) {
-    console.error("Error: routeCognitoId is missing from context.params in PUT request");
+    console.error("Error: routeCognitoId is missing from params in PUT request");
     return NextResponse.json({ message: 'Cognito ID is required in path parameters' }, { status: 400 });
   }
 

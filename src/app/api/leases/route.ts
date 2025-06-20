@@ -1,7 +1,7 @@
 // src/app/api/leases/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
-import dbConnect from '../../../../trash/dbConnect';
+import dbConnect from '../../../utils/dbConnect';
 import Lease from '@/app/models/Lease';     // Your Mongoose Lease model
 import Tenant from '@/app/models/Tenant';   // To populate tenant
 import Property from '@/app/models/Property'; // To populate property

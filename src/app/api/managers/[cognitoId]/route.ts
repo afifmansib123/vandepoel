@@ -1,7 +1,7 @@
 // src/app/api/managers/[cognitoId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose'; // For ObjectId type
-import dbConnect from '../../../../../trash/dbConnect';
+import dbConnect from '../../../../utils/dbConnect';
 import Manager from '@/app/models/Manager'; // Your Mongoose Manager model
 import { authenticateAndAuthorize, AuthenticatedUser } from '@/lib/authUtils'; // Adjust path to your auth utility
 

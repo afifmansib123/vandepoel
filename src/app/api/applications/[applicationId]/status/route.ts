@@ -1,7 +1,7 @@
 // src/app/api/applications/[applicationId]/status/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
-import dbConnect from '../../../../../../trash/dbConnect';
+import dbConnect from '../../../../../utils/dbConnect';
 import Application from '@/lib/models/Application';
 import Lease from '@/app/models/Lease';
 import Property from '@/app/models/Property';
