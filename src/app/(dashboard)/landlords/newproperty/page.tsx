@@ -590,13 +590,15 @@ const NewSellerPropertyPage = () => {
                 <label htmlFor="propertyStatus" className={labelClassName}>
                   Property Status
                 </label>
-                <input
-                  type="text"
+                <select
                   id="propertyStatus"
-                  readOnly
                   {...register("propertyStatus")}
                   className={inputClassName}
-                />
+                >
+                  <option value="">Select status</option>
+                  <option value="Sell">Sell</option>
+                  <option value="Rent">Rent</option>
+                </select>
               </div>
 
               {/* --- PASTE THE MISSING CODE HERE --- */}
