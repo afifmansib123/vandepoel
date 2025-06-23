@@ -115,7 +115,7 @@ interface SellerPropertyDetail {
   isPetsAllowed?: boolean;
   isParkingIncluded?: boolean;
   seller?: SellerInfo;
-   features?: PropertyFeatures;
+  features?: PropertyFeatures;
 }
 
 const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
@@ -187,7 +187,7 @@ const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
 };
 
 const capitalizeFirstLetter = (string: string) => {
-  if (!string) return '';
+  if (!string) return "";
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
@@ -195,58 +195,88 @@ const capitalizeFirstLetter = (string: string) => {
 const featureToIconMap: Record<string, React.ElementType> = {
   bedroom: BedDouble,
   bathroom: Bath,
-  dining: ChefHat,     // Using ChefHat as a proxy for dining
+  dining: ChefHat, // Using ChefHat as a proxy for dining
   kitchen: ChefHat,
-  livingroom: Tv,       // Using Tv as a proxy for living room
+  livingroom: Tv, // Using Tv as a proxy for living room
   drawingroom: ImageIcon, // Example, using ImageIcon as a generic for drawing room
-  default: Home,        // Fallback icon if no specific match
+  default: Home, // Fallback icon if no specific match
 };
 
 interface PropertyFeaturesDisplayProps {
   features?: PropertyFeatures;
 }
 
-const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({ features }) => {
+const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
+  features,
+}) => {
   if (!features || Object.keys(features).length === 0) {
     return (
-      <div className="p-4 bg-gray-100 rounded-lg mt-6"> {/* Added mt-6 for spacing */}
-        <p className="text-gray-600 italic">No specific room features listed.</p>
+      <div className="p-4 bg-gray-100 rounded-lg mt-6">
+        {" "}
+        {/* Added mt-6 for spacing */}
+        <p className="text-gray-600 italic">
+          No specific room features listed.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 mt-6"> {/* Added mt-6 for spacing */}
+    <div className="space-y-6 mt-6">
+      {" "}
+      {/* Added mt-6 for spacing */}
       <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
         Room Details & Features
       </h3>
       {Object.entries(features).map(([featureName, details]) => {
-        const IconComponent = featureToIconMap[featureName.toLowerCase()] || featureToIconMap.default;
+        const IconComponent =
+          featureToIconMap[featureName.toLowerCase()] ||
+          featureToIconMap.default;
         return (
-          <div key={featureName} className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div
+            key={featureName}
+            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200"
+          >
             <div className="flex items-center mb-3">
               <IconComponent className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" />
               <h4 className="text-lg font-medium text-gray-700">
                 {capitalizeFirstLetter(featureName)}
-                {details.count > 0 && <span className="text-sm font-normal text-gray-500 ml-2">({details.count})</span>}
+                {details.count > 0 && (
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    ({details.count})
+                  </span>
+                )}
               </h4>
             </div>
 
             {details.description && (
-              <p className="text-gray-600 mb-4 text-sm leading-relaxed pl-9"> {/* Indented description */}
+              <p className="text-gray-600 mb-4 text-sm leading-relaxed pl-9">
+                {" "}
+                {/* Indented description */}
                 {details.description}
               </p>
             )}
 
             {details.images && details.images.length > 0 && (
-              <div className="pl-9"> {/* Indented gallery */}
-                <h5 className="text-sm font-medium text-gray-600 mb-2">Gallery:</h5>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3"> {/* Adjusted for potentially fewer images */}
+              <div className="pl-9">
+                {" "}
+                {/* Indented gallery */}
+                <h5 className="text-sm font-medium text-gray-600 mb-2">
+                  Gallery:
+                </h5>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {" "}
+                  {/* Adjusted for potentially fewer images */}
                   {details.images.map((imageUrl, imgIndex) => (
-                    <div key={imageUrl + imgIndex} className="aspect-w-1 aspect-h-1 rounded-md overflow-hidden border">
+                    <div
+                      key={imageUrl + imgIndex}
+                      className="aspect-w-1 aspect-h-1 rounded-md overflow-hidden border"
+                    >
                       <Image
                         src={imageUrl}
-                        alt={`${capitalizeFirstLetter(featureName)} - Image ${imgIndex + 1}`}
+                        alt={`${capitalizeFirstLetter(featureName)} - Image ${
+                          imgIndex + 1
+                        }`}
                         layout="fill"
                         objectFit="cover"
                         className="hover:opacity-90 transition-opacity"
@@ -256,9 +286,13 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({ featu
                 </div>
               </div>
             )}
-             {(!details.images || details.images.length === 0) && !details.description && details.count > 0 && (
-                <p className="text-gray-500 text-xs pl-9 italic">Further details or images for this feature are not specified.</p>
-            )}
+            {(!details.images || details.images.length === 0) &&
+              !details.description &&
+              details.count > 0 && (
+                <p className="text-gray-500 text-xs pl-9 italic">
+                  Further details or images for this feature are not specified.
+                </p>
+              )}
           </div>
         );
       })}
@@ -780,6 +814,10 @@ interface FinancialServicesModalProps {
   propertyId: string | number;
 }
 
+// Inside the PropertyDetailView component
+
+
+
 const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
   isOpen,
   onClose,
@@ -1056,6 +1094,218 @@ const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
   );
 };
 
+// --- MODAL 4: Request to Rent Modal (For Tenants) ---
+interface RequestToRentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propertyName: string;
+  propertyId: string | number;
+  sellerEmail?: string;
+}
+
+const RequestToRentModal: React.FC<RequestToRentModalProps> = ({
+  isOpen,
+  onClose,
+  propertyName,
+  propertyId,
+  sellerEmail,
+}) => {
+  if (!isOpen) return null;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    moveInDate: "",
+    numberOfOccupants: 1,
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Console log for TENANT RENT REQUEST
+    console.log("=== TENANT RENT REQUEST ===");
+    console.log("Request Type: Request to Rent Property");
+    console.log("User Role: Tenant");
+    console.log("Property ID:", propertyId);
+    console.log("Property Name:", propertyName);
+    console.log("Landlord/Seller Email:", sellerEmail);
+    console.log("Tenant Application Details:", {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      proposedMoveInDate: formData.moveInDate,
+      numberOfOccupants: formData.numberOfOccupants,
+      message: formData.message,
+    });
+    console.log("Timestamp:", new Date().toISOString());
+    console.log("===========================");
+
+    alert(
+      `Your request to rent "${propertyName}" has been submitted! The landlord will be in touch.`
+    );
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Request to Rent
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-1">
+          You are requesting to rent{" "}
+          <span className="font-medium">{propertyName}</span>.
+        </p>
+        <p className="text-sm text-gray-600 mb-6">
+          Please fill out the form below to begin the application process.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="rent-name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Full Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              id="rent-name"
+              required
+              onChange={handleChange}
+              value={formData.name}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="rent-email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="rent-email"
+                required
+                onChange={handleChange}
+                value={formData.email}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="rent-phone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                id="rent-phone"
+                required
+                onChange={handleChange}
+                value={formData.phone}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="moveInDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Proposed Move-in Date *
+              </label>
+              <input
+                type="date"
+                name="moveInDate"
+                id="moveInDate"
+                required
+                onChange={handleChange}
+                value={formData.moveInDate}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="numberOfOccupants"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Number of Occupants *
+              </label>
+              <input
+                type="number"
+                name="numberOfOccupants"
+                id="numberOfOccupants"
+                required
+                min="1"
+                onChange={handleChange}
+                value={formData.numberOfOccupants}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="rent-message"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Message (Optional)
+            </label>
+            <textarea
+              name="message"
+              id="rent-message"
+              rows={3}
+              onChange={handleChange}
+              value={formData.message}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Any questions for the landlord? e.g., about pets, parking, etc."
+            ></textarea>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              Submit Request
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN COMPONENT ---
 const PropertyDetailView: React.FC = () => {
   // At the top of your PropertyDetailView component
@@ -1071,6 +1321,7 @@ const PropertyDetailView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
 
   // Modal states - ensure you have all three from your desired UI
   const [isScheduleVisitModalOpen, setIsScheduleVisitModalOpen] =
@@ -1079,6 +1330,7 @@ const PropertyDetailView: React.FC = () => {
     useState(false);
   const [isFinancialServicesModalOpen, setIsFinancialServicesModalOpen] =
     useState(false);
+    const [isRentModalopen, setIsRentModalopen] = useState(false);
 
   // PASTE THIS to replace the old useEffect
   useEffect(() => {
@@ -1150,7 +1402,7 @@ const PropertyDetailView: React.FC = () => {
   };
 
   // Determine user role for conditional rendering
-  const userRole = currentUser?.role || "buyer"; // Default to buyer if not logged in
+  const userRole = currentUser?.userRole;
 
   if (loading) {
     return <Loading />;
@@ -1379,9 +1631,10 @@ const PropertyDetailView: React.FC = () => {
                 </div>
               </div>
 
-                {property.features && Object.keys(property.features).length > 0 && (
-    <PropertyFeaturesDisplay features={property.features} />
-  )}
+              {property.features &&
+                Object.keys(property.features).length > 0 && (
+                  <PropertyFeaturesDisplay features={property.features} />
+                )}
 
               {/* Tabs */}
               <Tabs defaultValue="description" className="w-full">
@@ -1667,6 +1920,28 @@ const PropertyDetailView: React.FC = () => {
                   </>
                 )}
 
+                {userRole === "tenant" &&
+                  property.propertyStatus === "Rent" && (
+                    <>
+                      <Button
+                        onClick={() => setIsScheduleVisitModalOpen(true)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                      >
+                        <CalendarDays className="w-5 h-5 mr-2" />
+                        Schedule a Visit
+                      </Button>
+                      <Button
+                        // THIS IS THE IMPORTANT PART
+                        onClick={() => setIsRentModalopen(true)}
+                        variant="outline"
+                        className="w-full py-3"
+                      >
+                        <Banknote className="w-5 h-5 mr-2" />
+                        Request To Rent
+                      </Button>
+                    </>
+                  )}
+
                 {/* === FOR MANAGERS === */}
                 {userRole === "manager" && (
                   <>
@@ -1696,25 +1971,6 @@ const PropertyDetailView: React.FC = () => {
                   </>
                 )}
 
-                {/* === FOR LOGGED-IN USERS (BUYER/MANAGER) === */}
-                {currentUser && (
-                  <Button
-                    onClick={() => {
-                      if (property.seller?.email) {
-                        window.location.href = `mailto:${property.seller.email}?subject=Inquiry about ${property.name}`;
-                      } else {
-                        alert("Seller email is not available.");
-                      }
-                    }}
-                    variant="outline"
-                    className="w-full py-3"
-                  >
-                    <Phone className="w-5 h-5 mr-2" />
-                    Contact Seller
-                  </Button>
-                )}
-
-                {/* === FOR LOGGED-OUT USERS === */}
                 {!currentUser && (
                   <div className="text-center p-4 border border-dashed rounded-lg">
                     <p className="text-sm text-gray-600">
@@ -1762,6 +2018,13 @@ const PropertyDetailView: React.FC = () => {
             onClose={() => setIsFinancialServicesModalOpen(false)}
             propertyName={property.name}
             propertyId={property.id}
+          />
+          <RequestToRentModal
+            isOpen={isRentModalopen}
+            onClose={() => setIsRentModalopen(false)}
+            propertyName={property.name}
+            propertyId={property.id}
+            sellerEmail={property.seller?.email}
           />
         </>
       )}
