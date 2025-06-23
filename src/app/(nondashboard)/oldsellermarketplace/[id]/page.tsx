@@ -62,6 +62,16 @@ interface SellerInfo {
   companyName?: string;
 }
 
+interface FeatureDetail {
+  count: number;
+  description: string;
+  images: string[];
+}
+
+interface PropertyFeatures {
+  [key: string]: FeatureDetail;
+}
+
 // Updated property data interface
 interface SellerPropertyDetail {
   _id: string;
@@ -105,6 +115,7 @@ interface SellerPropertyDetail {
   isPetsAllowed?: boolean;
   isParkingIncluded?: boolean;
   seller?: SellerInfo;
+   features?: PropertyFeatures;
 }
 
 const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
@@ -173,6 +184,86 @@ const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
   "Smoke Free": { icon: Wind },
   "Non Smoking": { icon: Wind },
   DEFAULT: { icon: Star },
+};
+
+const capitalizeFirstLetter = (string: string) => {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+// Icon mapping using your existing Lucide icons from PropertyDetailView.tsx
+const featureToIconMap: Record<string, React.ElementType> = {
+  bedroom: BedDouble,
+  bathroom: Bath,
+  dining: ChefHat,     // Using ChefHat as a proxy for dining
+  kitchen: ChefHat,
+  livingroom: Tv,       // Using Tv as a proxy for living room
+  drawingroom: ImageIcon, // Example, using ImageIcon as a generic for drawing room
+  default: Home,        // Fallback icon if no specific match
+};
+
+interface PropertyFeaturesDisplayProps {
+  features?: PropertyFeatures;
+}
+
+const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({ features }) => {
+  if (!features || Object.keys(features).length === 0) {
+    return (
+      <div className="p-4 bg-gray-100 rounded-lg mt-6"> {/* Added mt-6 for spacing */}
+        <p className="text-gray-600 italic">No specific room features listed.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 mt-6"> {/* Added mt-6 for spacing */}
+      <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
+        Room Details & Features
+      </h3>
+      {Object.entries(features).map(([featureName, details]) => {
+        const IconComponent = featureToIconMap[featureName.toLowerCase()] || featureToIconMap.default;
+        return (
+          <div key={featureName} className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center mb-3">
+              <IconComponent className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" />
+              <h4 className="text-lg font-medium text-gray-700">
+                {capitalizeFirstLetter(featureName)}
+                {details.count > 0 && <span className="text-sm font-normal text-gray-500 ml-2">({details.count})</span>}
+              </h4>
+            </div>
+
+            {details.description && (
+              <p className="text-gray-600 mb-4 text-sm leading-relaxed pl-9"> {/* Indented description */}
+                {details.description}
+              </p>
+            )}
+
+            {details.images && details.images.length > 0 && (
+              <div className="pl-9"> {/* Indented gallery */}
+                <h5 className="text-sm font-medium text-gray-600 mb-2">Gallery:</h5>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3"> {/* Adjusted for potentially fewer images */}
+                  {details.images.map((imageUrl, imgIndex) => (
+                    <div key={imageUrl + imgIndex} className="aspect-w-1 aspect-h-1 rounded-md overflow-hidden border">
+                      <Image
+                        src={imageUrl}
+                        alt={`${capitalizeFirstLetter(featureName)} - Image ${imgIndex + 1}`}
+                        layout="fill"
+                        objectFit="cover"
+                        className="hover:opacity-90 transition-opacity"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+             {(!details.images || details.images.length === 0) && !details.description && details.count > 0 && (
+                <p className="text-gray-500 text-xs pl-9 italic">Further details or images for this feature are not specified.</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 // --- MODAL 1: Schedule Visit Modal (For Buyers) ---
@@ -1288,6 +1379,10 @@ const PropertyDetailView: React.FC = () => {
                 </div>
               </div>
 
+                {property.features && Object.keys(property.features).length > 0 && (
+    <PropertyFeaturesDisplay features={property.features} />
+  )}
+
               {/* Tabs */}
               <Tabs defaultValue="description" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
@@ -1325,7 +1420,7 @@ const PropertyDetailView: React.FC = () => {
                                 className="flex items-center text-green-800"
                               >
                                 <CalendarDays className="w-4 h-4 mr-2" />
-                                {formatDate(date)}
+                                <span>{date}</span>
                               </div>
                             ))}
                           </div>
