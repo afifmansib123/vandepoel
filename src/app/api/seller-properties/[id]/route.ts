@@ -87,11 +87,16 @@ function parseWKTPointString(wktString: string | null | undefined): ParsedPointC
 
 export async function GET(
   request: NextRequest,
-  context: HandlerContext
+  context: { params: Promise<{ id: string }> }
 ) {
   await dbConnect();
-  const { id: propertyIdParam } = context.params;
+  
+  // For Next.js 15+, params is a Promise and needs to be awaited
+  const params = await context.params;
+  const { id: propertyIdParam } = params;
+  
   console.log(`GET /api/seller-properties/${propertyIdParam} called`);
+  
 
   if (!propertyIdParam) {
     return NextResponse.json({ message: "Property ID parameter is missing." }, { status: 400 });

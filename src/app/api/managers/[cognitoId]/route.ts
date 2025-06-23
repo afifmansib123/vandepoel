@@ -13,23 +13,17 @@ interface ManagerDocument {
   cognitoId: string;
   name?: string; // Assuming name can be optional or not always set
   email?: string; // Assuming email can be optional
-  // Add any other fields from your Manager schema here
-  // e.g., companyName?: string;
   [key: string]: any; // Allows for other fields not explicitly typed
 }
 
-// Interface for the Manager object as returned in API responses
-// This often involves ensuring _id is a string for JSON serialization
 interface ManagerResponse {
   _id: string;
   cognitoId: string;
   name?: string;
   email?: string;
-  // Add any other fields consistent with ManagerDocument, ensuring proper serialization
   [key: string]: any;
 }
 
-// Type for the Next.js route handler context parameters
 interface HandlerContext {
   params: {
     cognitoId: string;
@@ -77,17 +71,15 @@ function isMongooseValidationError(error: any): error is MongooseValidationError
 // --- GET Handler (Get Manager by Cognito ID) ---
 export async function GET(
   request: NextRequest,
-  context: HandlerContext
+  context: { params: Promise<{ cognitoId: string }> }
 ) {
   // --- Start Debug Logging ---
   console.log("--- GET /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
-  // context.params.cognitoId is guaranteed by HandlerContext and routing
-  console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-  console.log("Value of context.params.cognitoId:", context.params.cognitoId);
-  // --- End Debug Logging ---
-
-  const cognitoIdFromPath: string = context.params.cognitoId;
+  
+  // Await the params Promise
+  const params = await context.params;
+  const cognitoIdFromPath: string = params.cognitoId;
 
   console.log(`[API /managers/:id GET] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
@@ -153,16 +145,15 @@ export async function GET(
 // --- PUT Handler (Update Manager by Cognito ID) ---
 export async function PUT(
   request: NextRequest,
-  context: HandlerContext
+  context: { params: Promise<{ cognitoId: string }> }
 ) {
   // --- Start Debug Logging ---
-  console.log("--- PUT /api/managers/[cognitoId] ---");
+  console.log("--- GET /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
-  console.log("Type of context.params.cognitoId:", typeof context.params.cognitoId);
-  console.log("Value of context.params.cognitoId:", context.params.cognitoId);
-  // --- End Debug Logging ---
-
-  const cognitoIdFromPath: string = context.params.cognitoId;
+  
+  // Await the params Promise
+  const params = await context.params;
+  const cognitoIdFromPath: string = params.cognitoId;
   console.log(`[API /managers/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
   // --- AUTHENTICATION & AUTHORIZATION ---

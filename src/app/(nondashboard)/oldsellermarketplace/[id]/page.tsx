@@ -1,0 +1,1677 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  MapPin,
+  BedDouble,
+  Bath,
+  Ruler,
+  Star,
+  Phone,
+  HelpCircle,
+  ImageIcon,
+  ChevronLeft,
+  ChevronRight,
+  // Icons for highlights and amenities
+  Wifi,
+  Car,
+  Waves,
+  Trees,
+  Dumbbell,
+  Shield,
+  Flame,
+  Snowflake,
+  ChefHat,
+  Tv,
+  Dog,
+  Camera,
+  Lock,
+  Sun,
+  Wind,
+  Home,
+  Users,
+  Coffee,
+  Gamepad2,
+  Baby,
+  // New Icons
+  User,
+  Mail,
+  CalendarDays,
+  UserCheck,
+  Wrench,
+  Banknote,
+  ClipboardList,
+  X,
+} from "lucide-react";
+
+import Loading from "@/components/Loading";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGetAuthUserQuery } from "@/state/api";
+
+// Define the expected shape of seller information
+interface SellerInfo {
+  name: string;
+  email: string;
+  phone?: string;
+  companyName?: string;
+}
+
+// Updated property data interface
+interface SellerPropertyDetail {
+  _id: string;
+  id: number;
+  name: string;
+  description: string;
+  salePrice: number;
+  propertyType: string;
+  propertyStatus: string;
+  beds: number;
+  baths: number;
+  squareFeet: number;
+  yearBuilt?: number | null;
+  HOAFees?: number | null;
+  amenities: string[];
+  highlights: string[];
+  openHouseDates?: string[];
+  sellerNotes?: string;
+  preferredFinancingInfo?: string;
+  insuranceRecommendation?: string;
+  sellerCognitoId: string;
+  photoUrls: string[];
+  agreementDocumentUrl?: string;
+  postedDate: string;
+  createdAt: string;
+  updatedAt: string;
+  buyerInquiries?: any[];
+  location: {
+    id: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+    coordinates: { longitude: number; latitude: number } | null;
+  } | null;
+  averageRating?: number;
+  numberOfReviews?: number;
+  applicationFee?: number;
+  securityDeposit?: number;
+  isPetsAllowed?: boolean;
+  isParkingIncluded?: boolean;
+  seller?: SellerInfo;
+}
+
+const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
+  "Air Conditioning": { icon: Snowflake },
+  Heating: { icon: Flame },
+  "Hardwood Floors": { icon: Home },
+  Carpet: { icon: Home },
+  "Tile Floors": { icon: Home },
+  "High Ceilings": { icon: ArrowLeft },
+  "Walk-in Closet": { icon: Home },
+  Balcony: { icon: Sun },
+  Patio: { icon: Sun },
+  Fireplace: { icon: Flame },
+  "Bay Windows": { icon: Sun },
+  Skylight: { icon: Sun },
+  "Ceiling Fans": { icon: Wind },
+  "Updated Kitchen": { icon: ChefHat },
+  "Stainless Steel Appliances": { icon: ChefHat },
+  "Granite Countertops": { icon: ChefHat },
+  Dishwasher: { icon: ChefHat },
+  Microwave: { icon: ChefHat },
+  Refrigerator: { icon: ChefHat },
+  "Washer/Dryer": { icon: Wind },
+  "Laundry Room": { icon: Wind },
+  "In-Unit Laundry": { icon: Wind },
+  "High-Speed Internet": { icon: Wifi },
+  "WiFi Included": { icon: Wifi },
+  "Cable Ready": { icon: Tv },
+  "Smart Home Features": { icon: Home },
+  "Security System": { icon: Shield },
+  "Video Surveillance": { icon: Camera },
+  "Keyless Entry": { icon: Lock },
+  Garage: { icon: Car },
+  "Covered Parking": { icon: Car },
+  "Street Parking": { icon: Car },
+  "Parking Included": { icon: Car },
+  "EV Charging": { icon: Car },
+  "Swimming Pool": { icon: Waves },
+  "Hot Tub": { icon: Waves },
+  Garden: { icon: Trees },
+  "Landscaped Yard": { icon: Trees },
+  Deck: { icon: Sun },
+  "Rooftop Access": { icon: Sun },
+  "Outdoor Space": { icon: Trees },
+  "Fitness Center": { icon: Dumbbell },
+  Gym: { icon: Dumbbell },
+  "Business Center": { icon: Coffee },
+  "Conference Room": { icon: Users },
+  "Lounge Area": { icon: Coffee },
+  "Game Room": { icon: Gamepad2 },
+  Library: { icon: Coffee },
+  Concierge: { icon: Users },
+  "24/7 Security": { icon: Shield },
+  "Controlled Access": { icon: Lock },
+  Elevator: { icon: ArrowLeft },
+  "Pet Friendly": { icon: Dog },
+  "Dog Park": { icon: Dog },
+  "Pet Wash Station": { icon: Dog },
+  Playground: { icon: Baby },
+  "Family Friendly": { icon: Users },
+  "Child Care": { icon: Baby },
+  "Wheelchair Accessible": { icon: Users },
+  "Handicap Accessible": { icon: Users },
+  "Emergency Exits": { icon: Shield },
+  "Fire Safety": { icon: Shield },
+  "Smoke Free": { icon: Wind },
+  "Non Smoking": { icon: Wind },
+  DEFAULT: { icon: Star },
+};
+
+// --- MODAL 1: Schedule Visit Modal (For Buyers) ---
+interface ScheduleVisitModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propertyName: string;
+  propertyId: string | number;
+  sellerEmail?: string;
+}
+
+const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
+  isOpen,
+  onClose,
+  propertyName,
+  propertyId,
+  sellerEmail,
+}) => {
+  if (!isOpen) return null;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    preferredDate: "",
+    preferredTime: "",
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Console log for BUYER VISIT REQUEST
+    console.log("=== BUYER VISIT REQUEST ===");
+    console.log("Request Type: Schedule Property Visit");
+    console.log("User Role: Buyer");
+    console.log("Property ID:", propertyId);
+    console.log("Property Name:", propertyName);
+    console.log("Seller Email:", sellerEmail);
+    console.log("Buyer Details:", {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      preferredDate: formData.preferredDate,
+      preferredTime: formData.preferredTime,
+      message: formData.message,
+    });
+    console.log("Timestamp:", new Date().toISOString());
+    console.log("==============================");
+
+    alert(
+      `Visit request for "${propertyName}" submitted! The seller will contact you.`
+    );
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Schedule a Visit
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-1">
+          Interested in <span className="font-medium">{propertyName}</span>?
+        </p>
+        <p className="text-sm text-gray-600 mb-6">
+          Fill out the form below, and the seller will contact you to confirm
+          the details.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Full Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              required
+              onChange={handleChange}
+              value={formData.name}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                required
+                onChange={handleChange}
+                value={formData.email}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                id="phone"
+                onChange={handleChange}
+                value={formData.phone}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="preferredDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Preferred Date *
+              </label>
+              <input
+                type="date"
+                name="preferredDate"
+                id="preferredDate"
+                required
+                onChange={handleChange}
+                value={formData.preferredDate}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="preferredTime"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Preferred Time *
+              </label>
+              <input
+                type="time"
+                name="preferredTime"
+                id="preferredTime"
+                required
+                onChange={handleChange}
+                value={formData.preferredTime}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Message (Optional)
+            </label>
+            <textarea
+              name="message"
+              id="message"
+              rows={3}
+              onChange={handleChange}
+              value={formData.message}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Any specific requirements or questions?"
+            ></textarea>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              Request Visit
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- MODAL 2: Agent Application Modal (For Managers) ---
+interface AgentApplicationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propertyName: string;
+  propertyId: string | number;
+}
+
+const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
+  isOpen,
+  onClose,
+  propertyName,
+  propertyId,
+}) => {
+  if (!isOpen) return null;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    companyName: "",
+    licenseNumber: "",
+    yearsOfExperience: "",
+    specialization: "residential",
+    commissionRate: "",
+    coverLetter: "",
+    references: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Console log for MANAGER AGENT APPLICATION
+    console.log("=== MANAGER AGENT APPLICATION ===");
+    console.log("Request Type: Apply to Become Property Agent");
+    console.log("User Role: Manager");
+    console.log("Property ID:", propertyId);
+    console.log("Property Name:", propertyName);
+    console.log("Agent Application Details:", {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      companyName: formData.companyName,
+      licenseNumber: formData.licenseNumber,
+      yearsOfExperience: formData.yearsOfExperience,
+      specialization: formData.specialization,
+      commissionRate: formData.commissionRate,
+      coverLetter: formData.coverLetter,
+      references: formData.references,
+    });
+    console.log("Timestamp:", new Date().toISOString());
+    console.log("==================================");
+
+    alert(`Agent application for "${propertyName}" submitted successfully!`);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Apply to Become Agent
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-1">
+          Apply to represent <span className="font-medium">{propertyName}</span>{" "}
+          as an agent.
+        </p>
+        <p className="text-sm text-gray-600 mb-6">
+          Fill out your professional details and we'll review your application.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="agent-name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Full Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                id="agent-name"
+                required
+                onChange={handleChange}
+                value={formData.name}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="agent-email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="agent-email"
+                required
+                onChange={handleChange}
+                value={formData.email}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="agent-phone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                id="agent-phone"
+                required
+                onChange={handleChange}
+                value={formData.phone}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="companyName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Company Name
+              </label>
+              <input
+                type="text"
+                name="companyName"
+                id="companyName"
+                onChange={handleChange}
+                value={formData.companyName}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="licenseNumber"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                License Number *
+              </label>
+              <input
+                type="text"
+                name="licenseNumber"
+                id="licenseNumber"
+                required
+                onChange={handleChange}
+                value={formData.licenseNumber}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="yearsOfExperience"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Years of Experience *
+              </label>
+              <input
+                type="number"
+                name="yearsOfExperience"
+                id="yearsOfExperience"
+                required
+                min="0"
+                onChange={handleChange}
+                value={formData.yearsOfExperience}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="specialization"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Specialization *
+              </label>
+              <select
+                name="specialization"
+                id="specialization"
+                required
+                onChange={handleChange}
+                value={formData.specialization}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="luxury">Luxury Properties</option>
+                <option value="investment">Investment Properties</option>
+                <option value="new_construction">New Construction</option>
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="commissionRate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Proposed Commission Rate (%) *
+              </label>
+              <input
+                type="number"
+                name="commissionRate"
+                id="commissionRate"
+                required
+                min="0"
+                max="10"
+                step="0.1"
+                onChange={handleChange}
+                value={formData.commissionRate}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="coverLetter"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Cover Letter *
+            </label>
+            <textarea
+              name="coverLetter"
+              id="coverLetter"
+              rows={4}
+              required
+              onChange={handleChange}
+              value={formData.coverLetter}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Explain why you're the best fit to represent this property..."
+            ></textarea>
+          </div>
+          <div>
+            <label
+              htmlFor="references"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              References
+            </label>
+            <textarea
+              name="references"
+              id="references"
+              rows={2}
+              onChange={handleChange}
+              value={formData.references}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Provide contact information for professional references..."
+            ></textarea>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              Submit Application
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- MODAL 3: Financial Services Inquiry Modal (For Buyers) ---
+interface FinancialServicesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  propertyName: string;
+  propertyId: string | number;
+}
+
+const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
+  isOpen,
+  onClose,
+  propertyName,
+  propertyId,
+}) => {
+  if (!isOpen) return null;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    inquiryType: "mortgage_preapproval",
+    annualIncome: "",
+    creditScore: "",
+    downPaymentAmount: "",
+    employmentStatus: "employed",
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Console log for BUYER FINANCIAL SERVICES INQUIRY
+    console.log("=== BUYER FINANCIAL SERVICES INQUIRY ===");
+    console.log("Request Type: Financial Services Inquiry");
+    console.log("User Role: Buyer");
+    console.log("Property ID:", propertyId);
+    console.log("Property Name:", propertyName);
+    console.log("Financial Inquiry Details:", {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      inquiryType: formData.inquiryType,
+      annualIncome: formData.annualIncome,
+      creditScore: formData.creditScore,
+      downPaymentAmount: formData.downPaymentAmount,
+      employmentStatus: formData.employmentStatus,
+      message: formData.message,
+    });
+    console.log("Timestamp:", new Date().toISOString());
+    console.log("=========================================");
+
+    alert(
+      `Financial services inquiry for "${propertyName}" submitted! Our partners will contact you.`
+    );
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Financial Services Inquiry
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-1">
+          Considering <span className="font-medium">{propertyName}</span>?
+        </p>
+        <p className="text-sm text-gray-600 mb-6">
+          Let us connect you with our financial partners for mortgages, loans,
+          or advice.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="financial-name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Full Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                id="financial-name"
+                required
+                onChange={handleChange}
+                value={formData.name}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="financial-email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="financial-email"
+                required
+                onChange={handleChange}
+                value={formData.email}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="financial-phone"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                id="financial-phone"
+                required
+                onChange={handleChange}
+                value={formData.phone}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="inquiryType"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Type of Inquiry *
+              </label>
+              <select
+                name="inquiryType"
+                id="inquiryType"
+                required
+                onChange={handleChange}
+                value={formData.inquiryType}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="mortgage_preapproval">
+                  Mortgage Pre-approval
+                </option>
+                <option value="loan_options">Loan Options & Rates</option>
+                <option value="financial_advice">
+                  General Financial Advice
+                </option>
+                <option value="investment_potential">
+                  Investment Potential Inquiry
+                </option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="annualIncome"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Annual Income (THB)
+              </label>
+              <input
+                type="number"
+                name="annualIncome"
+                id="annualIncome"
+                onChange={handleChange}
+                value={formData.annualIncome}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="creditScore"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Credit Score (Optional)
+              </label>
+              <input
+                type="number"
+                name="creditScore"
+                id="creditScore"
+                min="300"
+                max="850"
+                onChange={handleChange}
+                value={formData.creditScore}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="downPaymentAmount"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Down Payment Amount (THB)
+              </label>
+              <input
+                type="number"
+                name="downPaymentAmount"
+                id="downPaymentAmount"
+                onChange={handleChange}
+                value={formData.downPaymentAmount}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="employmentStatus"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Employment Status *
+              </label>
+              <select
+                name="employmentStatus"
+                id="employmentStatus"
+                required
+                onChange={handleChange}
+                value={formData.employmentStatus}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="employed">Employed</option>
+                <option value="self_employed">Self-Employed</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="student">Student</option>
+                <option value="retired">Retired</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="financial-message"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Additional Information
+            </label>
+            <textarea
+              name="message"
+              id="financial-message"
+              rows={3}
+              onChange={handleChange}
+              value={formData.message}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Any specific financial questions or requirements?"
+            ></textarea>
+          </div>
+          <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+            >
+              Submit Inquiry
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
+const PropertyDetailView: React.FC = () => {
+  // At the top of your PropertyDetailView component
+  const params = useParams();
+  const router = useRouter();
+  const propertyId = params.id as string;
+
+  // Get current user information
+  const { data: currentUser } = useGetAuthUserQuery(); // Keep 'currentUser' for consistency
+
+  // State management
+  const [property, setProperty] = useState<SellerPropertyDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Modal states - ensure you have all three from your desired UI
+  const [isScheduleVisitModalOpen, setIsScheduleVisitModalOpen] =
+    useState(false);
+  const [isAgentApplicationModalOpen, setIsAgentApplicationModalOpen] =
+    useState(false);
+  const [isFinancialServicesModalOpen, setIsFinancialServicesModalOpen] =
+    useState(false);
+
+  // PASTE THIS to replace the old useEffect
+  useEffect(() => {
+    if (!propertyId) {
+      // The 'params.id' is already named 'propertyId' in your target file
+      setError("Invalid Property ID.");
+      setLoading(false); // Make sure to use 'setLoading' to match your state variable
+      return;
+    }
+    const fetchPropertyDetails = async () => {
+      setLoading(true); // Use 'setLoading'
+      setError(null);
+      try {
+        const response = await fetch(
+          `/api/seller-properties/${propertyId}` // Use 'propertyId'
+        );
+        if (!response.ok) {
+          if (response.status === 404) throw new Error("Property not found.");
+          throw new Error(`Failed to fetch property: ${response.statusText}`);
+        }
+        const data: SellerPropertyDetail = await response.json();
+        setProperty(data);
+      } catch (err: any) {
+        setError(err.message || "An unknown error occurred.");
+      } finally {
+        setLoading(false); // Use 'setLoading'
+      }
+    };
+    fetchPropertyDetails();
+  }, [propertyId]);
+
+  // Image navigation
+  const nextImage = () => {
+    if (property && property.photoUrls.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === property.photoUrls.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (property && property.photoUrls.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? property.photoUrls.length - 1 : prev - 1
+      );
+    }
+  };
+
+  // Utility functions
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const getHighlightIcon = (highlight: string) => {
+    const iconData = HighlightVisuals[highlight] || HighlightVisuals.DEFAULT;
+    return iconData.icon;
+  };
+
+  // Determine user role for conditional rendering
+  const userRole = currentUser?.role || "buyer"; // Default to buyer if not logged in
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Error Loading Property
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button
+            onClick={() => router.push("/properties")}
+            className="inline-flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Properties
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Property Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            The property you're looking for doesn't exist.
+          </p>
+          <Button
+            onClick={() => router.push("/properties")}
+            className="inline-flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Properties
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/properties")}
+              className="inline-flex items-center text-gray-600 hover:text-gray-800"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Properties
+            </Button>
+            <div className="flex items-center space-x-2">
+              {property.averageRating && (
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="ml-1 text-sm font-medium text-gray-700">
+                    {property.averageRating}
+                  </span>
+                  <span className="ml-1 text-sm text-gray-500">
+                    ({property.numberOfReviews} reviews)
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Property Details */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Image Gallery */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="relative">
+                {property.photoUrls.length > 0 ? (
+                  <>
+                    {property.photoUrls && property.photoUrls.length > 0 ? (
+                      <div className="relative h-[350px] sm:h-[450px] md:h-[550px] w-full mb-8 overflow-hidden group">
+                        {property.photoUrls.map((imageUrl, index) => (
+                          <div
+                            key={imageUrl + index} // Use index for key if imageUrls are not guaranteed unique
+                            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                              index === currentImageIndex
+                                ? "opacity-100 z-10"
+                                : "opacity-0 z-0"
+                            }`}
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={`${property.name} - Image ${index + 1}`}
+                              layout="fill"
+                              objectFit="cover"
+                              priority={index === 0}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 mb-8">
+                        <ImageIcon className="w-20 h-20 mb-2" />
+                        <p>No images available for this property.</p>
+                      </div>
+                    )}
+                    {property.photoUrls.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevImage}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-opacity"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={nextImage}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full transition-opacity"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                          {currentImageIndex + 1} / {property.photoUrls.length}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="aspect-w-16 aspect-h-9 bg-gray-200 flex items-center justify-center">
+                    <ImageIcon className="w-16 h-16 text-gray-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnail Gallery */}
+              {property.photoUrls.length > 0 && (
+                <div className="p-4 flex space-x-2 overflow-x-auto">
+                  {property.photoUrls.map((url, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 ${
+                        index === currentImageIndex
+                          ? "border-blue-500"
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <Image
+                        src={url}
+                        alt={`Thumbnail ${index + 1}`}
+                        width={80}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Property Information */}
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    {property.name}
+                  </h1>
+                  <div className="flex items-center text-gray-600 mb-2">
+                    <MapPin className="w-5 h-5 mr-2" />
+                    <span>
+                      {property.location?.address}, {property.location?.city},{" "}
+                      {property.location?.state}
+                    </span>
+                  </div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {formatPrice(property.salePrice)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                    {property.propertyStatus}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {property.propertyType}
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <BedDouble className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {property.beds}
+                  </div>
+                  <div className="text-sm text-gray-600">Bedrooms</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <Bath className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {property.baths}
+                  </div>
+                  <div className="text-sm text-gray-600">Bathrooms</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <Ruler className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {property.squareFeet.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Sq Ft</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <Home className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                  <div className="text-2xl font-semibold text-gray-900">
+                    {property.yearBuilt || "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-600">Year Built</div>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <Tabs defaultValue="description" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                  <TabsTrigger value="features">Features</TabsTrigger>
+                  <TabsTrigger value="financial">Financial</TabsTrigger>
+                  <TabsTrigger value="seller">Seller Info</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="description" className="mt-6">
+                  <div className="space-y-4">
+                    <p className="text-gray-700 leading-relaxed">
+                      {property.description}
+                    </p>
+
+                    {property.sellerNotes && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-blue-900 mb-2">
+                          Seller Notes
+                        </h4>
+                        <p className="text-blue-800">{property.sellerNotes}</p>
+                      </div>
+                    )}
+
+                    {property.openHouseDates &&
+                      property.openHouseDates.length > 0 && (
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-green-900 mb-2">
+                            Open House Dates
+                          </h4>
+                          <div className="space-y-1">
+                            {property.openHouseDates.map((date, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center text-green-800"
+                              >
+                                <CalendarDays className="w-4 h-4 mr-2" />
+                                {formatDate(date)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="features" className="mt-6">
+                  <div className="space-y-6">
+                    {/* Highlights */}
+                    {property.highlights && property.highlights.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Property Highlights
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {property.highlights.map((highlight, index) => {
+                            const IconComponent = getHighlightIcon(highlight);
+                            return (
+                              <div
+                                key={index}
+                                className="flex items-center p-3 bg-gray-50 rounded-lg"
+                              >
+                                <IconComponent className="w-5 h-5 text-blue-600 mr-3" />
+                                <span className="text-gray-700">
+                                  {highlight}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Amenities */}
+                    {property.amenities && property.amenities.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">
+                          Amenities
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {property.amenities.map((amenity, index) => {
+                            const IconComponent = getHighlightIcon(amenity);
+                            return (
+                              <div
+                                key={index}
+                                className="flex items-center p-3 bg-gray-50 rounded-lg"
+                              >
+                                <IconComponent className="w-5 h-5 text-green-600 mr-3" />
+                                <span className="text-gray-700">{amenity}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Additional Features */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">
+                        Additional Information
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {property.isPetsAllowed !== undefined && (
+                          <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <Dog className="w-5 h-5 text-orange-600 mr-3" />
+                            <span className="text-gray-700">
+                              Pets{" "}
+                              {property.isPetsAllowed
+                                ? "Allowed"
+                                : "Not Allowed"}
+                            </span>
+                          </div>
+                        )}
+                        {property.isParkingIncluded !== undefined && (
+                          <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                            <Car className="w-5 h-5 text-purple-600 mr-3" />
+                            <span className="text-gray-700">
+                              Parking{" "}
+                              {property.isParkingIncluded
+                                ? "Included"
+                                : "Not Included"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="financial" className="mt-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-900 mb-2">
+                          Sale Price
+                        </h4>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {formatPrice(property.salePrice)}
+                        </p>
+                      </div>
+
+                      {property.HOAFees && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            HOA Fees
+                          </h4>
+                          <p className="text-lg font-semibold text-gray-700">
+                            {formatPrice(property.HOAFees)}/month
+                          </p>
+                        </div>
+                      )}
+
+                      {property.applicationFee && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            Application Fee
+                          </h4>
+                          <p className="text-lg font-semibold text-gray-700">
+                            {formatPrice(property.applicationFee)}
+                          </p>
+                        </div>
+                      )}
+
+                      {property.securityDeposit && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            Security Deposit
+                          </h4>
+                          <p className="text-lg font-semibold text-gray-700">
+                            {formatPrice(property.securityDeposit)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {property.preferredFinancingInfo && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-blue-900 mb-2">
+                          Financing Information
+                        </h4>
+                        <p className="text-blue-800">
+                          {property.preferredFinancingInfo}
+                        </p>
+                      </div>
+                    )}
+
+                    {property.insuranceRecommendation && (
+                      <div className="bg-yellow-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-yellow-900 mb-2">
+                          Insurance Recommendation
+                        </h4>
+                        <p className="text-yellow-800">
+                          {property.insuranceRecommendation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="seller" className="mt-6">
+                  <div className="space-y-4">
+                    {property.seller && (
+                      <div className="bg-gray-50 p-6 rounded-lg">
+                        <h4 className="font-semibold text-gray-900 mb-4">
+                          Seller Information
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center">
+                            <User className="w-5 h-5 text-gray-600 mr-3" />
+                            <span className="text-gray-700">
+                              {property.seller.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail className="w-5 h-5 text-gray-600 mr-3" />
+                            <span className="text-gray-700">
+                              {property.seller.email}
+                            </span>
+                          </div>
+                          {property.seller.phone && (
+                            <div className="flex items-center">
+                              <Phone className="w-5 h-5 text-gray-600 mr-3" />
+                              <span className="text-gray-700">
+                                {property.seller.phone}
+                              </span>
+                            </div>
+                          )}
+                          {property.seller.companyName && (
+                            <div className="flex items-center">
+                              <Home className="w-5 h-5 text-gray-600 mr-3" />
+                              <span className="text-gray-700">
+                                {property.seller.companyName}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-900 mb-2">
+                        Listing Information
+                      </h4>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p>Posted: {formatDate(property.postedDate)}</p>
+                        <p>Last Updated: {formatDate(property.updatedAt)}</p>
+                        <p>Property ID: {property.id}</p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+
+          {/* Right Column - Actions */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Interested in this property?
+              </h3>
+
+              <div className="space-y-3">
+                {/* === FOR BUYERS === */}
+                {userRole === "buyer" && (
+                  <>
+                    <Button
+                      onClick={() => setIsScheduleVisitModalOpen(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                    >
+                      <CalendarDays className="w-5 h-5 mr-2" />
+                      Schedule a Visit
+                    </Button>
+                    <Button
+                      onClick={() => setIsFinancialServicesModalOpen(true)}
+                      variant="outline"
+                      className="w-full py-3"
+                    >
+                      <Banknote className="w-5 h-5 mr-2" />
+                      Financial Services
+                    </Button>
+                  </>
+                )}
+
+                {/* === FOR MANAGERS === */}
+                {userRole === "manager" && (
+                  <>
+                    <Button
+                      onClick={() => setIsAgentApplicationModalOpen(true)}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                    >
+                      <UserCheck className="w-5 h-5 mr-2" />
+                      Apply as Agent
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        console.log("=== MANAGER PROPERTY REPORT REQUEST ===");
+                        console.log(
+                          "Request Type: Property Report",
+                          "Property ID:",
+                          property.id
+                        );
+                        alert("Property report request submitted!");
+                      }}
+                      variant="outline"
+                      className="w-full py-3"
+                    >
+                      <ClipboardList className="w-5 h-5 mr-2" />
+                      Request Property Report
+                    </Button>
+                  </>
+                )}
+
+                {/* === FOR LOGGED-IN USERS (BUYER/MANAGER) === */}
+                {currentUser && (
+                  <Button
+                    onClick={() => {
+                      if (property.seller?.email) {
+                        window.location.href = `mailto:${property.seller.email}?subject=Inquiry about ${property.name}`;
+                      } else {
+                        alert("Seller email is not available.");
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full py-3"
+                  >
+                    <Phone className="w-5 h-5 mr-2" />
+                    Contact Seller
+                  </Button>
+                )}
+
+                {/* === FOR LOGGED-OUT USERS === */}
+                {!currentUser && (
+                  <div className="text-center p-4 border border-dashed rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <Link
+                        href="/login"
+                        className="text-blue-600 font-semibold"
+                      >
+                        Log in
+                      </Link>{" "}
+                      or{" "}
+                      <Link
+                        href="/register"
+                        className="text-blue-600 font-semibold"
+                      >
+                        sign up
+                      </Link>{" "}
+                      to interact with this property.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- Modals --- */}
+      {property && (
+        <>
+          <ScheduleVisitModal
+            isOpen={isScheduleVisitModalOpen}
+            onClose={() => setIsScheduleVisitModalOpen(false)}
+            propertyName={property.name}
+            propertyId={property.id}
+            sellerEmail={property.seller?.email}
+          />
+          <AgentApplicationModal
+            isOpen={isAgentApplicationModalOpen}
+            onClose={() => setIsAgentApplicationModalOpen(false)}
+            propertyName={property.name}
+            propertyId={property.id}
+          />
+          <FinancialServicesModal
+            isOpen={isFinancialServicesModalOpen}
+            onClose={() => setIsFinancialServicesModalOpen(false)}
+            propertyName={property.name}
+            propertyId={property.id}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+export default PropertyDetailView;

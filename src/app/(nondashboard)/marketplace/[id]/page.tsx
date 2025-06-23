@@ -53,11 +53,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // ... existing lucide-react imports
 import {
-
   // ADD THESE NEW ICONS:
   Wrench,
   Banknote,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
 import { useGetAuthUserQuery } from "@/state/api";
 
@@ -455,9 +454,7 @@ const RequestMaintenanceModal: React.FC<RequestMaintenanceModalProps> = ({
       // propertyId,
       ...formData,
     });
-    alert(
-      `Maintenance/inspection request for "${propertyName}" submitted!`
-    );
+    alert(`Maintenance/inspection request for "${propertyName}" submitted!`);
     onClose();
   };
 
@@ -476,10 +473,12 @@ const RequestMaintenanceModal: React.FC<RequestMaintenanceModalProps> = ({
           </button>
         </div>
         <p className="text-sm text-gray-600 mb-1">
-          Need to check something for <span className="font-medium">{propertyName}</span>?
+          Need to check something for{" "}
+          <span className="font-medium">{propertyName}</span>?
         </p>
         <p className="text-sm text-gray-600 mb-6">
-          Describe your request, and we'll coordinate with the relevant services.
+          Describe your request, and we'll coordinate with the relevant
+          services.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -550,8 +549,12 @@ const RequestMaintenanceModal: React.FC<RequestMaintenanceModalProps> = ({
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2.5"
             >
               <option value="inspection">Property Inspection</option>
-              <option value="repair_query">Repair Query (e.g., AC, Plumbing)</option>
-              <option value="general_maintenance">General Maintenance Question</option>
+              <option value="repair_query">
+                Repair Query (e.g., AC, Plumbing)
+              </option>
+              <option value="general_maintenance">
+                General Maintenance Question
+              </option>
               <option value="cosmetic_changes">Cosmetic Changes Inquiry</option>
             </select>
           </div>
@@ -593,11 +596,19 @@ const RequestMaintenanceModal: React.FC<RequestMaintenanceModalProps> = ({
       </div>
       {/* Keep the style tag if it's not already global or in ScheduleVisitModal */}
       <style jsx global>{`
-        @keyframes modalFadeInMaintenance { /* Use a unique animation name if needed */
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+        @keyframes modalFadeInMaintenance {
+          /* Use a unique animation name if needed */
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
-        .animate-modalFadeIn { /* Or use a more generic class if animation is the same */
+        .animate-modalFadeIn {
+          /* Or use a more generic class if animation is the same */
           animation: modalFadeInMaintenance 0.3s ease-out forwards;
         }
       `}</style>
@@ -614,7 +625,9 @@ interface RequestFinancialServicesModalProps {
   propertyId: string | number;
 }
 
-const RequestFinancialServicesModal: React.FC<RequestFinancialServicesModalProps> = ({
+const RequestFinancialServicesModal: React.FC<
+  RequestFinancialServicesModalProps
+> = ({
   isOpen,
   onClose,
   propertyName,
@@ -669,7 +682,8 @@ const RequestFinancialServicesModal: React.FC<RequestFinancialServicesModalProps
           Considering <span className="font-medium">{propertyName}</span>?
         </p>
         <p className="text-sm text-gray-600 mb-6">
-          Let us connect you with our financial partners for mortgages, loans, or advice.
+          Let us connect you with our financial partners for mortgages, loans,
+          or advice.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -739,10 +753,14 @@ const RequestFinancialServicesModal: React.FC<RequestFinancialServicesModalProps
               value={formData.inquiryType}
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2.5"
             >
-              <option value="mortgage_preapproval">Mortgage Pre-approval</option>
+              <option value="mortgage_preapproval">
+                Mortgage Pre-approval
+              </option>
               <option value="loan_options">Loan Options & Rates</option>
               <option value="financial_advice">General Financial Advice</option>
-              <option value="investment_potential">Investment Potential Inquiry</option>
+              <option value="investment_potential">
+                Investment Potential Inquiry
+              </option>
             </select>
           </div>
           <div>
@@ -782,11 +800,19 @@ const RequestFinancialServicesModal: React.FC<RequestFinancialServicesModalProps
       </div>
       {/* Keep the style tag if it's not already global or in ScheduleVisitModal */}
       <style jsx global>{`
-        @keyframes modalFadeInFinancial { /* Use a unique animation name if needed */
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
+        @keyframes modalFadeInFinancial {
+          /* Use a unique animation name if needed */
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
-        .animate-modalFadeIn { /* Or use a more generic class if animation is the same */
+        .animate-modalFadeIn {
+          /* Or use a more generic class if animation is the same */
           animation: modalFadeInFinancial 0.3s ease-out forwards;
         }
       `}</style>
@@ -796,7 +822,7 @@ const RequestFinancialServicesModal: React.FC<RequestFinancialServicesModalProps
 // --- End ScheduleVisitModal Component ---
 
 const MarketplacePropertyDetailsPage = () => {
-    const {data : user} = useGetAuthUserQuery()
+  const { data: user } = useGetAuthUserQuery();
   const params = useParams();
   const router = useRouter();
   const propertyIdParams = params.id as string;
@@ -811,7 +837,8 @@ const MarketplacePropertyDetailsPage = () => {
 
   // ADD THESE STATES:
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
-  const [isFinancialServicesModalOpen, setIsFinancialServicesModalOpen] = useState(false);
+  const [isFinancialServicesModalOpen, setIsFinancialServicesModalOpen] =
+    useState(false);
 
   useEffect(() => {
     if (!propertyIdParams) {
@@ -960,7 +987,6 @@ Thank you.
 
     window.location.href = mailtoLink;
   };
-
 
   return (
     <div className="bg-white min-h-screen">
@@ -1254,7 +1280,7 @@ Thank you.
           </div>
 
           {/* Right Column (Seller Info & Schedule Visit) */}
- <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit space-y-6">
+          <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit space-y-6">
             {/* Seller Information Card - (Your existing card) */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
@@ -1266,57 +1292,115 @@ Thank you.
                 visit.
               </p>
             </div>
+            {user?.userRole === "buyer" && (
+              <>
+                <Button
+                  onClick={handleRequestSellerDetails}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
+                  size="lg"
+                >
+                  <HelpCircle className="w-5 h-5 mr-2" />
+                  Request Seller Details
+                </Button>
 
-            <Button
-              onClick={handleRequestSellerDetails}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
-              size="lg"
-            >
-              <HelpCircle className="w-5 h-5 mr-2" />
-              Request Seller Details
-            </Button>
+                <Button
+                  onClick={() => setIsScheduleVisitModalOpen(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
+                  size="lg"
+                >
+                  <CalendarDays className="w-5 h-5 mr-2" />
+                  Schedule a Visit
+                </Button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Request a tour and the seller will contact you.
+                </p>
 
-            {/* Schedule Visit Button - (Your existing button) */}
-            <Button
-              onClick={() => setIsScheduleVisitModalOpen(true)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
-              size="lg"
-            >
-              <CalendarDays className="w-5 h-5 mr-2" />
-              Schedule a Visit
-            </Button>
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Request a tour and the seller will contact you.
-            </p>
+                <Separator className="my-4" />
 
-            {/* ADD THESE NEW BUTTONS: */}
-            <Separator className="my-4" /> {/* Optional: for visual separation */}
+                <Button
+                  onClick={() => setIsFinancialServicesModalOpen(true)}
+                  variant="outline"
+                  className="w-full border-green-600 text-green-600 hover:bg-green-50 py-3 text-base font-semibold rounded-md shadow-sm hover:shadow-md transition-all"
+                  size="lg"
+                >
+                  <Banknote className="w-5 h-5 mr-2" />
+                  Inquire about Financial Services
+                </Button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Explore mortgage options or get financial advice.
+                </p>
+              </>
+            )}
 
-            <Button
-              onClick={() => setIsMaintenanceModalOpen(true)}
-              variant="outline" // Or choose another variant/style
-              className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 text-base font-semibold rounded-md shadow-sm hover:shadow-md transition-all"
-              size="lg"
-            >
-              <UserCheck className="w-5 h-5 mr-2" />
-              Request to be an Agent
-            </Button>
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Need to check something or inquire about repairs?
-            </p>
+            {/* == ACTION BUTTONS FOR MANAGERS == */}
+            {user?.userRole === "manager" && (
+              <>
+                <Button
+                  onClick={handleRequestSellerDetails}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-semibold rounded-md shadow-md hover:shadow-lg transition-all"
+                  size="lg"
+                >
+                  <HelpCircle className="w-5 h-5 mr-2" />
+                  Request Seller Details
+                </Button>
+                <Separator className="my-4" />
+                <Button
+                  onClick={() => setIsMaintenanceModalOpen(true)}
+                  variant="outline"
+                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-3 text-base font-semibold rounded-md shadow-sm hover:shadow-md transition-all"
+                  size="lg"
+                >
+                  <UserCheck className="w-5 h-5 mr-2" />
+                  Request to be an Agent
+                </Button>
 
-            <Button
-              onClick={() => setIsFinancialServicesModalOpen(true)}
-              variant="outline" // Or choose another variant/style
-              className="w-full border-green-600 text-green-600 hover:bg-green-50 py-3 text-base font-semibold rounded-md shadow-sm hover:shadow-md transition-all"
-              size="lg"
-            >
-              <Banknote className="w-5 h-5 mr-2" />
-              Inquire about Financial Services
-            </Button>
-            <p className="text-xs text-gray-500 text-center mt-2">
-              Explore mortgage options or get financial advice.
-            </p>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Need to check something or inquire about repairs?
+                </p>
+              </>
+            )}
+
+            {property.propertyStatus === "Rent" &&
+              user?.userRole === "tenant" && (
+                <>
+                  <Button
+                    onClick={() => setIsScheduleVisitModalOpen(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    size="lg"
+                  >
+                    <CalendarDays className="w-5 h-5 mr-2" />
+                    Schedule a Visit
+                  </Button>
+                  <Button
+                    onClick={() => setIsFinancialServicesModalOpen(true)}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Banknote className="w-5 h-5 mr-2" />
+                    Inquire about Financial Services
+                  </Button>
+                </>
+              )}
+
+            {/* == A PROMPT FOR LOGGED-OUT USERS == */}
+            {!user && (
+              <div className="text-center p-4 border border-dashed rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <Link href="/login" className="text-blue-600 font-semibold">
+                    Log in
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/register"
+                    className="text-blue-600 font-semibold"
+                  >
+                    sign up
+                  </Link>{" "}
+                  to interact with this property.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1348,7 +1432,6 @@ Thank you.
           propertyId={property._id} // or property.id
         />
       )}
-
     </div>
   );
 };
