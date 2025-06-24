@@ -52,6 +52,7 @@ interface SellerPropertyDocumentLean {
   createdAt: Date;
   updatedAt: Date;
   buyerInquiries?: any[]; // Define more specifically if possible
+  managedBy : string;
   // Add any other fields from your SellerProperty schema
   [key: string]: any;
 }

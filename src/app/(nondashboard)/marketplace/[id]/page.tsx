@@ -204,16 +204,57 @@ const featureToIconMap: Record<string, React.ElementType> = {
 
 interface PropertyFeaturesDisplayProps {
   features?: PropertyFeatures;
+  onImageClick: (imageUrl: string) => void;
+}
+
+// --- NEW COMPONENT: Image Lightbox ---
+interface ImageLightboxProps {
+  imageUrl: string | null;
+  onClose: () => void;
+}
+
+const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
+  if (!imageUrl) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
+      onClick={onClose} // Close when clicking the background
+    >
+      <button
+        className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+        onClick={onClose}
+      >
+        <X className="w-8 h-8" />
+      </button>
+      <div
+        className="relative w-full h-full max-w-5xl max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()} // Prevents closing when clicking the image
+      >
+        <Image
+          src={imageUrl}
+          alt="Enlarged property view"
+          layout="fill"
+          objectFit="contain" // 'contain' ensures the whole image is visible
+        />
+      </div>
+    </div>
+  );
+};
+// --- UPDATED COMPONENT: PropertyFeaturesDisplay ---
+
+interface PropertyFeaturesDisplayProps {
+  features?: PropertyFeatures;
+  onImageClick: (url: string) => void; // Define the prop correctly
 }
 
 const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
   features,
+  onImageClick, // <<< FIX #1: Actually receive the onImageClick function here
 }) => {
   if (!features || Object.keys(features).length === 0) {
     return (
       <div className="p-4 bg-gray-100 rounded-lg mt-6">
-        {" "}
-        {/* Added mt-6 for spacing */}
         <p className="text-gray-600 italic">
           No specific room features listed.
         </p>
@@ -223,8 +264,6 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
 
   return (
     <div className="space-y-6 mt-6">
-      {" "}
-      {/* Added mt-6 for spacing */}
       <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
         Room Details & Features
       </h3>
@@ -251,26 +290,22 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
 
             {details.description && (
               <p className="text-gray-600 mb-4 text-sm leading-relaxed pl-9">
-                {" "}
-                {/* Indented description */}
                 {details.description}
               </p>
             )}
 
             {details.images && details.images.length > 0 && (
               <div className="pl-9">
-                {" "}
-                {/* Indented gallery */}
                 <h5 className="text-sm font-medium text-gray-600 mb-2">
                   Gallery:
                 </h5>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {" "}
-                  {/* Adjusted for potentially fewer images */}
                   {details.images.map((imageUrl, imgIndex) => (
-                    <div
+                    // ▼▼▼ FIX #2: Change the `div` to a `button` and add the `onClick` handler ▼▼▼
+                    <button
                       key={imageUrl + imgIndex}
-                      className="aspect-w-1 aspect-h-1 rounded-md overflow-hidden border"
+                      onClick={() => onImageClick(imageUrl)}
+                      className="relative h-32 w-full rounded-md overflow-hidden border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group"
                     >
                       <Image
                         src={imageUrl}
@@ -279,9 +314,9 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
                         }`}
                         layout="fill"
                         objectFit="cover"
-                        className="hover:opacity-90 transition-opacity"
+                        className="group-hover:opacity-80 transition-opacity"
                       />
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -299,7 +334,6 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
     </div>
   );
 };
-
 // --- MODAL 1: Schedule Visit Modal (For Buyers) ---
 interface ScheduleVisitModalProps {
   isOpen: boolean;
@@ -816,8 +850,6 @@ interface FinancialServicesModalProps {
 
 // Inside the PropertyDetailView component
 
-
-
 const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
   isOpen,
   onClose,
@@ -1321,7 +1353,7 @@ const PropertyDetailView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
 
   // Modal states - ensure you have all three from your desired UI
   const [isScheduleVisitModalOpen, setIsScheduleVisitModalOpen] =
@@ -1330,7 +1362,7 @@ const PropertyDetailView: React.FC = () => {
     useState(false);
   const [isFinancialServicesModalOpen, setIsFinancialServicesModalOpen] =
     useState(false);
-    const [isRentModalopen, setIsRentModalopen] = useState(false);
+  const [isRentModalopen, setIsRentModalopen] = useState(false);
 
   // PASTE THIS to replace the old useEffect
   useEffect(() => {
@@ -1493,24 +1525,34 @@ const PropertyDetailView: React.FC = () => {
                   <>
                     {property.photoUrls && property.photoUrls.length > 0 ? (
                       <div className="relative h-[350px] sm:h-[450px] md:h-[550px] w-full mb-8 overflow-hidden group">
-                        {property.photoUrls.map((imageUrl, index) => (
-                          <div
-                            key={imageUrl + index} // Use index for key if imageUrls are not guaranteed unique
-                            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-                              index === currentImageIndex
-                                ? "opacity-100 z-10"
-                                : "opacity-0 z-0"
-                            }`}
-                          >
-                            <Image
-                              src={imageUrl}
-                              alt={`${property.name} - Image ${index + 1}`}
-                              layout="fill"
-                              objectFit="cover"
-                              priority={index === 0}
-                            />
-                          </div>
-                        ))}
+                        <button
+                          onClick={() =>
+                            setLightboxImageUrl(
+                              property.photoUrls[currentImageIndex]
+                            )
+                          }
+                          className="w-full h-full cursor-pointer focus:outline-none"
+                        >
+                          {property.photoUrls.map((imageUrl, index) => (
+                            <div
+                              key={imageUrl + index}
+                              className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+                                index === currentImageIndex
+                                  ? "opacity-100 z-10"
+                                  : "opacity-0 z-0"
+                              }`}
+                            >
+                              <Image
+                                src={imageUrl}
+                                alt={`${property.name} - Image ${index + 1}`}
+                                layout="fill"
+                                objectFit="cover"
+                                priority={index === 0}
+                                className="group-hover:scale-105 transition-transform duration-300" // Optional: nice zoom effect
+                              />
+                            </div>
+                          ))}
+                        </button>
                       </div>
                     ) : (
                       <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 mb-8">
@@ -1633,7 +1675,10 @@ const PropertyDetailView: React.FC = () => {
 
               {property.features &&
                 Object.keys(property.features).length > 0 && (
-                  <PropertyFeaturesDisplay features={property.features} />
+                  <PropertyFeaturesDisplay
+                    features={property.features}
+                    onImageClick={setLightboxImageUrl}
+                  />
                 )}
 
               {/* Tabs */}
@@ -2025,6 +2070,10 @@ const PropertyDetailView: React.FC = () => {
             propertyName={property.name}
             propertyId={property.id}
             sellerEmail={property.seller?.email}
+          />
+          <ImageLightbox
+            imageUrl={lightboxImageUrl}
+            onClose={() => setLightboxImageUrl(null)}
           />
         </>
       )}

@@ -105,6 +105,10 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  managedBy : {
+    type: String,
+    required: true,
+  },
   propertyFor : {
     type: String,
     default: 'Sale',

@@ -170,6 +170,7 @@ interface SellerPropertyFormData {
   country: string;
   postalCode: string;
   termsAgreed?: boolean;
+  managedBy: string;
   features: { [key: string]: FeatureDetail };
 }
 
@@ -190,6 +191,11 @@ const createSellerPropertyAPI = async (
         success: false,
         message: data.message || `Error: ${response.status}`,
       };
+    
+    // Show success alert and redirect
+    alert("Seller property created!");
+    window.location.href = '/';
+    
     return {
       success: true,
       property: data,
@@ -261,6 +267,7 @@ const NewSellerPropertyPage = () => {
       photos: [], // Default to empty array for FilePond
       agreementDocument: undefined,
       features: {},
+      managedBy: authUser?.cognitoInfo?.userId,
     },
   });
 
@@ -277,6 +284,8 @@ const NewSellerPropertyPage = () => {
 
   const watchedCountry = watch("country");
   const watchedState = watch("state");
+
+  const currentCurrency = watchedCountry === "Belgium" ? "EUR" : "THB";
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -570,6 +579,124 @@ const NewSellerPropertyPage = () => {
           </div>
 
           {/* Sale Details */}
+
+          {/* Location Section */}
+          <div className={sectionCardClassName}>
+            <h2 className={sectionTitleClassName}>Location</h2>
+            <p className={sectionDescriptionClassName}>
+              Specify the property's location details.
+            </p>
+            <div className="space-y-4">
+              {/* Row 1: Country */}
+              <div>
+                <label htmlFor="country" className={labelClassName}>
+                  Country
+                </label>
+                <select
+                  id="country"
+                  {...register("country", { required: "Country is required" })}
+                  className={inputClassName}
+                >
+                  <option value="">-- Select Country --</option>
+                  {allCountries.map((country) => (
+                    <option key={country.code} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.country && (
+                  <FormMessage>{errors.country.message}</FormMessage>
+                )}
+              </div>
+
+              {/* Row 2: State/Province and City */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="state" className={labelClassName}>
+                    State/Province
+                  </label>
+                  <select
+                    id="state"
+                    {...register("state", {
+                      required: "State/Province is required",
+                    })}
+                    className={inputClassName}
+                    disabled={!watchedCountry || currentProvinces.length === 0}
+                  >
+                    <option value="">-- Select State/Province --</option>
+                    {currentProvinces.map((province) => (
+                      <option key={province.name} value={province.name}>
+                        {province.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.state && (
+                    <FormMessage>{errors.state.message}</FormMessage>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="city" className={labelClassName}>
+                    City
+                  </label>
+                  <select
+                    id="city"
+                    {...register("city", { required: "City is required" })}
+                    className={inputClassName}
+                    disabled={!watchedState || currentCities.length === 0}
+                  >
+                    <option value="">-- Select City --</option>
+                    {currentCities.map((cityName) => (
+                      <option key={cityName} value={cityName}>
+                        {cityName}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.city && (
+                    <FormMessage>{errors.city.message}</FormMessage>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 3: Street Address and Postal Code */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="address" className={labelClassName}>
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    {...register("address", {
+                      required: "Street address is required",
+                    })}
+                    className={inputClassName}
+                    placeholder="e.g., 123 Main St, Apt 4B"
+                  />
+                  {errors.address && (
+                    <FormMessage>{errors.address.message}</FormMessage>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="postalCode" className={labelClassName}>
+                    Postal/Zip Code
+                  </label>
+                  <input
+                    type="text"
+                    id="postalCode"
+                    {...register("postalCode", {
+                      required: "Postal code is required",
+                    })}
+                    className={inputClassName}
+                    placeholder="e.g., 10110 or B-1000"
+                  />
+                  {errors.postalCode && (
+                    <FormMessage>{errors.postalCode.message}</FormMessage>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Sale Details */}
           <div className={sectionCardClassName}>
             <h2 className={sectionTitleClassName}>Sale Information</h2>
@@ -577,7 +704,7 @@ const NewSellerPropertyPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="salePrice" className={labelClassName}>
-                  Asking Price (THB)
+                  Asking Price ({currentCurrency})
                 </label>
                 <input
                   type="number"
@@ -713,7 +840,7 @@ const NewSellerPropertyPage = () => {
                       htmlFor={`${feature}-description`}
                       className={labelClassName}
                     >
-                      Description (Optional)
+                      Description (*)
                     </label>
                     <input
                       type="text"
@@ -804,124 +931,6 @@ const NewSellerPropertyPage = () => {
               />
             </div>
           </div>
-
-          {/* Location Section */}
-          <div className={sectionCardClassName}>
-            <h2 className={sectionTitleClassName}>Location</h2>
-            <p className={sectionDescriptionClassName}>
-              Specify the property's location details.
-            </p>
-            <div className="space-y-4">
-              {/* Row 1: Country */}
-              <div>
-                <label htmlFor="country" className={labelClassName}>
-                  Country
-                </label>
-                <select
-                  id="country"
-                  {...register("country", { required: "Country is required" })}
-                  className={inputClassName}
-                >
-                  <option value="">-- Select Country --</option>
-                  {allCountries.map((country) => (
-                    <option key={country.code} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.country && (
-                  <FormMessage>{errors.country.message}</FormMessage>
-                )}
-              </div>
-
-              {/* Row 2: State/Province and City */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="state" className={labelClassName}>
-                    State/Province
-                  </label>
-                  <select
-                    id="state"
-                    {...register("state", {
-                      required: "State/Province is required",
-                    })}
-                    className={inputClassName}
-                    disabled={!watchedCountry || currentProvinces.length === 0}
-                  >
-                    <option value="">-- Select State/Province --</option>
-                    {currentProvinces.map((province) => (
-                      <option key={province.name} value={province.name}>
-                        {province.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.state && (
-                    <FormMessage>{errors.state.message}</FormMessage>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="city" className={labelClassName}>
-                    City
-                  </label>
-                  <select
-                    id="city"
-                    {...register("city", { required: "City is required" })}
-                    className={inputClassName}
-                    disabled={!watchedState || currentCities.length === 0}
-                  >
-                    <option value="">-- Select City --</option>
-                    {currentCities.map((cityName) => (
-                      <option key={cityName} value={cityName}>
-                        {cityName}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.city && (
-                    <FormMessage>{errors.city.message}</FormMessage>
-                  )}
-                </div>
-              </div>
-
-              {/* Row 3: Street Address and Postal Code */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="address" className={labelClassName}>
-                    Street Address
-                  </label>
-                  <input
-                    type="text"
-                    id="address"
-                    {...register("address", {
-                      required: "Street address is required",
-                    })}
-                    className={inputClassName}
-                    placeholder="e.g., 123 Main St, Apt 4B"
-                  />
-                  {errors.address && (
-                    <FormMessage>{errors.address.message}</FormMessage>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="postalCode" className={labelClassName}>
-                    Postal/Zip Code
-                  </label>
-                  <input
-                    type="text"
-                    id="postalCode"
-                    {...register("postalCode", {
-                      required: "Postal code is required",
-                    })}
-                    className={inputClassName}
-                    placeholder="e.g., 10110 or B-1000"
-                  />
-                  {errors.postalCode && (
-                    <FormMessage>{errors.postalCode.message}</FormMessage>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Media & Documents Section with FilePond */}
           <div className={sectionCardClassName}>
             <h2 className={sectionTitleClassName}>Media & Documents</h2>

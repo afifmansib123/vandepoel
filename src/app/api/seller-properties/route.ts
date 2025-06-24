@@ -56,6 +56,7 @@ interface SellerPropertyDataFromFrontend {
   state: string; 
   country: string; 
   postalCode: string;
+  managedBy : string;
   // sellerCognitoId is added separately from auth
 }
 
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
       country: formData.get('country') as string,
       postalCode: formData.get('postalCode') as string,
       sellerCognitoId: formData.get('sellerCognitoId') as string, // Crucial for linking
+      managedBy : formData.get('managedBy') as string,
     };
 
     if (!dataForDb.sellerCognitoId) {
