@@ -526,7 +526,7 @@ export const api = createApi({
       },
     }),
 
-    // --- START Landlord Endpoints (already added from previous step) ---
+    // --- START Landlord and new manager Endpoints (already added from previous step) ---
     getLandlordProperties: build.query<Property[], void>({
       query: () => `seller-properties`,
       providesTags: (result) =>
@@ -539,6 +539,23 @@ export const api = createApi({
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
           error: "Failed to load landlord properties.",
+        });
+      },
+    }),
+
+        getmanagerProperties: build.query<Property[], void>({
+      query: () => `seller-properties`,
+
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Properties" as AppTag, id })),
+              { type: "Properties" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "Properties" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load manager properties.",
         });
       },
     }),
@@ -588,4 +605,5 @@ export const {
   useUpdateApplicationStatusMutation,
   useCreateApplicationMutation,
   useGetBuyerQuery,
+  useGetmanagerPropertiesQuery,
 } = api;
