@@ -158,3 +158,51 @@ export async function GET(
     return NextResponse.json({ message: `Error retrieving property: ${message}` }, { status: 500 });
   }
 }
+
+// src/app/api/seller-properties/[id]/route.ts
+
+// ... (keep all your existing code and imports) ...
+
+// PASTE THIS ENTIRE FUNCTION INTO THE FILE
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  await dbConnect();
+  
+  const { id: propertyIdParam } = context.params;
+
+  const numericId = Number(propertyIdParam);
+  if (isNaN(numericId)) {
+    return NextResponse.json({ message: "Invalid property ID format. Must be a number." }, { status: 400 });
+  }
+
+  try {
+    const body = await request.json();
+    const { managedBy } = body;
+
+    // Validate that the required field is present in the body
+    if (!managedBy || typeof managedBy !== 'string') {
+      return NextResponse.json({ message: "A 'managedBy' field with the agent's cognitoId is required." }, { status: 400 });
+    }
+
+    // Find the property by its numeric ID and update the 'managedBy' field
+    const updatedProperty = await SellerProperty.findOneAndUpdate(
+      { id: numericId },
+      { $set: { managedBy: managedBy } },
+      { new: true, runValidators: true } // Return the updated document
+    );
+
+    if (!updatedProperty) {
+      return NextResponse.json({ message: 'Property not found' }, { status: 404 });
+    }
+
+    console.log(`Property ID ${numericId} has been successfully assigned to manager: ${managedBy}`);
+    return NextResponse.json(updatedProperty, { status: 200 });
+
+  } catch (error: unknown) {
+    console.error(`PUT /api/seller-properties/${numericId} - Error:`, error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ message: `Error updating property: ${message}` }, { status: 500 });
+  }
+}

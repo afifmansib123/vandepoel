@@ -595,6 +595,7 @@ const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
 // --- MODAL 2: Agent Application Modal (For Managers) ---
 // --- MODAL 2: Agent Application Modal (For Managers) ---
+// --- MODAL 2: Agent Application Modal (For Managers) ---
 interface AgentApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -611,10 +612,8 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
   if (!isOpen) return null;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- FIX #1: Simplified state. Name, email, and phone are removed.
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
     companyName: "",
     licenseNumber: "",
     yearsOfExperience: "",
@@ -634,11 +633,26 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- FIX #2: Ensure user is logged in before proceeding.
+    if (!currentUser?.userInfo) {
+        alert("You must be logged in to submit an application. Please sign in and try again.");
+        return;
+    }
+
+    // --- FIX #3: Create a complete payload with the user's contact info.
+    const completeFormData = {
+        name: currentUser.userInfo.name,
+        email: currentUser.userInfo.email,
+        phone: currentUser.userInfo.phoneNumber || "",
+        ...formData, // Add the agent-specific form data
+    };
+
     await submitApplication({
       property,
       currentUser,
       applicationType: "AgentApplication",
-      formData,
+      formData: completeFormData, // Pass the new, complete object
       successMessage: `Agent application for "${property.name}" submitted successfully!`,
       setIsSubmitting,
       onClose,
@@ -659,8 +673,52 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
             <X className="w-6 h-6" />
           </button>
         </div>
+        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-r-lg mb-6 text-sm">
+            Your name and contact information will be automatically included from your profile.
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* The full form from your original code goes here */}
+          
+          {/* --- FIX #4: Removed the redundant name, email, and phone fields from the form UI. --- */}
+
+          {/* Agent-specific fields remain */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <input type="text" name="companyName" id="companyName" onChange={handleChange} value={formData.companyName} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700 mb-1">Real Estate License # *</label>
+              <input type="text" name="licenseNumber" id="licenseNumber" required onChange={handleChange} value={formData.licenseNumber} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="yearsOfExperience" className="block text-sm font-medium text-gray-700 mb-1">Years of Experience *</label>
+              <input type="number" name="yearsOfExperience" id="yearsOfExperience" required min="0" onChange={handleChange} value={formData.yearsOfExperience} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+            </div>
+             <div>
+              <label htmlFor="commissionRate" className="block text-sm font-medium text-gray-700 mb-1">Proposed Commission Rate (%) *</label>
+              <input type="number" name="commissionRate" id="commissionRate" required min="0" max="100" step="0.1" onChange={handleChange} value={formData.commissionRate} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+           <div>
+              <label htmlFor="specialization" className="block text-sm font-medium text-gray-700 mb-1">Area of Specialization</label>
+              <select name="specialization" id="specialization" onChange={handleChange} value={formData.specialization} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                <option value="residential">Residential</option>
+                <option value="commercial">Commercial</option>
+                <option value="luxury">Luxury</option>
+                <option value="land">Land</option>
+              </select>
+            </div>
+          <div>
+            <label htmlFor="coverLetter" className="block text-sm font-medium text-gray-700 mb-1">Cover Letter / Bio *</label>
+            <textarea name="coverLetter" id="coverLetter" rows={4} required onChange={handleChange} value={formData.coverLetter} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Briefly describe your experience and why you're a good fit."></textarea>
+          </div>
+          <div>
+            <label htmlFor="references" className="block text-sm font-medium text-gray-700 mb-1">References (Optional)</label>
+            <textarea name="references" id="references" rows={3} onChange={handleChange} value={formData.references} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g., Previous clients or brokers."></textarea>
+          </div>
+
           <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
             <Button
               type="button"
@@ -778,6 +836,7 @@ const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
 
 // --- MODAL 4: Request to Rent Modal (For Tenants) ---
 // --- MODAL 4: Request to Rent Modal (For Tenants) ---
+// --- MODAL 4: Request to Rent Modal (For Tenants) ---
 interface RequestToRentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -794,28 +853,41 @@ const RequestToRentModal: React.FC<RequestToRentModalProps> = ({
   if (!isOpen) return null;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- FIX #1: Simplified state. We will add user info automatically.
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
     moveInDate: "",
     numberOfOccupants: 1,
     message: "",
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // --- FIX #2: Ensure user is logged in before proceeding.
+    if (!currentUser?.userInfo) {
+        alert("You must be logged in to submit a request. Please sign in and try again.");
+        return;
+    }
+    
+    // --- FIX #3: Create a complete payload with the user's contact info.
+    const completeFormData = {
+        name: currentUser.userInfo.name,
+        email: currentUser.userInfo.email,
+        phone: currentUser.userInfo.phoneNumber || "", // Use optional chaining for safety
+        ...formData, // Add the other form data (move-in date, etc.)
+    };
+
     await submitApplication({
       property,
       currentUser,
       applicationType: "RentRequest",
-      formData,
+      formData: completeFormData, // Pass the new, complete object
       successMessage: `Request to rent "${property.name}" submitted!`,
       setIsSubmitting,
       onClose,
@@ -836,8 +908,60 @@ const RequestToRentModal: React.FC<RequestToRentModalProps> = ({
             <X className="w-6 h-6" />
           </button>
         </div>
+        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-800 p-4 rounded-r-lg mb-6 text-sm">
+            Your contact information ({currentUser?.userInfo?.name}, {currentUser?.userInfo?.email}) will be automatically sent with this request.
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* The full form from your original code goes here */}
+          
+          {/* --- FIX #4: Removed the empty name, email, and phone fields from the form UI. --- */}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label htmlFor="moveInDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Desired Move-in Date *
+                </label>
+                <input
+                    type="date"
+                    name="moveInDate"
+                    id="moveInDate"
+                    required
+                    onChange={handleChange}
+                    value={formData.moveInDate}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                    min={new Date().toISOString().split("T")[0]}
+                />
+            </div>
+            <div>
+                <label htmlFor="numberOfOccupants" className="block text-sm font-medium text-gray-700 mb-1">
+                    Number of Occupants *
+                </label>
+                <input
+                    type="number"
+                    name="numberOfOccupants"
+                    id="numberOfOccupants"
+                    required
+                    min="1"
+                    onChange={handleChange}
+                    value={formData.numberOfOccupants}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                Message to Landlord (Optional)
+            </label>
+            <textarea
+                name="message"
+                id="message"
+                rows={3}
+                onChange={handleChange}
+                value={formData.message}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                placeholder="Tell them a bit about yourself, your employment, etc."
+            ></textarea>
+          </div>
+
           <div className="pt-2 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
             <Button
               type="button"
