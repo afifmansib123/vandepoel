@@ -22,7 +22,7 @@ registerPlugin(
 );
 
 // Icons
-import { UploadCloud, XCircle, ImageOff } from "lucide-react"; // ImageOff might not be needed anymore
+import { UploadCloud, XCircle, ImageOff , Lock } from "lucide-react"; // ImageOff might not be needed anymore
 
 // Shadcn/ui components
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
 // Options for select dropdowns (untouched)
 const PROPERTY_TYPES_OPTIONS = [
@@ -520,6 +519,31 @@ const NewSellerPropertyPage = () => {
             ? "Error loading user information. Please try refreshing the page."
             : "Failed to load user info."}
         </p>
+      </div>
+    );
+  }
+
+  if (authUser && authUser.userInfo.status !== "approved") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-6 bg-gray-100">
+        <div className="bg-white p-8 sm:p-12 rounded-xl shadow-lg">
+          <Lock className="mx-auto h-16 w-16 text-yellow-500 mb-5" />
+          <h1 className="text-2xl font-bold text-gray-800">
+            Account Pending Approval
+          </h1>
+          <p className="mt-2 text-md text-gray-600">
+            You must have an approved account before you can list a new property.
+          </p>
+          <p className="mt-4 text-sm text-gray-500">
+            Your current status is: 
+            <span className="font-semibold text-yellow-600 ml-1">
+              {authUser.userInfo.status.toUpperCase()}
+            </span>
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Please wait for an administrator to review and approve your profile.
+          </p>
+        </div>
       </div>
     );
   }
