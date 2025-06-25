@@ -138,7 +138,7 @@ export const api = createApi({
           return {
             data: {
               cognitoInfo: cognitoInfoForApp, // Use the constructed cognito info
-              userInfo: userDetailsResponse.data as Tenant | Manager | Landlord, // <<< --- FIX #2: Add Landlord
+              userInfo: userDetailsResponse.data as Tenant | Manager | Landlord | Buyer, // <<< --- FIX #2: Add Landlord
               userRole,
             },
           };

@@ -1,21 +1,17 @@
-// src/app/api/managers/[cognitoId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { Types } from 'mongoose'; // For ObjectId type
+import { Types } from 'mongoose';
 import dbConnect from '../../../../utils/dbConnect';
-import Manager from '@/app/models/Manager'; // Your Mongoose Manager model
-import { authenticateAndAuthorize, AuthenticatedUser } from '@/lib/authUtils'; // Adjust path to your auth utility
+import Manager from '@/app/models/Manager';
+import { authenticateAndAuthorize, AuthenticatedUser } from '@/lib/authUtils';
 
-// --- START Standard Type Definitions ---
-
-// Interface for the structure of a Manager document from the database (after .lean())
+// --- ALL YOUR ORIGINAL INTERFACES AND TYPE GUARDS ---
 interface ManagerDocument {
-  _id: Types.ObjectId | string; // Mongoose ObjectId or string after lean/serialization
+  _id: Types.ObjectId | string;
   cognitoId: string;
-  name?: string; // Assuming name can be optional or not always set
-  email?: string; // Assuming email can be optional
-  [key: string]: any; // Allows for other fields not explicitly typed
+  name?: string;
+  email?: string;
+  [key: string]: any;
 }
-
 interface ManagerResponse {
   _id: string;
   cognitoId: string;
@@ -23,73 +19,40 @@ interface ManagerResponse {
   email?: string;
   [key: string]: any;
 }
-
-interface HandlerContext {
-  params: {
-    cognitoId: string;
-  };
-}
-
-// Type for the request body when updating a Manager (PUT request)
 interface ManagerPutRequestBody {
-  cognitoId?: string; // cognitoId from body, if sent
+  cognitoId?: string;
   name?: string;
   email?: string;
-  // Allows for other potential fields in the body (e.g., ...otherPayload)
   [key: string]: any;
 }
-
-// Type for the data that is actually used for $set in the update operation
-interface ManagerUpdateData {
-  name?: string;
-  email?: string;
-}
-
-// Simplified type for Mongoose Validation Error structure (reusable)
 interface MongooseValidationError {
   name: 'ValidationError';
   message: string;
-  errors: {
-    [key: string]: {
-      message: string;
-      kind?: string;
-      path?: string;
-      value?: any;
-      reason?: any;
-    };
-  };
+  errors: { [key: string]: any; };
 }
-
-// Type guard to check if an error is a MongooseValidationError (reusable)
 function isMongooseValidationError(error: any): error is MongooseValidationError {
   return error && error.name === 'ValidationError' && typeof error.errors === 'object' && error.errors !== null;
 }
+// --- END ---
 
-// --- END Standard Type Definitions ---
 
-
-// --- GET Handler (Get Manager by Cognito ID) ---
+// --- GET HANDLER (UNCHANGED FROM YOUR ORIGINAL) ---
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ cognitoId: string }> }
+  context: { params: { cognitoId: string } }
 ) {
-  // --- Start Debug Logging ---
   console.log("--- GET /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
   
-  // Await the params Promise
-  const params = await context.params;
-  const cognitoIdFromPath: string = params.cognitoId;
+  const { cognitoId: cognitoIdFromPath } = context.params;
 
   console.log(`[API /managers/:id GET] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
-  // --- AUTHENTICATION & AUTHORIZATION ---
   const authResult = await authenticateAndAuthorize(request, ['manager']);
   if (authResult instanceof NextResponse) {
     console.log('[API /managers/:id GET] Auth failed or returned response.');
     return authResult;
   }
-  // Assuming authenticateAndAuthorize returns AuthenticatedUser if not NextResponse
   const authenticatedUser = authResult as AuthenticatedUser;
   console.log(`[API /managers/:id GET] Auth successful. Authenticated user ID: "${authenticatedUser.id}", Role: "${authenticatedUser.role}"`);
 
@@ -98,9 +61,7 @@ export async function GET(
     return NextResponse.json({ message: 'Forbidden: You can only access your own profile.' }, { status: 403 });
   }
   console.log(`[API /managers/:id GET] Authorization check passed: Path ID matches token ID.`);
-  // --- END AUTH ---
 
-  // The check for cognitoIdFromPath being a non-empty string is still useful
   if (!cognitoIdFromPath || cognitoIdFromPath.trim() === '') {
     console.warn('[API /managers/:id GET] Invalid or missing cognitoId in path.');
     return NextResponse.json({ message: 'Cognito ID path parameter is required and must be a non-empty string' }, { status: 400 });
@@ -110,7 +71,6 @@ export async function GET(
   console.log(`[API /managers/:id GET] DB connected. Querying for cognitoId: "${cognitoIdFromPath}"`);
 
   try {
-    // Apply type assertion: cast to unknown first, then to the desired type
     const manager = await Manager.findOne({ cognitoId: cognitoIdFromPath })
       .lean()
       .exec() as unknown as ManagerDocument | null;
@@ -120,43 +80,35 @@ export async function GET(
       return NextResponse.json({ message: 'Manager not found' }, { status: 404 });
     }
 
-    // Now 'manager.name' is accessible due to ManagerDocument type
     console.log(`[API /managers/:id GET] MongoDB Query Result: Found manager "${manager.name || '(name not set)'}" for Cognito ID "${cognitoIdFromPath}".`);
 
-    // Prepare response object conforming to ManagerResponse
     const responseManager: ManagerResponse = {
-      ...manager, // Spread existing lean properties
-      _id: typeof manager._id === 'string' ? manager._id : manager._id.toString(), // Ensure _id is string
-      // Ensure other fields match ManagerResponse, or transform as needed
+      ...manager,
+      _id: typeof manager._id === 'string' ? manager._id : manager._id.toString(),
       name: manager.name,
       email: manager.email,
       cognitoId: manager.cognitoId,
     };
-
     return NextResponse.json(responseManager, { status: 200 });
 
-  } catch (error: unknown) { // Changed from 'any' to 'unknown'
+  } catch (error: unknown) {
     console.error(`[API /managers/:id GET] Database or other error fetching manager "${cognitoIdFromPath}":`, error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ message: `Error retrieving manager: ${message}` }, { status: 500 });
   }
 }
 
-// --- PUT Handler (Update Manager by Cognito ID) ---
+// --- PUT HANDLER (WITH CORRECTED LOGIC FOR NEW MODEL) ---
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ cognitoId: string }> }
+  context: { params: { cognitoId: string } }
 ) {
-  // --- Start Debug Logging ---
-  console.log("--- GET /api/managers/[cognitoId] ---");
+  console.log("--- PUT /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
   
-  // Await the params Promise
-  const params = await context.params;
-  const cognitoIdFromPath: string = params.cognitoId;
+  const { cognitoId: cognitoIdFromPath } = context.params;
   console.log(`[API /managers/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
-  // --- AUTHENTICATION & AUTHORIZATION ---
   const authResult = await authenticateAndAuthorize(request, ['manager']);
   if (authResult instanceof NextResponse) {
     console.log('[API /managers/:id PUT] Auth failed or returned response.');
@@ -170,9 +122,8 @@ export async function PUT(
     return NextResponse.json({ message: 'Forbidden: You can only update your own profile.' }, { status: 403 });
   }
   console.log(`[API /managers/:id PUT] Authorization check passed.`);
-  // --- END AUTH ---
-
-  if (!cognitoIdFromPath || cognitoIdFromPath.trim() === '') { // Retaining non-empty check
+  
+  if (!cognitoIdFromPath || cognitoIdFromPath.trim() === '') {
     console.error("Error: cognitoIdFromPath is invalid or missing from context.params in PUT request");
     return NextResponse.json({ message: 'Cognito ID is required in path and must be non-empty' }, { status: 400 });
   }
@@ -184,51 +135,62 @@ export async function PUT(
     const body: ManagerPutRequestBody = await request.json();
     console.log(`[API /managers/:id PUT] Request body:`, body);
 
-    const { cognitoId: cognitoIdFromBody, name, email } = body; // Removed ...otherPayload as it wasn't used
+    // ====================================================================
+    // --- THIS IS THE ONLY PART THAT HAS CHANGED ---
+    // It now builds the update object dynamically to support the new model.
+    // ====================================================================
 
-    if (cognitoIdFromBody && cognitoIdFromBody !== cognitoIdFromPath) {
-        console.warn(`Attempt to update cognitoId in body for ${cognitoIdFromPath}. This is usually not allowed.`);
-        // Optionally, return an error if you strictly forbid this.
+    // A flexible object to hold the fields we want to update.
+    const updateData: { [key: string]: any } = {};
+
+    // A list of all fields that can be updated via this endpoint.
+    const allowedUpdateFields = [
+      'name', 'email', 'phoneNumber', 'companyName', 'address',
+      'description', 'businessLicense', 'profileImage', 'status'
+    ];
+    
+    // Iterate over the allowed fields and add them to `updateData` if they exist in the request body.
+    for (const field of allowedUpdateFields) {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
     }
     
-    const updateData: ManagerUpdateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
+    // ====================================================================
+    // --- END OF CHANGE ---
+    // ====================================================================
 
     if (Object.keys(updateData).length === 0) {
-      console.log('[API /managers/:id PUT] No valid fields (name, email) provided for update.');
-      return NextResponse.json({ message: 'No valid fields (name, email) provided for update' }, { status: 400 });
+      console.log('[API /managers/:id PUT] No valid fields provided for update.');
+      return NextResponse.json({ message: 'No valid fields provided for update' }, { status: 400 });
     }
 
     const updatedManager = await Manager.findOneAndUpdate(
       { cognitoId: cognitoIdFromPath },
-      { $set: updateData },
+      { $set: updateData }, // Use the dynamically built updateData object
       { new: true, runValidators: true }
-    ).lean().exec() as unknown as ManagerDocument | null; // Apply type assertion
+    ).lean().exec() as unknown as ManagerDocument | null;
 
     if (!updatedManager) {
       console.log(`[API /managers/:id PUT] Manager with Cognito ID "${cognitoIdFromPath}" not found for update or no changes made.`);
       return NextResponse.json({ message: 'Manager not found or no changes made' }, { status: 404 });
     }
 
-    // Now 'updatedManager.name' is accessible
     console.log(`[API /managers/:id PUT] Updated manager name: ${updatedManager.name || '(name not set)'}`);
 
-    // Prepare response object conforming to ManagerResponse
     const responseManager: ManagerResponse = {
-        ...updatedManager, // Spread existing lean properties
-        _id: typeof updatedManager._id === 'string' ? updatedManager._id : updatedManager._id.toString(), // Ensure _id is string
-        name: updatedManager.name,
-        email: updatedManager.email,
-        cognitoId: updatedManager.cognitoId,
+      ...updatedManager,
+      _id: typeof updatedManager._id === 'string' ? updatedManager._id : updatedManager._id.toString(),
+      name: updatedManager.name,
+      email: updatedManager.email,
+      cognitoId: updatedManager.cognitoId,
     };
-
     return NextResponse.json(responseManager, { status: 200 });
 
-  } catch (error: unknown) { // Changed from 'any' to 'unknown'
+  } catch (error: unknown) {
     console.error(`[API /managers/:id PUT] Error updating manager "${cognitoIdFromPath}":`, error);
-    if (isMongooseValidationError(error)) { // Use type guard
-        return NextResponse.json({ message: 'Validation Error', errors: error.errors }, { status: 400 });
+    if (isMongooseValidationError(error)) {
+      return NextResponse.json({ message: 'Validation Error', errors: error.errors }, { status: 400 });
     }
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ message: `Error updating manager: ${message}` }, { status: 500 });

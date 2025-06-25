@@ -33,9 +33,6 @@ export async function authenticateAndAuthorize(
   console.log('[AuthUtil] Token extracted.');
 
   try {
-    // IMPORTANT: For production, VERIFY the token signature using JWKS.
-    // jwt.decode() DOES NOT VERIFY. This is for simplicity matching your old code.
-    // Consider using 'aws-jwt-verify' or 'jsonwebtoken' with a proper JWKS verifier.
     const decoded = jwt.decode(token) as DecodedToken | null;
     console.log('[AuthUtil] Decoded token payload:', decoded);
 

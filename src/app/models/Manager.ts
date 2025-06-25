@@ -1,16 +1,16 @@
-// src/lib/models/Manager.js
-import mongoose , {Schema} from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-const ManagerSchema : Schema = new mongoose.Schema({
+const ManagerSchema: Schema = new mongoose.Schema({
+  // --- No changes to these fields ---
   id: {
     type: Number,
-    index: true, 
+    index: true,
   },
   cognitoId: {
     type: String,
     unique: true,
     required: [true, 'Cognito ID is required.'],
-    index: true, 
+    index: true,
   },
   name: {
     type: String,
@@ -22,29 +22,43 @@ const ManagerSchema : Schema = new mongoose.Schema({
   },
   phoneNumber: {
     type: String,
-    required: [false, 'Phone number is not required.'],
+    // Note: If your form sends empty strings, `required: false` is fine.
+    // If it might send `null` or `undefined`, you can remove `required` entirely.
   },
-  description : {
-    type: String,
-    required: [false, 'Description is not required.'],
-  },
-  agency : {
-    type: String,
-    required: [false, 'Agency is not required.'],
-  },
-  properties : {
-    type: [Number], // Expects an array of Property IDs (numeric)
+  properties: {
+    type: [Number],
     default: [],
   },
-  applications : {
-    type: [Number], // Expects an array of Application IDs (numeric)
+  applications: {
+    type: [Number],
     default: [],
-  }
+  },
+
+  // --- ADD THESE NEW FIELDS (Copied from Landlord) ---
+  companyName: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
+  description: {
+    type: String,
+  },
+  businessLicense: {
+    type: String, // Storing URL or Base64 string
+  },
+  profileImage: {
+    type: String, // Storing URL or Base64 string
+  },
+  status: {
+    type: String,
+    enum: ['approved', 'pending', 'rejected'],
+    default: 'pending',
+  },
+  // 'agency' field from original Manager model removed as it seems replaced by companyName
 }, {
-  timestamps: true, // Adds createdAt and updatedAt
-  // IMPORTANT: If your MongoDB collection name is not 'managers', specify it:
-  // collection: 'manager_profiles'
+  timestamps: true, // This adds createdAt and updatedAt automatically
 });
 
-const Manager =  mongoose.models.Manager || mongoose.model('Manager', ManagerSchema);
+const Manager = mongoose.models.Manager || mongoose.model('Manager', ManagerSchema);
 export default Manager;
