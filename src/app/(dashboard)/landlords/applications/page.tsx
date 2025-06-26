@@ -283,7 +283,7 @@ const ApplicationDetailsModal = ({ application, onClose, onUpdateStatus }: {
     );
 };
 
-const InfoItem = ({ label, value }: { label: string, value: string }) => (
+const InfoItem = ({ label, value }: { label: string, value: string | undefined }) => (
     <div>
         <p className="text-xs text-gray-500 font-medium">{label}</p>
         <p className="text-gray-800">{value || "Not provided"}</p>

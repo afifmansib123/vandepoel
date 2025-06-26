@@ -58,7 +58,7 @@ const BuyerApplicationsPage = () => {
           if (!response.ok) throw new Error("Failed to fetch your applications.");
           
           const data = await response.json();
-          setApplications((data.data || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+          setApplications((data.data || []).sort((a:any, b:any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 
         } catch (err) {
           setError(err instanceof Error ? err.message : "An unknown error occurred");
@@ -263,7 +263,7 @@ const ApplicationDetailsModal = ({ application, onClose }: {
     );
 };
 
-const InfoItem = ({ label, value }: { label: string, value: string }) => (
+const InfoItem = ({ label, value }: { label: string, value: string | undefined }) => (
     <div>
         <p className="text-xs text-gray-500 font-medium">{label}</p>
         <p className="text-gray-800">{value || "Not provided"}</p>
