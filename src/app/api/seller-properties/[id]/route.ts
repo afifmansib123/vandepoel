@@ -158,50 +158,48 @@ export async function GET(
     return NextResponse.json({ message: `Error retrieving property: ${message}` }, { status: 500 });
   }
 }
+// in src/app/api/seller-properties/[id]/route.ts
 
-// src/app/api/seller-properties/[id]/route.ts
+// Keep all your existing imports
 
-// ... (keep all your existing code and imports) ...
-
-// PASTE THIS ENTIRE FUNCTION INTO THE FILE
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   await dbConnect();
   
-  const { id: propertyIdParam } = context.params;
+  const params = await context.params;
+  const { id: propertyMongoId } = params; // This is now the MongoDB _id (e.g., '65a5...')
 
-  const numericId = Number(propertyIdParam);
-  if (isNaN(numericId)) {
-    return NextResponse.json({ message: "Invalid property ID format. Must be a number." }, { status: 400 });
+  // --- MODIFIED: Validate the MongoDB ID format ---
+  if (!propertyMongoId || !/^[0-9a-fA-F]{24}$/.test(propertyMongoId)) {
+    return NextResponse.json({ message: "Invalid property ID format. Must be a 24-character hex string." }, { status: 400 });
   }
 
   try {
     const body = await request.json();
     const { managedBy } = body;
 
-    // Validate that the required field is present in the body
     if (!managedBy || typeof managedBy !== 'string') {
       return NextResponse.json({ message: "A 'managedBy' field with the agent's cognitoId is required." }, { status: 400 });
     }
 
-    // Find the property by its numeric ID and update the 'managedBy' field
-    const updatedProperty = await SellerProperty.findOneAndUpdate(
-      { id: numericId },
+    // --- MODIFIED: Find the document by its MongoDB _id using findByIdAndUpdate ---
+    const updatedProperty = await SellerProperty.findByIdAndUpdate(
+      propertyMongoId, // Use the MongoDB _id directly
       { $set: { managedBy: managedBy } },
-      { new: true, runValidators: true } // Return the updated document
+      { new: true, runValidators: true }
     );
 
     if (!updatedProperty) {
       return NextResponse.json({ message: 'Property not found' }, { status: 404 });
     }
 
-    console.log(`Property ID ${numericId} has been successfully assigned to manager: ${managedBy}`);
+    console.log(`Property ID ${propertyMongoId} has been successfully assigned to manager: ${managedBy}`);
     return NextResponse.json(updatedProperty, { status: 200 });
 
   } catch (error: unknown) {
-    console.error(`PUT /api/seller-properties/${numericId} - Error:`, error);
+    console.error(`PUT /api/seller-properties/${propertyMongoId} - Error:`, error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ message: `Error updating property: ${message}` }, { status: 500 });
   }

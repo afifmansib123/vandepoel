@@ -10,6 +10,7 @@ import { FileText, CheckCircle, XCircle, Clock, Mail, Phone, User } from "lucide
 // --- Type Definitions (Updated) ---
 interface PopulatedProperty {
   _id: string;
+  id:string;
   name: string;
   photoUrls: string[];
 }
@@ -69,21 +70,48 @@ const LandlordApplicationsPage = () => {
     }
   }, [landlordCognitoId]);
 
-  const handleUpdateStatus = async (applicationId: string, newStatus: "approved" | "rejected") => {
+// in LandlordApplicationsPage.tsx
+
+  const handleUpdateStatus = async (application: Application, newStatus: "approved" | "rejected") => {
     setApplications(prev =>
-      prev.map(app => app._id === applicationId ? { ...app, status: newStatus } : app)
+      prev.map(app => app._id === application._id ? { ...app, status: newStatus } : app)
     );
+
     try {
-      const response = await fetch(`/api/applications/${applicationId}`, {
+      // Step 1: Update the application status (this remains the same)
+      const appUpdateResponse = await fetch(`/api/applications/${application._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!response.ok) throw new Error(`Failed to update application.`);
+
+      if (!appUpdateResponse.ok) {
+        throw new Error(`Failed to update application status.`);
+      }
+
+      // --- NEW LOGIC: If an agent application is approved, assign them to the property ---
+      if (application.applicationType === 'AgentApplication' && newStatus === 'approved') {
+        console.log(`Assigning manager ${application.senderId} to property ${application.propertyId.id}`);
+        
+        const propertyUpdateResponse = await fetch(`/api/seller-properties/${application.propertyId._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ managedBy: application.senderId }), // senderId is the manager's cognitoId
+        });
+
+        if (!propertyUpdateResponse.ok) {
+            const errorResult = await propertyUpdateResponse.json();
+            throw new Error(`CRITICAL: Application was approved, but failed to assign agent. Reason: ${errorResult.message || 'Unknown error'}`);
+        }
+        
+        alert(`Successfully approved application and assigned ${application.formData.name} as the new agent.`);
+      }
+      // --- END NEW LOGIC ---
+
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err instanceof Error ? err.message : 'Could not update status'}`);
-      // Revert UI on failure - refetch or rollback
+      alert(`Error: ${err instanceof Error ? err.message : 'Could not complete the update process.'}`);
+      // Revert UI on failure by refetching all applications
       const originalApps = await fetch(`/api/applications?receiverId=${landlordCognitoId}`).then(res => res.json());
       setApplications(originalApps.data || []);
     }
@@ -154,7 +182,11 @@ const FilterButton = ({ status, current, setCount, onClick }: { status: "all" | 
 
 // --- Sub-Components (Updated) ---
 
-const ApplicationCard = ({ application, onViewDetails, onUpdateStatus }: { application: Application, onViewDetails: () => void, onUpdateStatus: (id: string, status: "approved" | "rejected") => void }) => {
+const ApplicationCard = ({ application, onViewDetails, onUpdateStatus }: { 
+    application: Application, 
+    onViewDetails: () => void, 
+    onUpdateStatus: (application: Application, status: "approved" | "rejected") => void 
+}) => {
     const { _id, propertyId, formData, status, createdAt, applicationType } = application;
 
     const getStatusInfo = (s: string) => {
@@ -190,8 +222,8 @@ const ApplicationCard = ({ application, onViewDetails, onUpdateStatus }: { appli
                     <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">View Details</button>
                     {status === "pending" && (
                         <>
-                            <button onClick={() => onUpdateStatus(_id, 'approved')} className="w-full text-center px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition">Approve</button>
-                            <button onClick={() => onUpdateStatus(_id, 'rejected')} className="w-full text-center px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition">Reject</button>
+                            <button onClick={() => onUpdateStatus(application, 'approved')} className="w-full text-center px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition">Approve</button>
+                            <button onClick={() => onUpdateStatus(application, 'rejected')} className="w-full text-center px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition">Reject</button>
                         </>
                     )}
                 </div>
@@ -200,7 +232,12 @@ const ApplicationCard = ({ application, onViewDetails, onUpdateStatus }: { appli
     );
 };
 
-const ApplicationDetailsModal = ({ application, onClose, onUpdateStatus }: { application: Application, onClose: () => void, onUpdateStatus: (id: string, status: "approved" | "rejected") => void }) => {
+const ApplicationDetailsModal = ({ application, onClose, onUpdateStatus }: { 
+    application: Application, 
+    onClose: () => void, 
+    // --- MODIFIED: Change the type from string to Application ---
+    onUpdateStatus: (application: Application, status: "approved" | "rejected") => void 
+}) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -236,8 +273,9 @@ const ApplicationDetailsModal = ({ application, onClose, onUpdateStatus }: { app
                 </div>
                 {application.status === 'pending' && (
                     <div className="p-6 sticky bottom-0 bg-white border-t flex gap-4">
-                        <button onClick={() => { onUpdateStatus(application._id, 'approved'); onClose(); }} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition">Approve Application</button>
-                        <button onClick={() => { onUpdateStatus(application._id, 'rejected'); onClose(); }} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition">Reject Application</button>
+                        {/* --- MODIFIED: Pass the whole 'application' object, not just its ID --- */}
+                        <button onClick={() => { onUpdateStatus(application, 'approved'); onClose(); }} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition">Approve Application</button>
+                        <button onClick={() => { onUpdateStatus(application, 'rejected'); onClose(); }} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition">Reject Application</button>
                     </div>
                 )}
             </div>

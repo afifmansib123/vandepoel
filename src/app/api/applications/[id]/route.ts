@@ -1,12 +1,17 @@
+// in src/app/api/applications/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/utils/dbConnect";
 import Application from "@/app/models/Application";
 
-export async function PUT(req: NextRequest,{ params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   await dbConnect();
 
   try {
-    const { id } = await params; // Await the params
+    // --- MODIFIED: Await the context.params promise first ---
+    const params = await context.params; 
+    const { id } = params; // Now you can safely destructure the id
+    
     const { status } = await req.json();
 
     if (!status || !['approved', 'rejected'].includes(status)) {
