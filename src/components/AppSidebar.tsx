@@ -93,8 +93,11 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         { icon: User, label: "Profile", href: "/buyers/profile" },
         { icon: Search, label: "Search Properties", href: "/buyers/search" }, // Or just "/properties" if search is public but this is buyer dashboard
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
-        // Example: Saved searches or alerts
-        // { icon: Bell, label: "Saved Searches", href: "/buyers/saved-searches" },
+         {
+          icon: FileText, // Assuming landlords also see applications for their properties
+          label: "Applications",
+          href: "/buyers/applications", 
+        },
         { 
           icon: UserCircle, // Or Settings icon
           label: "Profile Settings", 

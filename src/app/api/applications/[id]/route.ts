@@ -36,3 +36,31 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
 }
+
+// --- NEW: Add this DELETE function ---
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  await dbConnect();
+
+  try {
+    const params = await context.params;
+    const { id } = params;
+
+    // Validate the ID
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+        return NextResponse.json({ success: false, message: "Invalid Application ID." }, { status: 400 });
+    }
+
+    const deletedApplication = await Application.findByIdAndDelete(id);
+
+    if (!deletedApplication) {
+      return NextResponse.json({ success: false, message: "Application not found or already deleted." }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: "Application withdrawn successfully." }, { status: 200 });
+
+  } catch (error) {
+    console.error("Error withdrawing application:", error);
+    const errorMessage = error instanceof Error ? error.message : "An internal server error occurred.";
+    return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
+  }
+}

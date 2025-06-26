@@ -1,71 +1,273 @@
 "use client";
 
-import ApplicationCard from "@/components/ApplicationCard";
+import React, { useState, useEffect, useMemo } from "react";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
-import { useGetApplicationsQuery, useGetAuthUserQuery } from "@/state/api";
-import { CircleCheckBig, Clock, Download, XCircle } from "lucide-react";
-import React from "react";
+import { useGetAuthUserQuery } from "@/state/api";
+import Image from "next/image";
+import { FileText, CheckCircle, XCircle, Clock, Mail, Phone, User, Trash2 } from "lucide-react";
 
-const Applications = () => {
+// --- Type Definitions (Same as other pages) ---
+interface PopulatedProperty {
+  _id: string;
+  name: string;
+  photoUrls: string[];
+}
+
+interface Application {
+  _id: string;
+  propertyId: PopulatedProperty;
+  senderId: string;
+  receiverId: string;
+  applicationType: string;
+  formData: {
+    name: string;
+    email: string;
+    phone?: string;
+    [key: string]: any;
+  };
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
+// --- Helper Function ---
+const formatApplicationType = (type: string) => {
+    if (!type) return "General Inquiry";
+    return type.replace(/([A-Z])/g, ' $1').trim();
+};
+
+// --- Main Component for the Buyer/Sender ---
+const BuyerApplicationsPage = () => {
   const { data: authUser } = useGetAuthUserQuery();
-  const {
-    data: applications,
-    isLoading,
-    isError,
-  } = useGetApplicationsQuery({
-    userId: authUser?.cognitoInfo?.userId,
-    userType: "buyer",
-  });
+  const currentUserCognitoId = authUser?.cognitoInfo.userId;
 
-  if (isLoading) return <Loading />;
-  if (isError || !applications) return <div>Error fetching applications</div>;
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
-  return (
-    <div className="dashboard-container">
-      <Header
-        title="Applications"
-        subtitle="Track and manage your property rental applications"
-      />
-      <div className="w-full">
-        {applications?.map((application) => (
-          <ApplicationCard
-            key={application.id}
-            application={application}
-            userType="renter"
-          >
-            <div className="flex justify-between gap-5 w-full pb-4 px-4">
-              {application.status === "Approved" ? (
-                <div className="bg-green-100 p-4 text-green-700 grow flex items-center">
-                  <CircleCheckBig className="w-5 h-5 mr-2" />
-                  The property is being rented by you until{" "}
-                  {new Date(application.lease?.endDate).toLocaleDateString()}
-                </div>
-              ) : application.status === "Pending" ? (
-                <div className="bg-yellow-100 p-4 text-yellow-700 grow flex items-center">
-                  <Clock className="w-5 h-5 mr-2" />
-                  Your application is pending approval
-                </div>
-              ) : (
-                <div className="bg-red-100 p-4 text-red-700 grow flex items-center">
-                  <XCircle className="w-5 h-5 mr-2" />
-                  Your application has been denied
-                </div>
-              )}
+  // Fetch only applications sent by the current user
+  useEffect(() => {
+    if (currentUserCognitoId) {
+      const fetchSentApplications = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const response = await fetch(`/api/applications?senderId=${currentUserCognitoId}`);
+          if (!response.ok) throw new Error("Failed to fetch your applications.");
+          
+          const data = await response.json();
+          setApplications((data.data || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
 
-              <button
-                className={`bg-white border border-gray-300 text-gray-700 py-2 px-4
-                          rounded-md flex items-center justify-center hover:bg-primary-700 hover:text-primary-50`}
-              >
-                <Download className="w-5 h-5 mr-2" />
-                Download Agreement
-              </button>
-            </div>
-          </ApplicationCard>
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "An unknown error occurred");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchSentApplications();
+    }
+  }, [currentUserCognitoId]);
+
+  // --- NEW: Handler to withdraw a pending application ---
+  const handleWithdrawApplication = async (applicationId: string) => {
+    if (!window.confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) {
+      return;
+    }
+    
+    // Optimistically remove from UI
+    setApplications(prev => prev.filter(app => app._id !== applicationId));
+
+    try {
+      const response = await fetch(`/api/applications/${applicationId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error("Failed to withdraw the application. Please try again.");
+      }
+      alert("Application successfully withdrawn.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "An error occurred.");
+      // On failure, refetch to restore the application list
+      const refetchRes = await fetch(`/api/applications?senderId=${currentUserCognitoId}`);
+      const data = await refetchRes.json();
+      setApplications(data.data || []);
+    }
+  };
+
+  const filteredApplications = useMemo(() => {
+    if (filterStatus === "all") return applications;
+    return applications.filter(app => app.status === filterStatus);
+  }, [applications, filterStatus]);
+
+  const renderContent = () => {
+    if (isLoading) return <Loading />;
+    if (error) return <div className="text-center text-red-500 bg-red-100 p-4 rounded-md">{error}</div>;
+    if (applications.length === 0) return (
+      <div className="text-center py-16 px-6 bg-white rounded-lg shadow-md">
+        <FileText className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-xl font-semibold text-gray-900">No Applications Sent</h3>
+        <p className="mt-1 text-gray-500">You have not submitted any applications yet.</p>
+      </div>
+    );
+    if (filteredApplications.length === 0) return (
+      <div className="text-center py-16 px-6 bg-white rounded-lg shadow-md">
+        <FileText className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-2 text-xl font-semibold text-gray-900">No applications in this category</h3>
+        <p className="mt-1 text-gray-500">Try selecting a different filter.</p>
+      </div>
+    );
+    return (
+      <div className="space-y-4">
+        {filteredApplications.map(app => (
+          <ApplicationCard 
+            key={app._id} 
+            application={app} 
+            onViewDetails={() => setSelectedApplication(app)} 
+            onWithdraw={handleWithdrawApplication} 
+          />
         ))}
       </div>
+    );
+  };
+
+  return (
+    <div className="dashboard-container bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
+      <Header title="My Sent Applications" subtitle="Track the status of applications you have submitted." />
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6 flex flex-wrap gap-2">
+          <FilterButton status="all" current={filterStatus} setCount={applications.length} onClick={setFilterStatus} />
+          <FilterButton status="pending" current={filterStatus} setCount={applications.filter(a => a.status === 'pending').length} onClick={setFilterStatus} />
+          <FilterButton status="approved" current={filterStatus} setCount={applications.filter(a => a.status === 'approved').length} onClick={setFilterStatus} />
+          <FilterButton status="rejected" current={filterStatus} setCount={applications.filter(a => a.status === 'rejected').length} onClick={setFilterStatus} />
+        </div>
+        {renderContent()}
+      </div>
+      {selectedApplication && (
+        <ApplicationDetailsModal 
+          application={selectedApplication} 
+          onClose={() => setSelectedApplication(null)}
+        />
+      )}
     </div>
   );
 };
 
-export default Applications;
+// FilterButton remains the same
+const FilterButton = ({ status, current, setCount, onClick }: { status: "all" | "pending" | "approved" | "rejected", current: string, setCount: number, onClick: (s: any) => void }) => {
+    const isActive = status === current;
+    const baseClasses = "px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2";
+    const activeClasses = "bg-blue-600 text-white shadow";
+    const inactiveClasses = "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200";
+    return (
+        <button onClick={() => onClick(status)} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+            <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-200 text-gray-600'}`}>{setCount}</span>
+        </button>
+    )
+};
+
+// --- MODIFIED: ApplicationCard for the sender's view ---
+const ApplicationCard = ({ application, onViewDetails, onWithdraw }: { 
+    application: Application, 
+    onViewDetails: () => void, 
+    onWithdraw: (id: string) => void 
+}) => {
+    const { _id, propertyId, formData, status, createdAt, applicationType } = application;
+
+    const getStatusInfo = (s: string) => {
+        switch (s) {
+            case "approved": return { icon: <CheckCircle className="text-green-500" />, text: "Approved", color: "text-green-700 bg-green-100" };
+            case "rejected": return { icon: <XCircle className="text-red-500" />, text: "Rejected", color: "text-red-700 bg-red-100" };
+            default: return { icon: <Clock className="text-yellow-500" />, text: "Pending", color: "text-yellow-700 bg-yellow-100" };
+        }
+    };
+    const statusInfo = getStatusInfo(status);
+
+    return (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden transition hover:shadow-lg">
+            <div className="p-5 flex flex-col md:flex-row gap-5 items-start">
+                <Image src={propertyId.photoUrls?.[0] || "/placeholder-property.jpg"} alt={propertyId.name} width={160} height={120} className="w-full md:w-40 h-32 object-cover rounded-md border" />
+                <div className="flex-grow">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full inline-block mb-1">{formatApplicationType(applicationType)}</span>
+                            <h3 className="text-lg font-bold text-gray-900">{propertyId.name}</h3>
+                        </div>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5 ${statusInfo.color}`}>{statusInfo.icon}{statusInfo.text}</span>
+                    </div>
+                    <div className="border-t my-3"></div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-2"><User size={16} /><span>You ({formData.name})</span></div>
+                        <div className="flex items-center gap-2"><Mail size={16} /><span>{formData.email}</span></div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">Submitted on: {new Date(createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="w-full md:w-auto flex flex-col gap-2 self-stretch justify-center">
+                    <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">View Details</button>
+                    {/* NEW: Withdraw button for pending applications */}
+                    {status === "pending" && (
+                        <button onClick={() => onWithdraw(_id)} className="w-full text-center px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center justify-center gap-2">
+                            <Trash2 size={16} />
+                            Withdraw
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- MODIFIED: ApplicationDetailsModal is now view-only ---
+const ApplicationDetailsModal = ({ application, onClose }: { 
+    application: Application, 
+    onClose: () => void, 
+}) => {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={onClose}>
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="p-6 sticky top-0 bg-white border-b z-10">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">{formatApplicationType(application.applicationType)} Details</h2>
+                            <p className="text-gray-500">For property: {application.propertyId.name}</p>
+                        </div>
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
+                    </div>
+                </div>
+                <div className="p-6 space-y-6">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">Applicant Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <InfoItem label="Full Name" value={application.formData.name} />
+                            <InfoItem label="Email Address" value={application.formData.email} />
+                            <InfoItem label="Phone Number" value={application.formData?.phone} />
+                            <InfoItem label="Application Date" value={new Date(application.createdAt).toLocaleString()} />
+                        </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">Submitted Information</h3>
+                        <div className="space-y-3">
+                            {Object.entries(application.formData)
+                                .filter(([key]) => !['name', 'email', 'phone'].includes(key))
+                                .map(([key, value]) => (
+                                <InfoItem key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={String(value)} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                {/* No action buttons are needed in the sender's view */}
+            </div>
+        </div>
+    );
+};
+
+const InfoItem = ({ label, value }: { label: string, value: string }) => (
+    <div>
+        <p className="text-xs text-gray-500 font-medium">{label}</p>
+        <p className="text-gray-800">{value || "Not provided"}</p>
+    </div>
+);
+
+export default BuyerApplicationsPage;
