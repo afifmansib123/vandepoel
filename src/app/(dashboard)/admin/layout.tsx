@@ -1,0 +1,11 @@
+import React from "react";
+
+// This layout can be expanded later if the admin section needs a unique structure.
+// For now, it just passes children through, relying on the main dashboard layout.
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <div className="h-full w-full">{children}</div>;
+}

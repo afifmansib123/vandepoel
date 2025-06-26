@@ -48,7 +48,7 @@ export async function GET(
 
   console.log(`[API /managers/:id GET] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
-  const authResult = await authenticateAndAuthorize(request, ['manager']);
+  const authResult = await authenticateAndAuthorize(request, ['manager','superadmin']);
   if (authResult instanceof NextResponse) {
     console.log('[API /managers/:id GET] Auth failed or returned response.');
     return authResult;
@@ -109,7 +109,7 @@ export async function PUT(
   const { cognitoId: cognitoIdFromPath } = context.params;
   console.log(`[API /managers/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
-  const authResult = await authenticateAndAuthorize(request, ['manager']);
+  const authResult = await authenticateAndAuthorize(request, ['manager', 'superadmin']);
   if (authResult instanceof NextResponse) {
     console.log('[API /managers/:id PUT] Auth failed or returned response.');
     return authResult;
@@ -135,12 +135,6 @@ export async function PUT(
     const body: ManagerPutRequestBody = await request.json();
     console.log(`[API /managers/:id PUT] Request body:`, body);
 
-    // ====================================================================
-    // --- THIS IS THE ONLY PART THAT HAS CHANGED ---
-    // It now builds the update object dynamically to support the new model.
-    // ====================================================================
-
-    // A flexible object to hold the fields we want to update.
     const updateData: { [key: string]: any } = {};
 
     // A list of all fields that can be updated via this endpoint.
@@ -152,13 +146,12 @@ export async function PUT(
     // Iterate over the allowed fields and add them to `updateData` if they exist in the request body.
     for (const field of allowedUpdateFields) {
       if (body[field] !== undefined) {
+         if (field === 'status' && authenticatedUser.role !== 'superadmin') {
+            continue; // Skip the 'status' field if the user is not an admin
+        }
         updateData[field] = body[field];
       }
     }
-    
-    // ====================================================================
-    // --- END OF CHANGE ---
-    // ====================================================================
 
     if (Object.keys(updateData).length === 0) {
       console.log('[API /managers/:id PUT] No valid fields provided for update.');

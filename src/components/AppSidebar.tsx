@@ -12,18 +12,18 @@ import {
   useSidebar,
 } from "./ui/sidebar"; // Assuming these are your custom UI components
 import {
-  Building,      // For Properties (Manager/Landlord)
-  FileText,      // For Applications
-  Heart,         // For Favorites (Tenant/Buyer)
-  Home,          // For Residences (Tenant), Dashboard (Buyer)
-  Menu,          // Hamburger menu icon
-  Settings,      // For Settings
-  X,             // Close icon
-  Search,        // For Property Search (Buyer)
-  Briefcase,     // For My Listings/Portfolio (Landlord) - example
-  UserCircle,    // For Profile/Account (generic or specific if needed)
+  Building, // For Properties (Manager/Landlord)
+  FileText, // For Applications
+  Heart, // For Favorites (Tenant/Buyer)
+  Home, // For Residences (Tenant), Dashboard (Buyer)
+  Menu, // Hamburger menu icon
+  Settings, // For Settings
+  X, // Close icon
+  Search, // For Property Search (Buyer)
+  Briefcase, // For My Listings/Portfolio (Landlord) - example
+  UserCircle, // For Profile/Account (generic or specific if needed)
   ShieldCheck,
-  User,   // Example for Admin/MasterAdmin if you add that later
+  User, // Example for Admin/MasterAdmin if you add that later
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
@@ -74,16 +74,20 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Landlord View";
       navLinks = [
         { icon: User, label: "Profile", href: "/landlords/profile" },
-        { icon: Briefcase, label: "My Properties", href: "/landlords/properties" },
+        {
+          icon: Briefcase,
+          label: "My Properties",
+          href: "/landlords/properties",
+        },
         // Example: Link to add a new property
-        // { icon: PlusCircle, label: "Add Property", href: "/landlords/properties/new" }, 
+        // { icon: PlusCircle, label: "Add Property", href: "/landlords/properties/new" },
         {
           icon: FileText, // Assuming landlords also see applications for their properties
           label: "Applications",
-          href: "/landlords/applications", 
+          href: "/landlords/applications",
         },
         // Example: Link to view tenants of all properties or manage them
-        // { icon: Users, label: "My Tenants", href: "/landlords/tenants" }, 
+        // { icon: Users, label: "My Tenants", href: "/landlords/tenants" },
         { icon: Settings, label: "Settings", href: "/landlords/settings" },
       ];
       break;
@@ -93,18 +97,35 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         { icon: User, label: "Profile", href: "/buyers/profile" },
         { icon: Search, label: "Search Properties", href: "/buyers/search" }, // Or just "/properties" if search is public but this is buyer dashboard
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
-         {
+        {
           icon: FileText, // Assuming landlords also see applications for their properties
           label: "Applications",
-          href: "/buyers/applications", 
+          href: "/buyers/applications",
         },
-        { 
+        {
           icon: UserCircle, // Or Settings icon
-          label: "Profile Settings", 
-          href: "/buyers/settings" 
+          label: "Profile Settings",
+          href: "/buyers/settings",
         },
       ];
       break;
+    case "superadmin":
+      navLinks = [
+        { href: "/admin/users", label: "User Management", icon: User },
+        { href: "/admin/properties", label: "All Properties", icon: Home },
+        {
+          href: "/admin/applications",
+          label: "All Applications",
+          icon: FileText,
+        },
+        {
+          href: "/admin/services/maintenance",
+          label: "Maintenance",
+          icon: Briefcase,
+        },
+        { href: "/admin/services/banking", label: "Banking", icon: Building },
+        { href: "/admin/settings", label: "Admin Settings", icon: Settings },
+      ];
     default:
       // Fallback or links for an unknown role (should ideally not happen if roles are managed)
       sidebarTitle = "My Account";
@@ -127,7 +148,9 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
     >
       <SidebarHeader>
         <SidebarMenu>
-          <SidebarMenuItem> {/* This seems to be a wrapper, ensure it's used correctly by your UI lib */}
+          <SidebarMenuItem>
+            {" "}
+            {/* This seems to be a wrapper, ensure it's used correctly by your UI lib */}
             <div
               className={cn(
                 "flex min-h-[56px] w-full items-center pt-3 mb-3", // Original styling
@@ -162,14 +185,19 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="overflow-y-auto"> {/* Added overflow for scrollable content */}
+      <SidebarContent className="overflow-y-auto">
+        {" "}
+        {/* Added overflow for scrollable content */}
         <SidebarMenu>
           {navLinks.map((link) => {
             // Determine if the current link is active.
             // For nested routes, you might want `pathname.startsWith(link.href)`
             // For exact matches: `pathname === link.href`
-            const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href) && link.href.split('/').length > 2);
-
+            const isActive =
+              pathname === link.href ||
+              (link.href !== "/" &&
+                pathname.startsWith(link.href) &&
+                link.href.split("/").length > 2);
 
             return (
               <SidebarMenuItem key={link.href}>
@@ -186,22 +214,24 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
                   )}
                 >
                   <Link href={link.href} className="w-full" scroll={false}>
-                    <div className={cn(
+                    <div
+                      className={cn(
                         "flex items-center gap-3",
                         !open && "justify-center" // Center icon when collapsed
-                        )}>
+                      )}
+                    >
                       <link.icon // Lucide icon component
                         className={cn(
-                            "h-5 w-5 flex-shrink-0", // Icon size
-                            isActive ? "text-primary-600" : "text-gray-500" // Icon color
+                          "h-5 w-5 flex-shrink-0", // Icon size
+                          isActive ? "text-primary-600" : "text-gray-500" // Icon color
                         )}
                         aria-hidden="true"
                       />
                       {open && ( // Only show label if sidebar is open
                         <span
                           className={cn(
-                              "font-medium text-sm", // Label styling
-                              // isActive ? "text-primary-700" : "text-gray-700" // Text color already handled by parent
+                            "font-medium text-sm" // Label styling
+                            // isActive ? "text-primary-700" : "text-gray-700" // Text color already handled by parent
                           )}
                         >
                           {link.label}

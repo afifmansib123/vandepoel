@@ -45,10 +45,48 @@ interface CognitoUserInfo {
 interface User {
   // The structure returned by getAuthUser
   cognitoInfo: CognitoUserInfo; // Or more specific type from Amplify like `AuthUser`
-  userInfo: Tenant | Manager | Landlord | Buyer; // Using the hardcoded types for now
+  userInfo: Tenant | Manager | Landlord | Buyer | { [key: string]: any }; // Using the hardcoded types for now
   userRole: string;
   favorites?: Number[];
 }
+
+// --- START Admin Panel Types ---
+interface AdminUser {
+  _id: string;
+  cognitoId: string;
+  name: string;
+  email: string;
+  role: 'tenant' | 'manager' | 'landlord' | 'buyer';
+  status?: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+interface MaintenanceProvider {
+  _id: string;
+  companyName: string;
+  contactPerson?: string;
+  email: string;
+  phone?: string;
+  servicesOffered: string[];
+  serviceArea?: string;
+  website?: string;
+  status: 'active' | 'inactive';
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+interface BankingService {
+  _id: string;
+  bankName: string;
+  contactPerson?: string;
+  email: string;
+  phone?: string;
+  servicesOffered: string[];
+  website?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+// --- END Admin Panel Types ---
 // --- END Hardcoded Types ---
 
 export type AppTag =
@@ -60,7 +98,10 @@ export type AppTag =
   | "PropertyDetails"
   | "Leases"
   | "Payments"
-  | "Applications";
+  | "Applications"
+  | "AdminUsers"
+  | "MaintenanceProviders"
+  | "BankingServices";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -86,6 +127,10 @@ export const api = createApi({
     "Leases",
     "Payments",
     "Applications",
+    "AdminUsers",
+    "MaintenanceProviders",
+    "BankingServices",
+
   ] as AppTag[],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -107,7 +152,10 @@ export const api = createApi({
             endpoint = `/landlords/${amplifyUser.userId}`;
           } else if (userRole === "buyer") {
             endpoint = `/buyers/${amplifyUser.userId}`;
-          } else {
+          }else if (userRole === "superadmin") {
+            endpoint = `/superadmins/${amplifyUser.userId}`;
+          } 
+          else {
             return {
               error:
                 "Unknown user role or role not supported for details fetching.",
@@ -578,7 +626,104 @@ export const api = createApi({
         });
       },
     }),
-    // --- END Landlord Endpoints ---
+        // --- START Admin Endpoints ---
+
+    // Admin: User Management
+    getAllUsers: build.query<AdminUser[], void>({
+      query: () => "admin/users",
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ _id }) => ({ type: "AdminUsers" as AppTag, id: _id })),
+              { type: "AdminUsers" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "AdminUsers" as AppTag, id: "LIST" }],
+    }),
+
+    updateUserStatus: build.mutation<void, { cognitoId: string; role: string; status: 'approved' | 'rejected' }>({
+      query: ({ cognitoId, role, status }) => ({
+        url: `${role}s/${cognitoId}`, // e.g., landlords/cognito-id-123
+        method: 'PUT',
+        body: { status },
+      }),
+      invalidatesTags: [{ type: "AdminUsers", id: "LIST" }],
+       async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "User status updated!",
+          error: "Failed to update user status.",
+        });
+      },
+    }),
+
+    // Admin: Property & Application Management (using existing endpoints, but could be specific)
+    getAllPropertiesAdmin: build.query<typeof SellerProperty[], void>({
+        query: () => `seller-properties`,
+        providesTags: ["Properties"]
+    }),
+    getAllApplicationsAdmin: build.query<Application[], void>({
+        query: () => `applications`,
+        providesTags: ["Applications"]
+    }),
+
+    // Admin: Maintenance Providers
+    getMaintenanceProviders: build.query<MaintenanceProvider[], void>({
+        query: () => 'admin/maintenance-providers',
+        providesTags: ['MaintenanceProviders'],
+    }),
+    createMaintenanceProvider: build.mutation<MaintenanceProvider, Partial<MaintenanceProvider>>({
+        query: (body) => ({
+            url: 'admin/maintenance-providers',
+            method: 'POST',
+            body,
+        }),
+        invalidatesTags: ['MaintenanceProviders'],
+    }),
+    updateMaintenanceProvider: build.mutation<MaintenanceProvider, Partial<MaintenanceProvider> & { _id: string }>({
+        query: ({ _id, ...body }) => ({
+            url: `admin/maintenance-providers/${_id}`,
+            method: 'PUT',
+            body,
+        }),
+        invalidatesTags: (result, error, { _id }) => [{ type: 'MaintenanceProviders', id: _id }],
+    }),
+    deleteMaintenanceProvider: build.mutation<void, { id: string }>({
+        query: ({ id }) => ({
+            url: `admin/maintenance-providers/${id}`,
+            method: 'DELETE',
+        }),
+        invalidatesTags: ['MaintenanceProviders'],
+    }),
+
+    // Admin: Banking Services
+    getBankingServices: build.query<BankingService[], void>({
+        query: () => 'admin/banking-services',
+        providesTags: ['BankingServices'],
+    }),
+    createBankingService: build.mutation<BankingService, Partial<BankingService>>({
+        query: (body) => ({
+            url: 'admin/banking-services',
+            method: 'POST',
+            body,
+        }),
+        invalidatesTags: ['BankingServices'],
+    }),
+    updateBankingService: build.mutation<BankingService, Partial<BankingService> & { _id: string }>({
+        query: ({ _id, ...body }) => ({
+            url: `admin/banking-services/${_id}`,
+            method: 'PUT',
+            body,
+        }),
+        invalidatesTags: (result, error, { _id }) => [{ type: 'BankingServices', id: _id }],
+    }),
+    deleteBankingService: build.mutation<void, { id: string }>({
+        query: ({ id }) => ({
+            url: `admin/banking-services/${id}`,
+            method: 'DELETE',
+        }),
+        invalidatesTags: ['BankingServices'],
+    }),
+
+    // --- END Admin Endpoints ---
   }),
 });
 
@@ -606,4 +751,17 @@ export const {
   useCreateApplicationMutation,
   useGetBuyerQuery,
   useGetmanagerPropertiesQuery,
+  useGetAllUsersQuery,
+  useUpdateUserStatusMutation,
+  useGetAllPropertiesAdminQuery,
+  useGetAllApplicationsAdminQuery,
+  useGetMaintenanceProvidersQuery,
+  useCreateMaintenanceProviderMutation,
+  useUpdateMaintenanceProviderMutation,
+  useDeleteMaintenanceProviderMutation,
+  useGetBankingServicesQuery,
+  useCreateBankingServiceMutation,
+  useUpdateBankingServiceMutation,
+  useDeleteBankingServiceMutation,
+
 } = api;

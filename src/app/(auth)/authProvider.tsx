@@ -76,6 +76,7 @@ const components = {
             <Radio value="manager">Agent/Co-agents</Radio>
             <Radio value="landlord">Landlord</Radio> {/* ADDED Landlord */}
             <Radio value="buyer">Buyer</Radio>     {/* ADDED Buyer */}
+            <Radio value="superadmin">SuperAdmin</Radio>  
           </RadioGroupField>
         </>
       );

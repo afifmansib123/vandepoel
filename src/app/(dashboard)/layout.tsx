@@ -9,7 +9,11 @@ import { useGetAuthUserQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const { data: authUser, isLoading: authLoading, isError: authError } = useGetAuthUserQuery(); // Added isError
+  const {
+    data: authUser,
+    isLoading: authLoading,
+    isError: authError,
+  } = useGetAuthUserQuery(); // Added isError
   const router = useRouter();
   const pathname = usePathname();
   const [isRouteValidated, setIsRouteValidated] = useState(false); // Renamed for clarity
@@ -18,13 +22,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     if (authLoading) return; // Don't do anything until auth status is known
 
     if (!authUser || !authUser.userRole) {
-      // If no authUser or role after loading, might be an issue or user is not logged in.
-      // The Authenticator HOC should ideally handle redirection to login if not authenticated.
-      // If this layout is *always* for authenticated users, and we reach here without authUser,
-      // it could indicate a problem or a race condition.
-      // For now, we'll assume Auth HOC handles unauthenticated redirects.
-      // If authUser is truly missing for an expected authenticated route, redirecting to home or login might be an option.
-      // router.replace("/signin"); // Or "/"
       setIsRouteValidated(true); // Allow rendering to proceed, Auth HOC should kick in if needed
       return;
     }
@@ -59,6 +56,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           redirectTo = "/buyer/settings"; // Example: default buyer dashboard (e.g., search or favorites)
         }
         break;
+      case "superadmin": // ADDED: Superadmin case
+        if (!pathname.startsWith("/admin")) {
+          isAccessAllowed = false;
+          redirectTo = "/admin/users"; // Default admin dashboard
+        }
       default:
         // Unknown role, perhaps redirect to a generic page or error page
         isAccessAllowed = false;
@@ -72,7 +74,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       setIsRouteValidated(true); // Access is allowed or no redirection needed for this role/path
     }
     // --- MODIFICATION END ---
-
   }, [authUser, authLoading, router, pathname]);
 
   // Show loading until authentication check and route validation are complete
@@ -93,26 +94,34 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     // console.warn("DashboardLayout: authUser or userRole is missing after loading.");
     // Returning null or a redirect here can prevent rendering child components with missing auth context.
     // router.replace('/signin'); // Consider this if Authenticator isn't catching it
-    return null; 
-  }
-  
-  // If there was an error fetching the authenticated user
-  if (authError) {
-    console.error("DashboardLayout: Error fetching authenticated user", authError);
-    // You might want to redirect to an error page or show a message
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen">
-            <p>Could not load your user information.</p>
-            <button onClick={() => router.push("/signin")} className="mt-4 text-blue-500">Try logging in again</button>
-        </div>
-    );
+    return null;
   }
 
+  // If there was an error fetching the authenticated user
+  if (authError) {
+    console.error(
+      "DashboardLayout: Error fetching authenticated user",
+      authError
+    );
+    // You might want to redirect to an error page or show a message
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p>Could not load your user information.</p>
+        <button
+          onClick={() => router.push("/signin")}
+          className="mt-4 text-blue-500"
+        >
+          Try logging in again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full bg-primary-100">
-        <Navbar /> {/* Assuming Navbar is generic or adapts based on authUser */}
+        <Navbar />{" "}
+        {/* Assuming Navbar is generic or adapts based on authUser */}
         <div style={{ marginTop: `${NAVBAR_HEIGHT}px` }}>
           <main className="flex">
             {/* Pass the userRole to Sidebar, assuming it uses it for conditional rendering */}
