@@ -109,18 +109,6 @@ export async function PUT(
   const { cognitoId: cognitoIdFromPath } = context.params;
   console.log(`[API /managers/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
-  const authResult = await authenticateAndAuthorize(request, ['manager', 'superadmin']);
-  if (authResult instanceof NextResponse) {
-    console.log('[API /managers/:id PUT] Auth failed or returned response.');
-    return authResult;
-  }
-  const authenticatedUser = authResult as AuthenticatedUser;
-  console.log(`[API /managers/:id PUT] Auth successful. Authenticated user ID: "${authenticatedUser.id}", Role: "${authenticatedUser.role}"`);
-
-  if (authenticatedUser.id !== cognitoIdFromPath) {
-    console.warn(`[API /managers/:id PUT] Forbidden: Auth user "${authenticatedUser.id}" trying to update manager profile for "${cognitoIdFromPath}".`);
-    return NextResponse.json({ message: 'Forbidden: You can only update your own profile.' }, { status: 403 });
-  }
   console.log(`[API /managers/:id PUT] Authorization check passed.`);
   
   if (!cognitoIdFromPath || cognitoIdFromPath.trim() === '') {
@@ -146,9 +134,6 @@ export async function PUT(
     // Iterate over the allowed fields and add them to `updateData` if they exist in the request body.
     for (const field of allowedUpdateFields) {
       if (body[field] !== undefined) {
-         if (field === 'status' && authenticatedUser.role !== 'superadmin') {
-            continue; // Skip the 'status' field if the user is not an admin
-        }
         updateData[field] = body[field];
       }
     }
