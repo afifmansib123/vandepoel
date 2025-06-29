@@ -1,8 +1,8 @@
 import React from "react";
 
-// This layout can be expanded later if the admin section needs a unique structure.
+// This layout can be expanded later if the superadmin section needs a unique structure.
 // For now, it just passes children through, relying on the main dashboard layout.
-export default function AdminLayout({
+export default function SuperadminLayout({
   children,
 }: {
   children: React.ReactNode;

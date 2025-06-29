@@ -35,6 +35,16 @@ interface Buyer {
   updatedAt?: string | Date;
 }
 
+interface SuperAdmin {
+  id: string | number;
+  cognitoId: string;
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 interface CognitoUserInfo {
   // Basic structure for Cognito user info
   userId: string;
@@ -45,7 +55,7 @@ interface CognitoUserInfo {
 interface User {
   // The structure returned by getAuthUser
   cognitoInfo: CognitoUserInfo; // Or more specific type from Amplify like `AuthUser`
-  userInfo: Tenant | Manager | Landlord | Buyer | { [key: string]: any }; // Using the hardcoded types for now
+  userInfo: Tenant | Manager | Landlord | Buyer | SuperAdmin |{ [key: string]: any }; // Using the hardcoded types for now
   userRole: string;
   favorites?: Number[];
 }
@@ -108,9 +118,9 @@ export const api = createApi({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
     prepareHeaders: async (headers) => {
       const session = await fetchAuthSession();
-      const { idToken } = session.tokens ?? {};
-      if (idToken) {
-        headers.set("Authorization", `Bearer ${idToken}`);
+      const accessToken = session.tokens?.accessToken?.toString(); 
+      if (accessToken) {
+        headers.set("Authorization", `Bearer ${accessToken}`);
       }
       return headers;
     },
@@ -153,7 +163,7 @@ export const api = createApi({
           } else if (userRole === "buyer") {
             endpoint = `/buyers/${amplifyUser.userId}`;
           }else if (userRole === "superadmin") {
-            endpoint = `/superadmins/${amplifyUser.userId}`;
+            endpoint = `/superadmin/${amplifyUser.userId}`;
           } 
           else {
             return {
@@ -186,7 +196,7 @@ export const api = createApi({
           return {
             data: {
               cognitoInfo: cognitoInfoForApp, // Use the constructed cognito info
-              userInfo: userDetailsResponse.data as Tenant | Manager | Landlord | Buyer, // <<< --- FIX #2: Add Landlord
+              userInfo: userDetailsResponse.data as Tenant | Manager | Landlord | Buyer | SuperAdmin , // <<< --- FIX #2: Add Landlord
               userRole,
             },
           };
@@ -630,7 +640,7 @@ export const api = createApi({
 
     // Admin: User Management
     getAllUsers: build.query<AdminUser[], void>({
-      query: () => "admin/users",
+      query: () => `superadmin/resources?resource=users`,
       providesTags: (result) =>
         result
           ? [
@@ -667,12 +677,12 @@ export const api = createApi({
 
     // Admin: Maintenance Providers
     getMaintenanceProviders: build.query<MaintenanceProvider[], void>({
-        query: () => 'admin/maintenance-providers',
+        query: () => 'superadmin/resources?resource=maintenance',
         providesTags: ['MaintenanceProviders'],
     }),
     createMaintenanceProvider: build.mutation<MaintenanceProvider, Partial<MaintenanceProvider>>({
         query: (body) => ({
-            url: 'admin/maintenance-providers',
+            url: 'superadmin/maintenance',
             method: 'POST',
             body,
         }),
@@ -680,7 +690,7 @@ export const api = createApi({
     }),
     updateMaintenanceProvider: build.mutation<MaintenanceProvider, Partial<MaintenanceProvider> & { _id: string }>({
         query: ({ _id, ...body }) => ({
-            url: `admin/maintenance-providers/${_id}`,
+            url: `superadmin/maintenance/${_id}`,
             method: 'PUT',
             body,
         }),
@@ -688,7 +698,7 @@ export const api = createApi({
     }),
     deleteMaintenanceProvider: build.mutation<void, { id: string }>({
         query: ({ id }) => ({
-            url: `admin/maintenance-providers/${id}`,
+            url: `superadmin/maintenance/${id}`,
             method: 'DELETE',
         }),
         invalidatesTags: ['MaintenanceProviders'],
@@ -696,12 +706,12 @@ export const api = createApi({
 
     // Admin: Banking Services
     getBankingServices: build.query<BankingService[], void>({
-        query: () => 'admin/banking-services',
+        query: () => 'superadmin/banking',
         providesTags: ['BankingServices'],
     }),
     createBankingService: build.mutation<BankingService, Partial<BankingService>>({
         query: (body) => ({
-            url: 'admin/banking-services',
+            url: 'superadmin/banking',
             method: 'POST',
             body,
         }),
@@ -709,7 +719,7 @@ export const api = createApi({
     }),
     updateBankingService: build.mutation<BankingService, Partial<BankingService> & { _id: string }>({
         query: ({ _id, ...body }) => ({
-            url: `admin/banking-services/${_id}`,
+            url: `superadmin/banking/${_id}`,
             method: 'PUT',
             body,
         }),
@@ -717,7 +727,7 @@ export const api = createApi({
     }),
     deleteBankingService: build.mutation<void, { id: string }>({
         query: ({ id }) => ({
-            url: `admin/banking-services/${id}`,
+            url: `superadmin/banking/${id}`,
             method: 'DELETE',
         }),
         invalidatesTags: ['BankingServices'],

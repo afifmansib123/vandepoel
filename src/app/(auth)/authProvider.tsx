@@ -149,7 +149,7 @@ const Auth = ({ children }: { children: React.ReactNode }) => {
 
   const isAuthPage = pathname === "/signin" || pathname === "/signup"; // Original check, slightly simplified from regex
 
-  const dashboardPrefixes = ["/manager", "/tenants", "/landlords", "/buyers"]; // ADDED landlord and buyer prefixes
+  const dashboardPrefixes = ["/manager", "/tenants", "/landlords", "/buyers", "/superadmin"]; // ADDED landlord and buyer prefixes
   const isDashboardPage = dashboardPrefixes.some(prefix => pathname.startsWith(prefix));
 
   useEffect(() => {

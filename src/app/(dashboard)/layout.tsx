@@ -57,10 +57,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         }
         break;
       case "superadmin": // ADDED: Superadmin case
-        if (!pathname.startsWith("/admin")) {
+        if (!pathname.startsWith("/superadmin")) {
           isAccessAllowed = false;
-          redirectTo = "/admin/users"; // Default admin dashboard
+          redirectTo = "/superadmin/users"; // Default superadmin dashboard
         }
+        break;
       default:
         // Unknown role, perhaps redirect to a generic page or error page
         isAccessAllowed = false;

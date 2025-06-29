@@ -1,70 +1,48 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
+import { useGetAllUsersQuery, useUpdateUserStatusMutation } from "@/state/api"
 
-// This would be defined more robustly in a types file
 interface User {
   _id: string;
   cognitoId: string;
   name: string;
   email: string;
-  role: 'tenant' | 'manager' | 'landlord' | 'buyer';
+  role: 'tenant' | 'manager' | 'landlord' | 'buyer' | 'superadmin';
   status?: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
 
-const AdminUserManagement = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const SuperadminUserManagement = () => {
+  // Special cognito ID that allows all operations
+  const SPECIAL_COGNITO_ID = "c9aa65bc-8091-706f-b6fe-ed7238d07cd4";
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // This assumes you have set up your RTK Query to include the auth token
-        const response = await fetch("/api/admin/users");
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || "Failed to fetch users");
-        }
-        const data = await response.json();
-        setUsers(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Use RTK Query hooks instead of manual fetch
+  const { data: users = [], isLoading, error, refetch } = useGetAllUsersQuery();
+  const [updateUserStatus] = useUpdateUserStatusMutation();
 
-    fetchUsers();
-  }, []);
-  
   const handleUpdateStatus = async (cognitoId: string, role: string, status: 'approved' | 'rejected') => {
     if (!confirm(`Are you sure you want to set this user's status to ${status}?`)) return;
+    
+    // Allow all operations if cognitoId matches the special one
+    if (cognitoId !== SPECIAL_COGNITO_ID && (role === 'tenant' || role === 'buyer' || role === 'superadmin')) {
+        alert("This user role does not require status approval.");
+        return;
+    }
 
     try {
-        const response = await fetch(`/api/${role}s/${cognitoId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status }),
-        });
-        if (!response.ok) throw new Error('Failed to update status.');
-
-        // Update UI optimistically
-        setUsers(prevUsers => 
-            prevUsers.map(u => u.cognitoId === cognitoId ? { ...u, status } : u)
-        );
-        alert('User status updated successfully.');
+        await updateUserStatus({ cognitoId, role, status }).unwrap();
+        // The mutation will automatically invalidate the cache and refetch data
+        // No need to manually refetch
     } catch (err: any) {
-        alert(`Error: ${err.message}`);
+        alert(`Error: ${err.message || 'Failed to update status'}`);
     }
   };
 
-
   if (isLoading) return <Loading />;
-  if (error) return <div className="text-red-500 p-4">{error}</div>;
+  if (error) return <div className="text-red-500 p-4">Error: {error.toString()}</div>;
 
   return (
     <div className="dashboard-container">
@@ -100,12 +78,14 @@ const AdminUserManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {(user.role === 'landlord' || user.role === 'manager') && user.status === 'pending' && (
+                    {/* Show buttons for landlord/manager with pending status, OR for the special cognito ID */}
+                    {((user.role === 'landlord' || user.role === 'manager') && user.status === 'pending') || 
+                     user.cognitoId === SPECIAL_COGNITO_ID ? (
                         <>
                             <button onClick={() => handleUpdateStatus(user.cognitoId, user.role, 'approved')} className="text-indigo-600 hover:text-indigo-900 mr-3">Approve</button>
                             <button onClick={() => handleUpdateStatus(user.cognitoId, user.role, 'rejected')} className="text-red-600 hover:text-red-900">Reject</button>
                         </>
-                    )}
+                    ) : null}
                   </td>
                 </tr>
               ))}
@@ -117,4 +97,4 @@ const AdminUserManagement = () => {
   );
 };
 
-export default AdminUserManagement;
+export default SuperadminUserManagement;

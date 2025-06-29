@@ -220,7 +220,7 @@ export const createNewUserInDatabase = async (
       endpointPath = "/buyers"; // Added buyer endpoint (ensure this POST endpoint exists on your backend)
       break;
     case "superadmin":
-      endpointPath = "/superadmins";
+      endpointPath = "/superadmin";
       break;
     default:
       // Handle unknown role - important for robustness
