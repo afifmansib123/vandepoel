@@ -5,8 +5,11 @@ import SuperAdmin from '@/app/models/SuperAdmin';
 export async function POST(request: NextRequest) {
   await dbConnect();
 
+  // Declare body outside try block so it's accessible in catch
+  let body: any;
+
   try {
-    const body = await request.json();
+    body = await request.json();
     const { cognitoId, name, email } = body;
 
     if (!cognitoId || !name || !email) {
@@ -32,10 +35,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Error in POST /api/superadmin:', error);
-    if (error.code === 11000) {
+    if (error.code === 11000 && body?.cognitoId) {
       // This is a backup for a race condition. Find the user again and return them.
       const admin = await SuperAdmin.findOne({ cognitoId: body.cognitoId }).lean().exec();
-      return NextResponse.json(admin, { status: 200 });
+      if (admin) {
+        return NextResponse.json(admin, { status: 200 });
+      }
     }
     return NextResponse.json({ message: `Error: ${error.message}` }, { status: 500 });
   }

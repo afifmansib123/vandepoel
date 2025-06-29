@@ -8,14 +8,14 @@ export async function GET(
   request: NextRequest,
   // --- FIX START: Corrected the context signature ---
   // The 'params' object is not a Promise. This aligns it with your other handlers.
-  context: { params: { cognitoId: string } }
+  context: { params: Promise<{ cognitoId: string }> }
   // --- FIX END ---
 ) {
   await dbConnect();
 
   try {
     // --- FIX START: Removed 'await' as context.params is not a promise ---
-    const { cognitoId } = context.params;
+    const { cognitoId } = await context.params;
     // --- FIX END ---
 
     // Check if the cognitoId was provided
@@ -47,15 +47,17 @@ export async function GET(
 export async function POST(request: NextRequest) {
   await dbConnect();
 
+  // Declare body variable outside try block so it's accessible in catch
+  let body: any;
+
   try {
-    const body = await request.json();
+    body = await request.json();
     const { cognitoId, name, email } = body;
 
     if (!cognitoId || !name || !email) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    // --- FIX START: Replaced the previous logic with a clear, robust implementation ---
     // First, check if the user already exists.
     const existingAdmin = await SuperAdmin.findOne({ cognitoId }).lean().exec();
 
@@ -73,14 +75,13 @@ export async function POST(request: NextRequest) {
 
     // Return the newly created user with a 201 status.
     return NextResponse.json(savedAdmin.toObject(), { status: 201 });
-    // --- FIX END ---
 
   } catch (error: any) {
     console.error('Error in POST /api/superadmin:', error);
     
     // This catch block specifically handles a race condition where `findOne` returns null,
     // but another process saves the user before this one does, causing a duplicate key error.
-    if (error.code === 11000) {
+    if (error.code === 11000 && body?.cognitoId) {
       console.warn(`[POST /api/superadmin] Race condition: Duplicate key error for ${body.cognitoId}. Finding and returning existing user.`);
       const admin = await SuperAdmin.findOne({ cognitoId: body.cognitoId }).lean().exec();
       if (admin) {

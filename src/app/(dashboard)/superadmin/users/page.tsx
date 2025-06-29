@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
-import { useGetAllUsersQuery, useUpdateUserStatusMutation } from "@/state/api"
 
 interface User {
   _id: string;
@@ -16,33 +15,57 @@ interface User {
 }
 
 const SuperadminUserManagement = () => {
-  // Special cognito ID that allows all operations
-  const SPECIAL_COGNITO_ID = "c9aa65bc-8091-706f-b6fe-ed7238d07cd4";
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Use RTK Query hooks instead of manual fetch
-  const { data: users = [], isLoading, error, refetch } = useGetAllUsersQuery();
-  const [updateUserStatus] = useUpdateUserStatusMutation();
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/superadmin/resources?resource=users");
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Failed to fetch users");
+      }
+      const data = await response.json();
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+  
   const handleUpdateStatus = async (cognitoId: string, role: string, status: 'approved' | 'rejected') => {
     if (!confirm(`Are you sure you want to set this user's status to ${status}?`)) return;
-    
-    // Allow all operations if cognitoId matches the special one
-    if (cognitoId !== SPECIAL_COGNITO_ID && (role === 'tenant' || role === 'buyer' || role === 'superadmin')) {
+    if (role === 'tenant' || role === 'buyer' || role === 'superadmin') {
         alert("This user role does not require status approval.");
         return;
     }
 
     try {
-        await updateUserStatus({ cognitoId, role, status }).unwrap();
-        // The mutation will automatically invalidate the cache and refetch data
-        // No need to manually refetch
+        const response = await fetch(`/api/${role}s/${cognitoId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+        });
+        if (!response.ok) throw new Error('Failed to update status.');
+        
+        // Refetch users to get the latest state
+        await fetchUsers();
+        alert('User status updated successfully.');
     } catch (err: any) {
-        alert(`Error: ${err.message || 'Failed to update status'}`);
+        alert(`Error: ${err.message}`);
     }
   };
 
+
   if (isLoading) return <Loading />;
-  if (error) return <div className="text-red-500 p-4">Error: {error.toString()}</div>;
+  if (error) return <div className="text-red-500 p-4">{error}</div>;
 
   return (
     <div className="dashboard-container">
@@ -78,14 +101,12 @@ const SuperadminUserManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {/* Show buttons for landlord/manager with pending status, OR for the special cognito ID */}
-                    {((user.role === 'landlord' || user.role === 'manager') && user.status === 'pending') || 
-                     user.cognitoId === SPECIAL_COGNITO_ID ? (
+                    {(user.role === 'landlord' || user.role === 'manager') && user.status === 'pending' && (
                         <>
                             <button onClick={() => handleUpdateStatus(user.cognitoId, user.role, 'approved')} className="text-indigo-600 hover:text-indigo-900 mr-3">Approve</button>
                             <button onClick={() => handleUpdateStatus(user.cognitoId, user.role, 'rejected')} className="text-red-600 hover:text-red-900">Reject</button>
                         </>
-                    ) : null}
+                    )}
                   </td>
                 </tr>
               ))}
