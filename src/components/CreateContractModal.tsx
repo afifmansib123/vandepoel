@@ -44,7 +44,7 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
     setError(null);
 
     const contractData = {
-      propertyId: application.propertyId.name, // The Mongoose ObjectId of the property
+      propertyId: application.propertyId._id, // The Mongoose ObjectId of the property
       tenantId: application.senderId,
       managerId: managerId,
       duration: duration,
