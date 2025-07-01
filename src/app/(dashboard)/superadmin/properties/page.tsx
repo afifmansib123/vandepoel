@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { useGetAllPropertiesAdminQuery } from "@/state/api"; // This hook already exists
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, Search, AlertTriangle } from "lucide-react";
+import { Eye, Trash2, Search, AlertTriangle, MapPin, Calendar, User, DollarSign, Home, Bed, Bath, Maximize, Star, Shield, Clock, FileText } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner"; // Using the existing toast library for feedback
 
@@ -38,13 +38,35 @@ interface PropertyForAdmin {
   location: {
     city?: string;
     country?: string;
+    address?: string;
+    state?: string;
+    postalCode?: string;
   };
   sellerCognitoId: string;
   photoUrls?: string[];
+  description?: string;
+  features?: {
+    [key: string]: {
+      count: number;
+      description?: string;
+      images?: string[];
+    };
+  };
+  amenities?: string[];
+  highlights?: string[];
+  openHouseDates?: string[];
+  sellerNotes?: string;
+  managedBy?: string;
+  postedDate: string;
+  updatedAt: string;
+  allowBuyerApplications?: boolean;
+  preferredFinancingInfo?: string;
+  insuranceRecommendation?: string;
+  squareFeet?: number;
   [key: string]: any; // Allow other properties for the details modal
 }
 
-// Modal to show detailed property information
+// Enhanced Modal to show detailed property information in a beautiful, user-friendly way
 const PropertyDetailsModal = ({
   property,
   isOpen,
@@ -58,43 +80,323 @@ const PropertyDetailsModal = ({
   onDelete: (id: string) => void;
   isDeleting: boolean;
 }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   if (!property) return null;
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-white rounded-lg">
-        <DialogHeader>
-          <DialogTitle>Property Details: {property.name}</DialogTitle>
+      <DialogContent className="max-w-4xl bg-white rounded-lg max-h-[90vh] overflow-hidden">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-2xl font-bold text-gray-900">{property.name}</DialogTitle>
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="h-4 w-4" />
+            <span>{property.location?.address}, {property.location?.city}, {property.location?.state}, {property.location?.country}</span>
+          </div>
         </DialogHeader>
-        <div className="mt-4 space-y-2 text-sm max-h-[70vh] overflow-y-auto pr-2">
-          {property.photoUrls && property.photoUrls[0] && (
-            <div className="relative h-48 w-full rounded-md overflow-hidden mb-4">
-              <Image
-                src={property.photoUrls[0]}
-                alt={property.name}
-                layout="fill"
-                objectFit="cover"
-              />
+        
+        <div className="overflow-y-auto pr-2" style={{ maxHeight: 'calc(90vh - 200px)' }}>
+          {/* Image Gallery */}
+          {property.photoUrls && property.photoUrls.length > 0 && (
+            <div className="mb-6">
+              <div className="relative h-64 w-full rounded-lg overflow-hidden mb-4">
+                <Image
+                  src={property.photoUrls[currentImageIndex]}
+                  alt={property.name}
+                  layout="fill"
+                  objectFit="cover"
+                />
+                {property.photoUrls.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : property.photoUrls!.length - 1)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
+                    >
+                      ←
+                    </button>
+                    <button
+                      onClick={() => setCurrentImageIndex(prev => prev < property.photoUrls!.length - 1 ? prev + 1 : 0)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
+                    >
+                      →
+                    </button>
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                      {currentImageIndex + 1} / {property.photoUrls.length}
+                    </div>
+                  </>
+                )}
+              </div>
+              {property.photoUrls.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {property.photoUrls.map((url, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0 ${
+                        index === currentImageIndex ? 'ring-2 ring-blue-500' : ''
+                      }`}
+                    >
+                      <Image
+                        src={url}
+                        alt={`${property.name} ${index + 1}`}
+                        layout="fill"
+                        objectFit="cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-          {Object.entries(property).map(([key, value]) => (
-            <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b">
-              <span className="font-semibold capitalize text-gray-600 col-span-1">
-                {key.replace(/([A-Z])/g, " $1")}
-              </span>
-              <div className="text-gray-800 col-span-2 break-words">
-                {typeof value === "object" && value !== null ? (
-                  <pre className="whitespace-pre-wrap bg-gray-50 p-2 rounded-md text-xs">
-                    {JSON.stringify(value, null, 2)}
-                  </pre>
-                ) : (
-                  String(value)
+
+          {/* Key Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                Property Details
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Type:</span>
+                  <span className="font-medium">{property.propertyType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <Badge variant={property.propertyStatus === "Sell" || property.propertyStatus === "For Sale" ? "default" : "secondary"}>
+                    {property.propertyStatus}
+                  </Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Price:</span>
+                  <span className="font-bold text-lg text-green-600">{formatPrice(property.salePrice)}</span>
+                </div>
+                {property.squareFeet && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Square Feet:</span>
+                    <span className="font-medium">{property.squareFeet.toLocaleString()} sq ft</span>
+                  </div>
                 )}
               </div>
             </div>
-          ))}
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Location
+              </h3>
+              <div className="space-y-2">
+                <div>
+                  <span className="text-gray-600">Address:</span>
+                  <p className="font-medium">{property.location?.address}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">City:</span>
+                  <span className="font-medium ml-2">{property.location?.city}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">State/Province:</span>
+                  <span className="font-medium ml-2">{property.location?.state}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Country:</span>
+                  <span className="font-medium ml-2">{property.location?.country}</span>
+                </div>
+                {property.location?.postalCode && (
+                  <div>
+                    <span className="text-gray-600">Postal Code:</span>
+                    <span className="font-medium ml-2">{property.location.postalCode}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          {property.features && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Bed className="h-5 w-5" />
+                Features
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(property.features).map(([featureType, featureData]: [string, any]) => (
+                  <div key={featureType} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {featureType === 'bedroom' && <Bed className="h-4 w-4" />}
+                      {featureType === 'bathroom' && <Bath className="h-4 w-4" />}
+                      <h4 className="font-medium capitalize">{featureType}</h4>
+                    </div>
+                    <p className="text-gray-600 mb-2">Count: {featureData.count}</p>
+                    {featureData.description && (
+                      <p className="text-sm text-gray-600 mb-2">{featureData.description}</p>
+                    )}
+                    {featureData.images && featureData.images.length > 0 && (
+                      <div className="flex gap-2 overflow-x-auto">
+                        {featureData.images.map((img: string, idx: number) => (
+                          <div key={idx} className="relative h-20 w-20 rounded-md overflow-hidden flex-shrink-0">
+                            <Image
+                              src={img}
+                              alt={`${featureType} ${idx + 1}`}
+                              layout="fill"
+                              objectFit="cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          {property.description && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Description
+              </h3>
+              <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">{property.description}</p>
+            </div>
+          )}
+
+          {/* Amenities */}
+          {property.amenities && property.amenities.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Amenities
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {property.amenities.map((amenity: string, index: number) => (
+                  <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                    {amenity}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Highlights */}
+          {property.highlights && property.highlights.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Highlights
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {property.highlights.map((highlight: string, index: number) => (
+                  <Badge key={index} variant="outline" className="bg-green-50 text-green-700">
+                    {highlight}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Open House Dates */}
+          {property.openHouseDates && property.openHouseDates.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Open House Schedule
+              </h3>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                {property.openHouseDates.map((date: string, index: number) => (
+                  <p key={index} className="text-yellow-800 font-medium">{date}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Seller Information */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Seller Information
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <div>
+                <span className="text-gray-600">Seller ID:</span>
+                <span className="font-mono text-sm ml-2">{property.sellerCognitoId}</span>
+              </div>
+              {property.managedBy && (
+                <div>
+                  <span className="text-gray-600">Managed By:</span>
+                  <span className="font-mono text-sm ml-2">{property.managedBy}</span>
+                </div>
+              )}
+              {property.sellerNotes && (
+                <div>
+                  <span className="text-gray-600">Seller Notes:</span>
+                  <p className="text-gray-700 mt-1 p-3 bg-white rounded border-l-4 border-blue-400">
+                    "{property.sellerNotes}"
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Additional Information
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Posted Date:</span>
+                <span className="font-medium">{formatDate(property.postedDate)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Last Updated:</span>
+                <span className="font-medium">{formatDate(property.updatedAt)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Property ID:</span>
+                <span className="font-mono text-sm">{property._id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Buyer Applications:</span>
+                <span className="font-medium">
+                  {property.allowBuyerApplications ? "Allowed" : "Not Allowed"}
+                </span>
+              </div>
+              {property.preferredFinancingInfo && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Preferred Financing:</span>
+                  <span className="font-medium">{property.preferredFinancingInfo}</span>
+                </div>
+              )}
+              {property.insuranceRecommendation && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Insurance Recommendation:</span>
+                  <span className="font-medium">{property.insuranceRecommendation}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <DialogFooter className="mt-6 sm:justify-between items-center">
+
+        <DialogFooter className="mt-6 sm:justify-between items-center border-t pt-4">
           <Button
             variant="destructive"
             onClick={() => onDelete(property._id)}
@@ -230,7 +532,7 @@ const SuperadminPropertiesPage = () => {
                     <TableCell>
                       <Badge
                         variant={
-                          prop.propertyStatus === "For Sale"
+                          prop.propertyStatus === "Sell" || prop.propertyStatus === "For Sale"
                             ? "default"
                             : "secondary"
                         }

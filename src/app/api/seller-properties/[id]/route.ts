@@ -204,3 +204,131 @@ export async function PUT(
     return NextResponse.json({ message: `Error updating property: ${message}` }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Connect to database
+    await dbConnect();
+
+    const propertyId = params.id;
+
+    if (!propertyId) {
+      return NextResponse.json(
+        { success: false, message: "Property ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Option 2: If using AWS Cognito, replace above with your Cognito auth check
+    // const authHeader = request.headers.get("authorization");
+    // if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    //   return NextResponse.json(
+    //     { success: false, message: "Unauthorized - No token provided" },
+    //     { status: 401 }
+    //   );
+    // }
+    // const token = authHeader.substring(7);
+    // // Verify the token with AWS Cognito
+    // const cognitoUser = await verifyCognitoToken(token);
+    // if (!cognitoUser) {
+    //   return NextResponse.json(
+    //     { success: false, message: "Unauthorized - Invalid token" },
+    //     { status: 401 }
+    //   );
+    // }
+
+    // Check if property exists
+    const existingProperty = await SellerProperty.findById(propertyId);
+    if (!existingProperty) {
+      return NextResponse.json(
+        { success: false, message: "Property not found" },
+        { status: 404 }
+      );
+    }
+
+    // Optional: Delete associated images from S3
+    // Uncomment and adjust if you want to clean up S3 images
+    /*
+    if (existingProperty.photoUrls && existingProperty.photoUrls.length > 0) {
+      try {
+        await deleteS3Images(existingProperty.photoUrls);
+      } catch (s3Error) {
+        console.error("Error deleting S3 images:", s3Error);
+        // Continue with property deletion even if S3 cleanup fails
+      }
+    }
+
+    // Delete feature images if they exist
+    if (existingProperty.features) {
+      for (const feature of Object.values(existingProperty.features)) {
+        if (feature.images && feature.images.length > 0) {
+          try {
+            await deleteS3Images(feature.images);
+          } catch (s3Error) {
+            console.error("Error deleting feature images:", s3Error);
+          }
+        }
+      }
+    }
+    */
+
+    // Delete the property from database
+    await SellerProperty.findByIdAndDelete(propertyId);
+
+
+    return NextResponse.json(
+      { 
+        success: true, 
+        message: "Property deleted successfully",
+        deletedPropertyId: propertyId
+      },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Error deleting property:", error);
+
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: "Internal server error while deleting property" 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// Optional: Helper function to delete S3 images
+/*
+import AWS from 'aws-sdk';
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+async function deleteS3Images(imageUrls: string[]) {
+  const bucketName = process.env.AWS_S3_BUCKET_NAME;
+  
+  for (const imageUrl of imageUrls) {
+    try {
+      // Extract the key from the full S3 URL
+      const urlParts = imageUrl.split('/');
+      const key = urlParts.slice(3).join('/'); // Remove https://bucket-name.s3.region.amazonaws.com/
+      
+      await s3.deleteObject({
+        Bucket: bucketName,
+        Key: key,
+      }).promise();
+      
+      console.log(`Deleted S3 image: ${key}`);
+    } catch (error) {
+      console.error(`Failed to delete S3 image ${imageUrl}:`, error);
+      // Continue with other images even if one fails
+    }
+  }
+} */
