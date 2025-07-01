@@ -452,11 +452,6 @@ const SuperadminPropertiesPage = () => {
 
     setIsDeleting(true);
     try {
-      // We use the existing Bearer token logic from RTK Query by accessing fetchBaseQuery's prepareHeaders
-      // Or more simply, if your browser handles auth cookies, a direct fetch works.
-      // Assuming your API is secured and expects a token:
-      // Note: This part assumes your RTK setup correctly adds the auth header to all requests.
-      // If not, you would need to get the token from Amplify manually here.
       const response = await fetch(`/api/seller-properties/${id}`, {
         method: "DELETE",
         // The browser should automatically send the auth headers if your RTK query setup is working

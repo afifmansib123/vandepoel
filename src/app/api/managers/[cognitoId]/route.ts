@@ -39,33 +39,14 @@ function isMongooseValidationError(error: any): error is MongooseValidationError
 // --- GET HANDLER (UNCHANGED FROM YOUR ORIGINAL) ---
 export async function GET(
   request: NextRequest,
-  context: { params: { cognitoId: string } }
+  context: { params: Promise< { cognitoId: string } >}
 ) {
   console.log("--- GET /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
   
-  const { cognitoId: cognitoIdFromPath } = context.params;
+  const { cognitoId: cognitoIdFromPath } = await context.params;
 
   console.log(`[API /managers/:id GET] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
-
-  const authResult = await authenticateAndAuthorize(request, ['manager','superadmin']);
-  if (authResult instanceof NextResponse) {
-    console.log('[API /managers/:id GET] Auth failed or returned response.');
-    return authResult;
-  }
-  const authenticatedUser = authResult as AuthenticatedUser;
-  console.log(`[API /managers/:id GET] Auth successful. Authenticated user ID: "${authenticatedUser.id}", Role: "${authenticatedUser.role}"`);
-
-  if (authenticatedUser.id !== cognitoIdFromPath) {
-    console.warn(`[API /managers/:id GET] Forbidden: Auth user "${authenticatedUser.id}" trying to access manager profile for "${cognitoIdFromPath}".`);
-    return NextResponse.json({ message: 'Forbidden: You can only access your own profile.' }, { status: 403 });
-  }
-  console.log(`[API /managers/:id GET] Authorization check passed: Path ID matches token ID.`);
-
-  if (!cognitoIdFromPath || cognitoIdFromPath.trim() === '') {
-    console.warn('[API /managers/:id GET] Invalid or missing cognitoId in path.');
-    return NextResponse.json({ message: 'Cognito ID path parameter is required and must be a non-empty string' }, { status: 400 });
-  }
 
   await dbConnect();
   console.log(`[API /managers/:id GET] DB connected. Querying for cognitoId: "${cognitoIdFromPath}"`);
