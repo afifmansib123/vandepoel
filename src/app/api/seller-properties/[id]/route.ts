@@ -86,78 +86,96 @@ function parseWKTPointString(wktString: string | null | undefined): ParsedPointC
     return null;
 }
 
+// Keep all your existing imports and type definitions at the top of the file
+
+// This single GET function now handles BOTH numeric IDs and MongoDB _ids.
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } } // The context param is simplified here
 ) {
   await dbConnect();
   
-  // For Next.js 15+, params is a Promise and needs to be awaited
-  const params = await context.params;
-  const { id: propertyIdParam } = params;
+  const { id: idParam } = params;
   
-  console.log(`GET /api/seller-properties/${propertyIdParam} called`);
-  
+  console.log(`GET /api/seller-properties/ with parameter: ${idParam}`);
 
-  if (!propertyIdParam) {
+  if (!idParam) {
     return NextResponse.json({ message: "Property ID parameter is missing." }, { status: 400 });
   }
 
-  const numericId = Number(propertyIdParam);
-  if (isNaN(numericId)) {
-    return NextResponse.json({ message: "Invalid property ID format. Must be a number." }, { status: 400 });
+  // --- THIS IS THE NEW LOGIC TO CHECK BOTH ID TYPES ---
+
+  let query: any;
+  // Check if the parameter is a valid 24-character hex string (a MongoDB ObjectId)
+  if (/^[0-9a-fA-F]{24}$/.test(idParam)) {
+    console.log(`Parameter '${idParam}' is a valid MongoDB ObjectId. Querying by _id.`);
+    query = { _id: idParam };
+  } else if (!isNaN(Number(idParam))) {
+    // Check if it's a number
+    console.log(`Parameter '${idParam}' is a number. Querying by numeric id.`);
+    query = { id: Number(idParam) };
+  } else {
+    // If it's neither, it's an invalid format
+    return NextResponse.json({ message: "Invalid Property ID format." }, { status: 400 });
   }
 
   try {
-    const property = await SellerProperty.findOne({ id: numericId })
+    // The query object is now dynamically set to search by either _id or id
+    const property = await SellerProperty.findOne(query)
       .lean()
       .exec() as SellerPropertyDocumentLean | null;
 
     if (!property) {
-      console.log(`SellerProperty with numeric ID ${numericId} not found.`);
+      console.log(`Property not found with query:`, query);
       return NextResponse.json({ message: 'Property not found' }, { status: 404 });
     }
-    console.log(`Found SellerProperty with ID ${numericId}: ${property.name}`);
+    console.log(`Found Property: ${property.name}`);
 
+    // The rest of your logic for fetching and formatting the location is perfect and remains unchanged.
     let formattedLocation: FormattedLocationForResponse | null = null;
     if (property.locationId) {
       const locationDoc = await Location.findOne({ id: property.locationId })
         .lean()
-        .exec() as { id: number; address?: string; city?: string; state?: string; country?: string; postalCode?: string; coordinates?: string; [key: string]: any; } | null;
+        .exec() as { id: number; address?: string; city?: string; state?: string; country?: string; postalCode?: string; coordinates?: string; } | null;
 
+      // =========================== THE FIX IS HERE ===========================
       if (locationDoc) {
         formattedLocation = {
-          id: locationDoc.id,
-          address: locationDoc.address,
-          city: locationDoc.city,
-          state: locationDoc.state,
-          country: locationDoc.country,
-          postalCode: locationDoc.postalCode,
-          coordinates: parseWKTPointString(locationDoc.coordinates),
+          id: locationDoc.id, // We know id exists because locationDoc exists
+          address: locationDoc.address ?? '', // Use ?? to provide a default empty string
+          city: locationDoc.city ?? '',       // Use ?? to provide a default empty string
+          state: locationDoc.state ?? '',       // Use ?? to provide a default empty string
+          country: locationDoc.country ?? '',     // Use ?? to provide a default empty string
+          postalCode: locationDoc.postalCode ?? '', // Use ?? to provide a default empty string
+          coordinates: parseWKTPointString(locationDoc.coordinates), // Your helper handles this case already
         };
-      } else {
-        console.warn(`Location with ID ${property.locationId} not found for SellerProperty ID ${numericId}.`);
+      }
+      // ========================= END OF FIX =========================
+      else {
+        console.warn(`Location with ID ${property.locationId} not found for SellerProperty ID ${property.id}.`);
       }
     } else {
-        console.log(`SellerProperty ID ${numericId} does not have a locationId.`);
+        console.log(`SellerProperty ID ${property.id} does not have a locationId.`);
     }
 
-    // Prepare the response object
     const { _id, locationId, ...restOfProperty } = property;
     const responseData: SingleSellerPropertyResponse = {
       ...restOfProperty,
-      _id: typeof _id === 'string' ? _id : _id.toString(),
+      _id: _id.toString(),
       location: formattedLocation,
     };
 
     return NextResponse.json(responseData, { status: 200 });
 
   } catch (error: unknown) {
-    console.error(`GET /api/seller-properties/${numericId} - Error:`, error);
+    console.error(`Error fetching property with parameter '${idParam}':`, error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ message: `Error retrieving property: ${message}` }, { status: 500 });
   }
 }
+
+// Your existing PUT and DELETE functions remain below...
+// ...
 // in src/app/api/seller-properties/[id]/route.ts
 
 // Keep all your existing imports

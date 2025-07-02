@@ -1,13 +1,16 @@
+// src/app/(dashboard)/tenants/applications/page.tsx
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useGetAuthUserQuery } from "@/state/api";
 import Image from "next/image";
-import { FileText, CheckCircle, XCircle, Clock, Mail, Phone, User, Trash2 } from "lucide-react";
+import { FileText, CheckCircle, XCircle, Clock, Mail, Phone, User, Trash2, Home } from "lucide-react";
 
-// --- Type Definitions (Reused from other pages) ---
+// --- Type Definitions ---
 interface PopulatedProperty {
   _id: string;
   name: string;
@@ -47,7 +50,6 @@ const TenantApplicationsPage = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
-  // Fetch only applications sent by the current tenant
   useEffect(() => {
     if (currentUserCognitoId) {
       const fetchSentApplications = async () => {
@@ -56,10 +58,8 @@ const TenantApplicationsPage = () => {
         try {
           const response = await fetch(`/api/applications?senderId=${currentUserCognitoId}`);
           if (!response.ok) throw new Error("Failed to fetch your applications.");
-          
           const data = await response.json();
           setApplications((data.data || []).sort((a:any, b:any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-
         } catch (err) {
           setError(err instanceof Error ? err.message : "An unknown error occurred");
         } finally {
@@ -70,25 +70,16 @@ const TenantApplicationsPage = () => {
     }
   }, [currentUserCognitoId]);
 
-  // Handler to withdraw a pending application
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (!window.confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) {
-      return;
-    }
-    
+    if (!window.confirm("Are you sure you want to withdraw this application?")) return;
     setApplications(prev => prev.filter(app => app._id !== applicationId));
-
     try {
-      const response = await fetch(`/api/applications/${applicationId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error("Failed to withdraw the application. Please try again.");
-      }
+      const response = await fetch(`/api/applications/${applicationId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error("Failed to withdraw the application.");
       alert("Application successfully withdrawn.");
     } catch (err) {
       alert(err instanceof Error ? err.message : "An error occurred.");
-      // On failure, refetch to restore the list
+      // Refetch on failure to restore the list
       const refetchRes = await fetch(`/api/applications?senderId=${currentUserCognitoId}`);
       const data = await refetchRes.json();
       setApplications(data.data || []);
@@ -107,7 +98,7 @@ const TenantApplicationsPage = () => {
       <div className="text-center py-16 px-6 bg-white rounded-lg shadow-md">
         <FileText className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-xl font-semibold text-gray-900">No Applications Sent</h3>
-        <p className="mt-1 text-gray-500">When you request to rent a property, you will see its status here.</p>
+        <p className="mt-1 text-gray-500">Your rental applications will appear here.</p>
       </div>
     );
     if (filteredApplications.length === 0) return (
@@ -133,7 +124,7 @@ const TenantApplicationsPage = () => {
 
   return (
     <div className="dashboard-container bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-      <Header title="My Rental Applications" subtitle="Track the status of your visit requests and rental applications." />
+      <Header title="My Rental Applications" subtitle="Track the status of your sent applications." />
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-wrap gap-2">
           <FilterButton status="all" current={filterStatus} setCount={applications.length} onClick={setFilterStatus} />
@@ -153,8 +144,6 @@ const TenantApplicationsPage = () => {
   );
 };
 
-// --- All sub-components are identical to the Buyer's page ---
-
 const FilterButton = ({ status, current, setCount, onClick }: { status: "all" | "pending" | "approved" | "rejected", current: string, setCount: number, onClick: (s: any) => void }) => {
     const isActive = status === current;
     const baseClasses = "px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2";
@@ -168,14 +157,12 @@ const FilterButton = ({ status, current, setCount, onClick }: { status: "all" | 
     )
 };
 
-// In src/app/(dashboard)/tenants/applications/page.tsx
-
-const ApplicationCard = ({ application, onViewDetails, onWithdraw }: { 
-    application: Application, 
-    onViewDetails: () => void, 
-    onWithdraw: (id: string) => void 
+const ApplicationCard = ({ application, onViewDetails, onWithdraw }: {
+    application: Application,
+    onViewDetails: () => void,
+    onWithdraw: (id: string) => void
 }) => {
-    // Destructure propertyId for cleaner access
+    const router = useRouter();
     const { _id, propertyId, formData, status, createdAt, applicationType } = application;
 
     const getStatusInfo = (s: string) => {
@@ -188,32 +175,17 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }: {
     const statusInfo = getStatusInfo(status);
 
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden transition hover:shadow-lg">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-5 flex flex-col md:flex-row gap-5 items-start">
-                {/* --- FIX IS HERE: Add optional chaining to 'alt' and a fallback value --- */}
-                <Image 
-                    src={propertyId?.photoUrls?.[0] ?? "/placeholder-property.jpg"} 
-                    alt={propertyId?.name ?? "Property Image"} // <-- ADD `?.` HERE
-                    width={160} 
-                    height={120} 
-                    className="w-full md:w-40 h-32 object-cover rounded-md border" 
-                />
+                <Image src={propertyId?.photoUrls?.[0] ?? "/placeholder-property.jpg"} alt={propertyId?.name ?? "Property Image"} width={160} height={120} className="w-full md:w-40 h-32 object-cover rounded-md border" />
                 <div className="flex-grow">
                     <div className="flex justify-between items-start">
                         <div>
-                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full inline-block mb-1">
-                                {formatApplicationType(applicationType)}
-                            </span>
-                            {/* --- FIX IS HERE: Add optional chaining and a fallback for the name --- */}
-                            <h3 className="text-lg font-bold text-gray-900">
-                                {propertyId?.name ?? "Unknown Property"} {/* <-- ADD `?.` HERE */}
-                            </h3>
+                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full inline-block mb-1">{formatApplicationType(applicationType)}</span>
+                            <h3 className="text-lg font-bold text-gray-900">{propertyId?.name ?? "Unknown Property"}</h3>
                         </div>
-                        <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5 ${statusInfo.color}`}>
-                            {statusInfo.icon}{statusInfo.text}
-                        </span>
+                        <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5 ${statusInfo.color}`}>{statusInfo.icon}{statusInfo.text}</span>
                     </div>
-                    {/* The rest of the component remains the same */}
                     <div className="border-t my-3"></div>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2"><User size={16} /><span>You ({formData.name})</span></div>
@@ -222,7 +194,13 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }: {
                     <p className="text-xs text-gray-400 mt-2">Submitted on: {new Date(createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="w-full md:w-auto flex flex-col gap-2 self-stretch justify-center">
-                    <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">View Details</button>
+                    <button onClick={() => { if (propertyId?._id) router.push(`/tenants/properties/${propertyId._id}`); }} disabled={!propertyId?._id} className="w-full text-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:bg-gray-300 flex items-center justify-center gap-2">
+                        <Home size={16} />
+                        View Property
+                    </button>
+                    <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">
+                        View Details
+                    </button>
                     {status === "pending" && (
                         <button onClick={() => onWithdraw(_id)} className="w-full text-center px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center justify-center gap-2">
                             <Trash2 size={16} />
@@ -234,12 +212,8 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }: {
         </div>
     );
 };
-// In src/app/(dashboard)/tenants/applications/page.tsx
 
-const ApplicationDetailsModal = ({ application, onClose }: { 
-    application: Application, 
-    onClose: () => void, 
-}) => {
+const ApplicationDetailsModal = ({ application, onClose }: { application: Application, onClose: () => void }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -247,17 +221,29 @@ const ApplicationDetailsModal = ({ application, onClose }: {
                     <div className="flex justify-between items-center">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">{formatApplicationType(application.applicationType)} Details</h2>
-                            {/* --- FIX IS HERE: Add optional chaining and a fallback --- */}
-                            <p className="text-gray-500">
-                                For property: {application.propertyId?.name ?? "Unknown Property"} {/* <-- ADD `?.` HERE */}
-                            </p>
+                            <p className="text-gray-500">For property: {application.propertyId?.name ?? "Unknown Property"}</p>
                         </div>
                         <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
                     </div>
                 </div>
-                {/* The rest of the modal is fine as it doesn't access propertyId */}
                 <div className="p-6 space-y-6">
-                    {/* ... */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">My Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <InfoItem label="Full Name" value={application.formData.name} />
+                            <InfoItem label="Email Address" value={application.formData.email} />
+                            <InfoItem label="Phone Number" value={application.formData?.phone} />
+                            <InfoItem label="Application Date" value={new Date(application.createdAt).toLocaleString()} />
+                        </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-semibold text-lg mb-2">Details Submitted</h3>
+                        <div className="space-y-3">
+                            {Object.entries(application.formData).filter(([key]) => !['name', 'email', 'phone'].includes(key)).map(([key, value]) => (
+                                <InfoItem key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={String(value)} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

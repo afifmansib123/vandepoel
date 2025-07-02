@@ -5,7 +5,8 @@ import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useGetAuthUserQuery } from "@/state/api";
 import Image from "next/image";
-import { FileSignature, FileText, CheckCircle, Clock, XCircle, User, Calendar, Shield } from "lucide-react";
+import { FileSignature, FileText, CheckCircle, Clock, XCircle, User, Calendar, Shield , Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // --- Type Definitions ---
 interface PopulatedProperty {
@@ -177,6 +178,8 @@ const ContractCard = ({ contract, onViewDetails }: { contract: Contract; onViewD
   };
   const statusInfo = getStatusInfo(status);
 
+  const router = useRouter()
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition hover:shadow-lg">
       <div className="p-5 flex flex-col md:flex-row gap-5 items-start">
@@ -201,6 +204,11 @@ const ContractCard = ({ contract, onViewDetails }: { contract: Contract; onViewD
         </div>
         <div className="w-full md:w-auto flex flex-col gap-2 self-stretch justify-center">
           <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">View Details</button>
+                              <button onClick={() => { router.push(`/tenants/properties/${propertyId
+}`); }}className="w-full text-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:bg-gray-300 flex items-center justify-center gap-2">
+                        <Home size={16} />
+                        View Property
+                    </button>
         </div>
       </div>
     </div>
