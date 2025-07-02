@@ -44,7 +44,7 @@ const DiscoverSection = () => {
             your dream property! For Real estate agents, we offer a
             comprehensive platform to list and manage your properties, making it
             easier than ever to connect with potential renters and buyers.
-            Whether you're looking to rent, buy, or sell, our platform has you
+            Whether you&apos;re looking to rent, buy, or sell, our platform has you
             covered. Join us today and experience the future of real estate
             management.
           </p>

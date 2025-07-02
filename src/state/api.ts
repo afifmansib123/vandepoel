@@ -180,7 +180,7 @@ export const api = createApi({
           ) {
             userDetailsResponse = await createNewUserInDatabase(
               amplifyUser, // Pass the amplifyUser object
-              idToken,
+             idToken as any,
               userRole,
               fetchWithBQ
             );

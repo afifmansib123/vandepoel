@@ -45,7 +45,7 @@ const components = {
       return (
         <View className="text-center mt-4">
           <p className="text-muted-foreground">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <button
               onClick={toSignUp}
               className="text-primary hover:underline bg-transparent border-none p-0"

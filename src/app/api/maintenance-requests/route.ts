@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     const landlordId = url.searchParams.get('landlordId');
 
     // Build filter for any of the three user types
-    let filter: any = {};
+    const filter: any = {};
     if (tenantId) {
       filter.tenantId = tenantId;
     } else if (managerId) {

@@ -608,7 +608,7 @@ const NewSellerPropertyPage = () => {
           <div className={sectionCardClassName}>
             <h2 className={sectionTitleClassName}>Location</h2>
             <p className={sectionDescriptionClassName}>
-              Specify the property's location details.
+              Specify the property&apos;s location details.
             </p>
             <div className="space-y-4">
               {/* Row 1: Country */}
@@ -1037,10 +1037,10 @@ const NewSellerPropertyPage = () => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="openHouseDates" className={labelClassName}>
-                  Open House Dates & Times (e.g., "Sat 2-4pm, Sun 1-3pm")
+                  Open House Dates &amp; Times (e.g., &quot;Sat 2-4pm, Sun 1-3pm&quot;)
                 </label>
                 <input
-                  type="text"
+                  type="text" 
                   id="openHouseDates"
                   {...register("openHouseDates")}
                   className={inputClassName}

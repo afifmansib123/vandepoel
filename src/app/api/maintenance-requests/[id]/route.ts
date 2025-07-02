@@ -4,15 +4,15 @@ import MaintenanceRequest from "@/app/models/MaintenanceRequest";
 import mongoose from "mongoose";
 
 interface RouteContext {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // ======================= THE FIX IS IN THE FUNCTION SIGNATURE =======================
 export async function PUT(req: NextRequest, context: RouteContext) {
   await dbConnect();
   
-  // Destructure 'id' from context.params
-  const { id } = context.params;
+  // Await the params Promise and destructure 'id'
+  const { id } = await context.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ success: false, message: "Invalid request ID format" }, { status: 400 });
   }
@@ -46,7 +46,7 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 // DELETE /api/maintenance-requests/[id] - Also useful for a superadmin
 export async function DELETE(req: NextRequest, { params }: RouteContext) {
     await dbConnect();
-    const { id } = params;
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return NextResponse.json({ success: false, message: "Invalid request ID format" }, { status: 400 });

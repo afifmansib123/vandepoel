@@ -82,12 +82,12 @@ export async function GET(
 // --- PUT HANDLER (WITH CORRECTED LOGIC FOR NEW MODEL) ---
 export async function PUT(
   request: NextRequest,
-  context: { params: { cognitoId: string } }
+  context: { params: Promise<{ cognitoId: string }> }
 ) {
   console.log("--- PUT /api/managers/[cognitoId] ---");
   console.log("Received context:", context);
   
-  const { cognitoId: cognitoIdFromPath } = context.params;
+  const { cognitoId: cognitoIdFromPath } = await context.params;
   console.log(`[API /managers/:id PUT] Handler invoked. Path param cognitoId: "${cognitoIdFromPath}"`);
 
   console.log(`[API /managers/:id PUT] Authorization check passed.`);

@@ -9,7 +9,7 @@ import { useGetAuthUserQuery, useGetmanagerPropertiesQuery } from "@/state/api";
 import React from "react";
 import { useState , useEffect } from "react";
 
-const managerProperties = () => {
+const ManagerProperties = () => {
   const {
     data: managerProperties, // Type assertion for better intellisense
     isLoading,
@@ -86,4 +86,4 @@ const managerProperties = () => {
   );
 };
 
-export default managerProperties;
+export default ManagerProperties;

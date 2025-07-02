@@ -129,7 +129,7 @@ const LandlordApplicationsPage = () => {
       <div className="text-center py-16 px-6 bg-white rounded-lg shadow-md">
         <FileText className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-xl font-semibold text-gray-900">No Applications Yet</h3>
-        <p className="mt-1 text-gray-500">When someone applies, you'll see it here.</p>
+        <p className="mt-1 text-gray-500">When someone applies, you&apos;ll see it here.</p>
       </div>
     );
     if (filteredApplications.length === 0) return (

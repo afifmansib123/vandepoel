@@ -53,9 +53,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"; // For the top image carousel
 
-// Components from the "zip file" (initial user provided files)
-import ContactWidget from "@/app/(nondashboard)/search/[id]/ContactWidget"; // Adjusted path
-import ApplicationModal from "@/app/(nondashboard)/search/[id]/ApplicationModal"; // Adjusted path
+import ApplicationModal from "@/app/(nondashboard)/search/[id]/ApplicationModal"
 import { useGetAuthUserQuery } from "@/state/api";
 import {
   Wrench, X, CheckCircle, AlertTriangle,

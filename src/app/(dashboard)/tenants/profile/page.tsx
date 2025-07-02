@@ -145,7 +145,7 @@ const TenantProfile = () => {
             Error Loading Profile
           </h2>
           <p className="text-gray-700">
-            We couldn't fetch your profile. Please try refreshing the page or
+            We couldnt fetch your profile. Please try refreshing the page or
             contact support.
           </p>
         </div>

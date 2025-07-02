@@ -142,7 +142,7 @@ const BuyerProfile = () => {
             Error Loading Profile
           </h2>
           <p className="text-gray-700">
-            We couldn't fetch your profile. Please try refreshing the page or
+            We couldn&apos;t fetch your profile. Please try refreshing the page or
             contact support.
           </p>
         </div>

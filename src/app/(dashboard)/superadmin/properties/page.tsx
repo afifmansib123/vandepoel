@@ -348,7 +348,7 @@ const PropertyDetailsModal = ({
                 <div>
                   <span className="text-gray-600">Seller Notes:</span>
                   <p className="text-gray-700 mt-1 p-3 bg-white rounded border-l-4 border-blue-400">
-                    "{property.sellerNotes}"
+                    {property.sellerNotes}
                   </p>
                 </div>
               )}
@@ -434,10 +434,15 @@ const SuperadminPropertiesPage = () => {
     if (!searchQuery) return properties;
     const lowerCaseQuery = searchQuery.toLowerCase();
     return properties.filter(
-      (prop: PropertyForAdmin) =>
-        prop.name.toLowerCase().includes(lowerCaseQuery) ||
-        prop._id.toLowerCase().includes(lowerCaseQuery) ||
-        prop.sellerCognitoId.toLowerCase().includes(lowerCaseQuery)
+      (prop: any) => {
+        // Convert the property to a plain object if it's a Mongoose model
+        const property = prop.toObject ? prop.toObject() : prop;
+        return (
+          property.name?.toLowerCase().includes(lowerCaseQuery) ||
+          property._id?.toLowerCase().includes(lowerCaseQuery) ||
+          property.sellerCognitoId?.toLowerCase().includes(lowerCaseQuery)
+        );
+      }
     );
   }, [properties, searchQuery]);
 
@@ -520,39 +525,43 @@ const SuperadminPropertiesPage = () => {
             </TableHeader>
             <TableBody>
               {filteredProperties.length > 0 ? (
-                filteredProperties.map((prop: PropertyForAdmin) => (
-                  <TableRow key={prop._id}>
-                    <TableCell className="font-medium">{prop.name}</TableCell>
-                    <TableCell>{prop.propertyType}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          prop.propertyStatus === "Sell" || prop.propertyStatus === "For Sale"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {prop.propertyStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {prop.location?.city}, {prop.location?.country}
-                    </TableCell>
-                    <TableCell>
-                      ${prop.salePrice?.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedProperty(prop)}
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredProperties.map((prop: any) => {
+                  // Convert to plain object if it's a Mongoose model
+                  const property = prop.toObject ? prop.toObject() : prop;
+                  return (
+                    <TableRow key={property._id}>
+                      <TableCell className="font-medium">{property.name}</TableCell>
+                      <TableCell>{property.propertyType}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            property.propertyStatus === "Sell" || property.propertyStatus === "For Sale"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {property.propertyStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {property.location?.city}, {property.location?.country}
+                      </TableCell>
+                      <TableCell>
+                        ${property.salePrice?.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedProperty(property)}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center h-24">

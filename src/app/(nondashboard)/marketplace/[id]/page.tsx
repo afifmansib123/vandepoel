@@ -416,7 +416,7 @@ const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
   property,
   currentUser,
 }) => {
-  if (!isOpen) return null;
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -427,6 +427,8 @@ const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
     preferredTime: "",
     message: "",
   });
+
+  if (!isOpen) return null;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -609,7 +611,6 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
   property,
   currentUser,
 }) => {
-  if (!isOpen) return null;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   // --- FIX #1: Simplified state. Name, email, and phone are removed.
@@ -622,7 +623,7 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
     coverLetter: "",
     references: "",
   });
-
+if (!isOpen) return null;
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -712,7 +713,7 @@ const AgentApplicationModal: React.FC<AgentApplicationModalProps> = ({
             </div>
           <div>
             <label htmlFor="coverLetter" className="block text-sm font-medium text-gray-700 mb-1">Cover Letter / Bio *</label>
-            <textarea name="coverLetter" id="coverLetter" rows={4} required onChange={handleChange} value={formData.coverLetter} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Briefly describe your experience and why you're a good fit."></textarea>
+            <textarea name="coverLetter" id="coverLetter" rows={4} required onChange={handleChange} value={formData.coverLetter} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Briefly describe your experience and why youre a good fit."></textarea>
           </div>
           <div>
             <label htmlFor="references" className="block text-sm font-medium text-gray-700 mb-1">References (Optional)</label>
@@ -758,7 +759,6 @@ const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
   property,
   currentUser,
 }) => {
-  if (!isOpen) return null;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -772,6 +772,8 @@ const FinancialServicesModal: React.FC<FinancialServicesModalProps> = ({
     employmentStatus: "employed",
     message: "",
   });
+
+  if (!isOpen) return null;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -850,7 +852,6 @@ const RequestToRentModal: React.FC<RequestToRentModalProps> = ({
   property,
   currentUser,
 }) => {
-  if (!isOpen) return null;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   // --- FIX #1: Simplified state. We will add user info automatically.
@@ -859,6 +860,8 @@ const RequestToRentModal: React.FC<RequestToRentModalProps> = ({
     numberOfOccupants: 1,
     message: "",
   });
+
+  if (!isOpen) return null;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -1123,7 +1126,7 @@ const PropertyDetailView: React.FC = () => {
             Property Not Found
           </h2>
           <p className="text-gray-600 mb-6">
-            The property you're looking for doesn't exist.
+            The property you&apos;re looking for doesn&apos;t exist.
           </p>
           <Button
             onClick={() => router.push("/properties")}

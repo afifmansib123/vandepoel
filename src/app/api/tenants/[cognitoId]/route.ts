@@ -31,9 +31,7 @@ interface PopulatedTenantResponse extends Omit<TenantDocument, 'favorites' | '_i
 
 // Type for the Next.js route handler context parameters
 interface HandlerContext {
-  params: {
-    cognitoId: string;
-  };
+  params: Promise<{ cognitoId: string }>;
 }
 
 // Type for the request body when updating a Tenant (PUT request)

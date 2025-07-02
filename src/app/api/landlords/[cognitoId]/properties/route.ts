@@ -9,10 +9,36 @@ import { authenticateAndAuthorize, AuthenticatedUser } from '@/lib/authUtils'; /
 
 // ... (other interface definitions like ParsedPointCoordinates, LocationDocumentLean, LocationDataObject remain the same) ...
 
+interface ParsedPointCoordinates {
+  longitude: number;
+  latitude: number;
+}
+
+interface LocationDocumentLean {
+  id: number;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  coordinates: string | null;
+  [key: string]: any;
+}
+
+interface LocationDataObject {
+  id: number;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  coordinates: ParsedPointCoordinates | null;
+}
+
 interface HandlerContext {
-  params: {
+  params: Promise<{
     cognitoId: string;
-  };
+  }>;
 }
 
 // IMPORTANT: Update this interface based on your Property schema
@@ -30,7 +56,6 @@ interface PropertyWithPopulatedLocation extends Omit<PropertyDocumentLean, 'loca
   _id: string;
   location: LocationDataObject | null;
 }
-
 
 function parseWKTPoint(wktString: string | null | undefined): ParsedPointCoordinates | null {
     if (!wktString || typeof wktString !== 'string') return null;
@@ -51,7 +76,9 @@ export async function GET(
 ) {
   console.log("--- GET /api/landlords/[cognitoId]/properties ---");
   await dbConnect();
-  const { cognitoId: cognitoIdFromPath } = context.params; // Renamed for clarity
+  
+  // Await the params Promise
+  const { cognitoId: cognitoIdFromPath } = await context.params; // Renamed for clarity
 
   // --- ADDED AUTHENTICATION & AUTHORIZATION ---
   const authResult = await authenticateAndAuthorize(request, ['landlord']);

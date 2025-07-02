@@ -225,13 +225,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Connect to database
     await dbConnect();
 
-    const propertyId = params.id;
+    const propertyId = (await params).id;
 
     if (!propertyId) {
       return NextResponse.json(

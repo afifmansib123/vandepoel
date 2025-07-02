@@ -123,28 +123,28 @@ const ApplicationModal = ({
               </p>
             )}
             <CustomFormField
-              control={form.control}
+
               name="name"
               label="Name"
               type="text"
               placeholder="Enter your full name"
             />
             <CustomFormField
-              control={form.control}
+
               name="email"
               label="Email"
               type="email"
               placeholder="Enter your email address"
             />
             <CustomFormField
-              control={form.control}
+
               name="phoneNumber"
               label="Phone Number"
               type="text"
               placeholder="Enter your phone number"
             />
             <CustomFormField
-              control={form.control}
+
               name="message"
               label="Message (Optional)"
               type="textarea"
