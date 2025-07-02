@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { XCircle, FileText, User, Home, Calendar } from 'lucide-react';
 
-// You can create a simple loading spinner component like this
+// A simple loading spinner component
 const LoadingSpinner = () => (
     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -11,12 +11,15 @@ const LoadingSpinner = () => (
     </svg>
 );
 
-// Reuse the Application type definition for props
+// Updated interface to reflect that the object may contain more details
 interface PopulatedProperty {
   _id: string; // The mongodb _id
-  id: string;  // The original property _id from its own model
   name: string;
+  // This object likely contains more details (e.g., photoUrls, address)
+  // all of which will now be sent with the contract.
+  [key: string]: any;
 }
+
 interface Application {
   propertyId: PopulatedProperty;
   senderId: string;
@@ -43,12 +46,19 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
     setIsLoading(true);
     setError(null);
 
+    // --- MODIFICATION START ---
+    // Instead of sending just the property's ID, we now send the entire property object.
+    // The key is changed from 'propertyId' to 'property' to be more descriptive.
+    // Your backend API at `POST /api/contracts` should be updated to expect this
+    // 'property' object. From there, it can extract the `_id` for database references
+    // and/or store the other details as a snapshot within the contract document.
     const contractData = {
-      propertyId: application.propertyId._id, // The Mongoose ObjectId of the property
+      property: application.propertyId, // This now sends the full property object
       tenantId: application.senderId,
       managerId: managerId,
       duration: duration,
     };
+    // --- MODIFICATION END ---
 
     try {
       const response = await fetch('/api/contracts', {
