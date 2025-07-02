@@ -91,11 +91,11 @@ function parseWKTPointString(wktString: string | null | undefined): ParsedPointC
 // This single GET function now handles BOTH numeric IDs and MongoDB _ids.
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } } // The context param is simplified here
+  { params }: { params: Promise<{ id: string }> } // The context param is simplified here
 ) {
   await dbConnect();
   
-  const { id: idParam } = params;
+  const { id: idParam } = await params;
   
   console.log(`GET /api/seller-properties/ with parameter: ${idParam}`);
 
