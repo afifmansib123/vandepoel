@@ -156,7 +156,7 @@ const Favorites = () => {
           <SellerPropertyCard
             key={property.id}
             property={property}
-            propertyLinkBase="/seller-marketplace"
+            propertyLinkBase="/marketplace"
             onFavoriteToggle={handleFavoriteToggle}
             showFavoriteButton={true}
           />

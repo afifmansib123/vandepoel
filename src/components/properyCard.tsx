@@ -9,12 +9,10 @@ import {
   MapPin,
   Maximize,
   CalendarDays,
-  Tag,
   Building,
-} from "lucide-react"; // Or your preferred icon library
+} from "lucide-react";
 
 // Define a type for your property object based on the provided JSON
-// This makes props handling much safer and easier
 interface Location {
   id: number;
   address: string;
@@ -22,7 +20,7 @@ interface Location {
   state: string;
   country: string;
   postalCode: string;
-  coordinates: null | { lat: number; lng: number }; // Assuming coordinates could be null
+  coordinates: null | { lat: number; lng: number };
 }
 
 export interface Property {
@@ -48,7 +46,7 @@ export interface Property {
   insuranceRecommendation: string;
   locationId: number;
   sellerCognitoId: string;
-  buyerInquiries: any[]; // Define more strictly if needed
+  buyerInquiries: any[];
   postedDate: string;
   createdAt: string;
   updatedAt: string;
@@ -81,14 +79,33 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const displayImage =
     photoUrls && photoUrls.length > 0
       ? photoUrls[0]
-      : "https://via.placeholder.com/400x300.png?text=No+Image"; // Placeholder image
+      : "https://via.placeholder.com/400x300.png?text=No+Image";
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "THB", // Change as needed
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(salePrice);
+  // <<< CHANGE 1: ADD THE DYNAMIC CURRENCY FORMATTING FUNCTION
+  const formatPrice = (price: number, country?: string) => {
+    const countryLower = country?.toLowerCase().trim();
+
+    let options: Intl.NumberFormatOptions = {
+      style: "currency",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    };
+    let locale = "en-US"; // Default locale
+
+    if (countryLower === "thailand") {
+      options.currency = "THB";
+      locale = "th-TH";
+    } else if (countryLower === "belgium") {
+      options.currency = "EUR";
+      locale = "nl-BE";
+    } else {
+      // Default to USD if no specific country matches
+      options.currency = "USD";
+    }
+
+    return new Intl.NumberFormat(locale, options).format(price);
+  };
+
 
   const formattedDate = new Date(postedDate).toLocaleDateString("en-US", {
     year: "numeric",
@@ -127,7 +144,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {name}
           </h3>
           <p className="text-2xl font-bold text-gray-800 mb-2">
-            {formattedPrice}
+            {/* <<< CHANGE 2: USE THE NEW FUNCTION TO DISPLAY THE PRICE */}
+            {formatPrice(salePrice, location?.country)}
           </p>
 
           <div className="flex items-center text-sm text-gray-600 mb-2">
@@ -148,7 +166,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </div>
             <div className="flex items-center">
               <Maximize size={16} className="mr-1 text-black" />{" "}
-              {squareFeet}
+              {squareFeet.toLocaleString()}
               <span className="ml-1 hidden sm:inline">sqft</span>
             </div>
           </div>

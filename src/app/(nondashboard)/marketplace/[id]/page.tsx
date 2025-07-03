@@ -1070,12 +1070,29 @@ const PropertyDetailView: React.FC = () => {
   };
 
   // Utility functions
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", {
+  const formatPrice = (price: number, country?: string) => {
+    // Normalize country name for easier matching
+    const countryLower = country?.toLowerCase().trim();
+
+    let options: Intl.NumberFormatOptions = {
       style: "currency",
-      currency: "THB",
       minimumFractionDigits: 0,
-    }).format(price);
+      maximumFractionDigits: 2,
+    };
+    let locale = "en-US"; // Default locale
+
+    if (countryLower === "thailand") {
+      options.currency = "THB";
+      locale = "th-TH";
+    } else if (countryLower === "belgium") {
+      options.currency = "EUR";
+      locale = "nl-BE"; // Use a Belgian locale for correct formatting (e.g., € 1.234,56)
+    } else {
+      // Default to USD if no specific country matches
+      options.currency = "USD";
+    }
+
+    return new Intl.NumberFormat(locale, options).format(price);
   };
 
   const formatDate = (dateString: string) => {
@@ -1286,7 +1303,7 @@ const PropertyDetailView: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-3xl font-bold text-blue-600">
-                    {formatPrice(property.salePrice)}
+                    {formatPrice(property.salePrice, property.location?.country)}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1469,14 +1486,14 @@ const PropertyDetailView: React.FC = () => {
                 </TabsContent>
 
                 <TabsContent value="financial" className="mt-6">
-                  <div className="space-y-4">
+<div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-gray-900 mb-2">
                           Sale Price
                         </h4>
                         <p className="text-2xl font-bold text-blue-600">
-                          {formatPrice(property.salePrice)}
+                          {formatPrice(property.salePrice, property.location?.country)}
                         </p>
                       </div>
 
@@ -1486,7 +1503,7 @@ const PropertyDetailView: React.FC = () => {
                             HOA Fees
                           </h4>
                           <p className="text-lg font-semibold text-gray-700">
-                            {formatPrice(property.HOAFees)}/month
+                            {formatPrice(property.HOAFees, property.location?.country)}/month
                           </p>
                         </div>
                       )}
@@ -1497,7 +1514,7 @@ const PropertyDetailView: React.FC = () => {
                             Application Fee
                           </h4>
                           <p className="text-lg font-semibold text-gray-700">
-                            {formatPrice(property.applicationFee)}
+                            {formatPrice(property.applicationFee, property.location?.country)}
                           </p>
                         </div>
                       )}
@@ -1508,7 +1525,7 @@ const PropertyDetailView: React.FC = () => {
                             Security Deposit
                           </h4>
                           <p className="text-lg font-semibold text-gray-700">
-                            {formatPrice(property.securityDeposit)}
+                            {formatPrice(property.securityDeposit, property.location?.country)}
                           </p>
                         </div>
                       )}

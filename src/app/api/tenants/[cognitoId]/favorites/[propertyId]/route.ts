@@ -1,105 +1,93 @@
-// src/app/api/buyers/[cognitoId]/favorites/[propertyId]/route.ts
+// src/app/api/tenants/[cognitoId]/favorites/[propertyId]/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../../../utils/dbConnect';
-import Tenant from '@/app/models/Tenant';
+import Tenant from '@/app/models/Tenant'; // CORRECT: Use the Tenant model
 import SellerProperty from '@/app/models/SellerProperty';
 
-async function getBuyerAndProperty(cognitoId: string, propertyIdStr: string) {
+interface HandlerContext {
+  params: {
+    cognitoId: string;
+    propertyId: string;
+  };
+}
+
+// Helper to get the tenant and validate the property
+async function getTenantAndValidate(cognitoId: string, propertyIdStr: string) {
     const propertyIdNum = Number(propertyIdStr);
     if (isNaN(propertyIdNum)) {
         return { error: NextResponse.json({ message: 'Invalid Property ID format' }, { status: 400 }) };
     }
 
-    const buyer = await Tenant.findOne({ cognitoId }).exec();
-    if (!buyer) {
-        return { error: NextResponse.json({ message: 'Buyer not found' }, { status: 404 }) };
+    // CORRECT: Find a document in the 'tenants' collection
+    const tenant = await Tenant.findOne({ cognitoId }).exec();
+    if (!tenant) {
+        return { error: NextResponse.json({ message: 'Tenant not found' }, { status: 404 }) };
     }
 
-    const property = await SellerProperty.findOne({ id: propertyIdNum }).select('_id id').lean().exec();
-    if (!property) {
+    // Optional but good: Check if property exists
+    const propertyExists = await SellerProperty.exists({ id: propertyIdNum });
+    if (!propertyExists) {
         return { error: NextResponse.json({ message: 'Property not found' }, { status: 404 }) };
     }
     
-    return { buyer, propertyId: propertyIdNum, propertyExists: true };
-}
-
-async function getPopulatedBuyer(buyer: any) {
-    const populatedBuyer = buyer.toObject();
-    if (populatedBuyer.favorites && populatedBuyer.favorites.length > 0) {
-        const favoriteProperties = await SellerProperty.find({ 
-            id: { $in: populatedBuyer.favorites as number[] } 
-        }).lean().exec();
-        populatedBuyer.favorites = favoriteProperties;
-    } else {
-        populatedBuyer.favorites = [];
-    }
-    return populatedBuyer;
+    return { tenant, propertyId: propertyIdNum };
 }
 
 // --- POST Handler (Add Favorite Property) ---
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
-) {
+export async function POST(request: NextRequest, { params }: HandlerContext) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = await params;
+  const { cognitoId, propertyId: propertyIdStr } = params;
 
-  const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
+  const result = await getTenantAndValidate(cognitoId, propertyIdStr);
   if (result.error) return result.error;
-  const { buyer, propertyId } = result;
+  const { propertyId } = result;
 
   try {
-    // Use MongoDB's $addToSet to prevent duplicates at the database level
-    const updateResult = await Tenant.findOneAndUpdate(
+    // CORRECT: Update the document in the 'tenants' collection
+    const updatedTenant = await Tenant.findOneAndUpdate(
       { cognitoId },
-      { $addToSet: { favorites: propertyId } }, // $addToSet only adds if not already present
-      { new: true } // Return the updated document
-    ).exec();
+      { $addToSet: { favorites: propertyId } },
+      { new: true }
+    ).lean().exec(); // Use .lean() for a plain object
 
-    if (!updateResult) {
-      return NextResponse.json({ message: 'Failed to update favorites' }, { status: 500 });
+    if (!updatedTenant) {
+      return NextResponse.json({ message: 'Failed to update tenant favorites' }, { status: 500 });
     }
 
-    // Get populated buyer for response
-    const populatedBuyer = await getPopulatedBuyer(updateResult);
-    return NextResponse.json(populatedBuyer, { status: 200 });
+    return NextResponse.json(updatedTenant, { status: 200 });
 
   } catch (error: any) {
-    console.error(`Error adding favorite for buyer ${cognitoId}:`, error);
+    console.error(`Error adding favorite for tenant ${cognitoId}:`, error);
     return NextResponse.json({ message: `Error adding favorite: ${error.message}` }, { status: 500 });
   }
 }
 
 // --- DELETE Handler (Remove Favorite Property) ---
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: HandlerContext) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = await params;
+  const { cognitoId, propertyId: propertyIdStr } = params;
 
-  const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
+  const result = await getTenantAndValidate(cognitoId, propertyIdStr);
   if (result.error) return result.error;
-  const { buyer, propertyId } = result;
+  const { propertyId } = result;
 
   try {
-    // Use MongoDB's $pull to remove the property ID from favorites
-    const updateResult = await Tenant.findOneAndUpdate(
+    // CORRECT: Update the document in the 'tenants' collection
+    const updatedTenant = await Tenant.findOneAndUpdate(
       { cognitoId },
-      { $pull: { favorites: propertyId } }, // $pull removes all instances of the value
-      { new: true } // Return the updated document
-    ).exec();
+      { $pull: { favorites: propertyId } },
+      { new: true }
+    ).lean().exec(); // Use .lean() for a plain object
 
-    if (!updateResult) {
-      return NextResponse.json({ message: 'Failed to update favorites' }, { status: 500 });
+    if (!updatedTenant) {
+      return NextResponse.json({ message: 'Failed to update tenant favorites' }, { status: 500 });
     }
 
-    // Get populated buyer for response
-    const populatedBuyer = await getPopulatedBuyer(updateResult);
-    return NextResponse.json(populatedBuyer, { status: 200 });
+    return NextResponse.json(updatedTenant, { status: 200 });
 
   } catch (error: any) {
-    console.error(`Error removing favorite for buyer ${cognitoId}:`, error);
+    console.error(`Error removing favorite for tenant ${cognitoId}:`, error);
     return NextResponse.json({ message: `Error removing favorite: ${error.message}` }, { status: 500 });
   }
 }

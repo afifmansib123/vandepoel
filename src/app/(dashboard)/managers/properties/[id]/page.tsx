@@ -736,6 +736,31 @@ const SellerPropertyDetailsPage = () => {
   const { data: authUser } = useGetAuthUserQuery();
   const propertyIdForModal = Number(property?.id);
 
+  const formatPrice = (price: number, country?: string) => {
+    const countryLower = country?.toLowerCase().trim();
+
+    let options: Intl.NumberFormatOptions = {
+      style: "currency",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0, // Or 2 if you want decimals
+    };
+    let locale = "en-US"; // Default locale
+
+    if (countryLower === "thailand") {
+      options.currency = "THB";
+      locale = "th-TH";
+    } else if (countryLower === "belgium") {
+      options.currency = "EUR";
+      locale = "nl-BE"; 
+    } else {
+      // Default to USD if no specific country matches
+      options.currency = "USD";
+    }
+
+    return new Intl.NumberFormat(locale, options).format(price);
+  };
+  
+
   useEffect(() => {
     if (!propertyIdParams || isNaN(Number(propertyIdParams))) {
       setError("Invalid Property ID.");
@@ -916,7 +941,7 @@ const SellerPropertyDetailsPage = () => {
                       Sale Price
                     </div>
                     <div className="font-semibold text-gray-800">
-                      ${property.salePrice.toLocaleString()}
+                       {formatPrice(property.salePrice, property.location?.country)}
                     </div>
                   </div>
                   <div className="relative">

@@ -61,27 +61,42 @@ const SellerMap: React.FC<SellerMapProps> = ({ properties, isLoading }) => {
     const minPrice = prices[0];
     const maxPrice = prices[prices.length - 1];
     
-    const formatPrice = (price: number) => {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+const formatPrice = (price: number, country?: string) => {
+      const countryLower = country?.toLowerCase().trim();
+
+      let options: Intl.NumberFormatOptions = {
+        style: "currency",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(price);
+      };
+      let locale = "en-US"; // Default locale
+
+      if (countryLower === "thailand") {
+        options.currency = "THB";
+        locale = "th-TH";
+      } else if (countryLower === "belgium") {
+        options.currency = "EUR";
+        locale = "nl-BE"; 
+      } else {
+        // Default to USD if no specific country matches
+        options.currency = "USD";
+      }
+
+      return new Intl.NumberFormat(locale, options).format(price);
     };
 
     const priceRange = minPrice === maxPrice ? 
-      formatPrice(minPrice) : 
-      `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+      formatPrice(minPrice, firstProperty.location.country) : 
+      `${formatPrice(minPrice, firstProperty.location.country)} - ${formatPrice(maxPrice, firstProperty.location.country)}`;
 
     // Create popup content
-    const propertyListHTML = properties.slice(0, 5).map(property => `
+const propertyListHTML = properties.slice(0, 5).map(property => `
       <div style="border-bottom: 1px solid #e5e7eb; padding: 8px 0;">
         <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 2px; color: #1f2937;">
           ${property.name}
         </div>
         <div style="font-size: 0.85em; color: #059669; font-weight: 600; margin-bottom: 2px;">
-          ${formatPrice(property.salePrice)}
+          ${formatPrice(property.salePrice, property.location.country)}
         </div>
         <div style="font-size: 0.8em; color: #6b7280;">
           ${property.beds} bed • ${property.baths} bath • ${property.propertyType}
@@ -89,7 +104,7 @@ const SellerMap: React.FC<SellerMapProps> = ({ properties, isLoading }) => {
       </div>
     `).join('');
 
-    const popupHTML = `
+const popupHTML = `
       <div style="font-family: Arial, sans-serif; width: 280px;">
         <div style="background: #059669; color: white; padding: 12px; margin: -15px -15px 12px -15px;">
           <h3 style="margin: 0 0 4px; font-size: 1.1em; font-weight: 600;">

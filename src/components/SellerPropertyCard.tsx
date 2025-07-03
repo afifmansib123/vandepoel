@@ -80,7 +80,7 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
       console.log('Is already favorite:', isAlreadyFavorite);
       
       const cognitoId = authUser.cognitoInfo.userId;
-      const apiEndpoint = `/api/${authUser.userRole}s/${cognitoId}/favorites/${property.id}`;
+      const apiEndpoint = `/api/${authUser.userRole}/${cognitoId}/favorites/${property.id}`;
       
       const response = await fetch(apiEndpoint, {
         method: isAlreadyFavorite ? 'DELETE' : 'POST',
@@ -104,6 +104,30 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
   };
 
   const isFavorite = isPropertyFavorite();
+
+  const formatPrice = (price: number, country?: string) => {
+    const countryLower = country?.toLowerCase().trim();
+
+    let options: Intl.NumberFormatOptions = {
+      style: "currency",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0, // Or 2 if you want decimals
+    };
+    let locale = "en-US"; // Default locale
+
+    if (countryLower === "thailand") {
+      options.currency = "THB";
+      locale = "th-TH";
+    } else if (countryLower === "belgium") {
+      options.currency = "EUR";
+      locale = "nl-BE"; 
+    } else {
+      // Default to USD if no specific country matches
+      options.currency = "USD";
+    }
+
+    return new Intl.NumberFormat(locale, options).format(price);
+  };
 
   return (
     <Link href={link} legacyBehavior>
@@ -147,7 +171,7 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
         </div>
         <div className="p-5">
           <p className="text-2xl font-bold text-primary-700 mb-3">
-            THB{property.salePrice}
+           {formatPrice(property.salePrice, property.location?.country)}
           </p>
           <p className="text-sm text-gray-600 mb-3 flex items-center">
             <span
