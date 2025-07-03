@@ -54,7 +54,7 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
   };
 
   // Handle favorite toggle
-  const handleFavoriteToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+const handleFavoriteToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -63,24 +63,28 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
       return;
     }
 
-    // Check if user is buyer or tenant
     if (authUser.userRole !== 'buyer' && authUser.userRole !== 'tenant') {
       alert("Only buyers and tenants can save favorites");
       return;
     }
 
+    const isAlreadyFavorite = isPropertyFavorite();
+    
     try {
-      const currentFavorites = authUser.favorites || [];
-      
-      // Check if property ID already exists in favorites
-      const isAlreadyFavorite = currentFavorites.some((fav: FavoriteItem) => 
-        typeof fav === 'number' ? fav === property.id : fav.id === property.id
-      );
-      
-      console.log('Is already favorite:', isAlreadyFavorite);
+      // --- FIX: Map the user role to the correct API path segment ---
+      const roleToApiSegment: { [key: string]: string } = {
+        buyer: 'buyers',
+        tenant: 'tenants' // Add this for future-proofing
+      };
+
+      const apiSegment = roleToApiSegment[authUser.userRole];
+      if (!apiSegment) {
+          throw new Error(`Unsupported user role for favorites: ${authUser.userRole}`);
+      }
       
       const cognitoId = authUser.cognitoInfo.userId;
-      const apiEndpoint = `/api/${authUser.userRole}/${cognitoId}/favorites/${property.id}`;
+      const apiEndpoint = `/api/${apiSegment}/${cognitoId}/favorites/${property.id}`;
+      // --- END FIX ---
       
       const response = await fetch(apiEndpoint, {
         method: isAlreadyFavorite ? 'DELETE' : 'POST',
@@ -88,20 +92,19 @@ const SellerPropertyCard: React.FC<SellerPropertyCardProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      // Refetch user data to get updated favorites
       await refetchAuthUser();
-      
-      // Call the parent's toggle function to refresh data
       onFavoriteToggle?.();
 
     } catch (error) {
       console.error("Failed to update favorites:", error);
-      alert("Failed to update favorites. Please try again.");
+      alert(`Failed to update favorites: ${error instanceof Error ? error.message : "Please try again."}`);
     }
   };
+
 
   const isFavorite = isPropertyFavorite();
 
