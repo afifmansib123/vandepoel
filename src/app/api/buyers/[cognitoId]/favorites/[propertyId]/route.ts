@@ -35,12 +35,13 @@ async function getPopulatedBuyer(buyer: any) {
     }
     return populatedBuyer;
 }
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { cognitoId: string; propertyId: string } }
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
 ) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
   const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
   if (result.error) return result.error;
@@ -69,10 +70,10 @@ export async function POST(
 // --- DELETE Handler (Remove Favorite Property) ---
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { cognitoId: string; propertyId: string } }
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
 ) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
   const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
   if (result.error) return result.error;

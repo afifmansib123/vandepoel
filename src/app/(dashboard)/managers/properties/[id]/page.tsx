@@ -739,7 +739,7 @@ const SellerPropertyDetailsPage = () => {
   const formatPrice = (price: number, country?: string) => {
     const countryLower = country?.toLowerCase().trim();
 
-    let options: Intl.NumberFormatOptions = {
+    const options: Intl.NumberFormatOptions = {
       style: "currency",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0, // Or 2 if you want decimals

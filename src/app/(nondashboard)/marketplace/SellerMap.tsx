@@ -64,7 +64,7 @@ const SellerMap: React.FC<SellerMapProps> = ({ properties, isLoading }) => {
 const formatPrice = (price: number, country?: string) => {
       const countryLower = country?.toLowerCase().trim();
 
-      let options: Intl.NumberFormatOptions = {
+      const options: Intl.NumberFormatOptions = {
         style: "currency",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,

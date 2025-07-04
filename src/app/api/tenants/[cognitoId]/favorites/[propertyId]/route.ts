@@ -5,13 +5,6 @@ import dbConnect from '../../../../../../utils/dbConnect';
 import Tenant from '@/app/models/Tenant'; // CORRECT: Use the Tenant model
 import SellerProperty from '@/app/models/SellerProperty';
 
-interface HandlerContext {
-  params: {
-    cognitoId: string;
-    propertyId: string;
-  };
-}
-
 // Helper to get the tenant and validate the property
 async function getTenantAndValidate(cognitoId: string, propertyIdStr: string) {
     const propertyIdNum = Number(propertyIdStr);
@@ -35,9 +28,12 @@ async function getTenantAndValidate(cognitoId: string, propertyIdStr: string) {
 }
 
 // --- POST Handler (Add Favorite Property) ---
-export async function POST(request: NextRequest, { params }: HandlerContext) {
+export async function POST(
+  request: NextRequest, 
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
+) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
   const result = await getTenantAndValidate(cognitoId, propertyIdStr);
   if (result.error) return result.error;
@@ -64,9 +60,12 @@ export async function POST(request: NextRequest, { params }: HandlerContext) {
 }
 
 // --- DELETE Handler (Remove Favorite Property) ---
-export async function DELETE(request: NextRequest, { params }: HandlerContext) {
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
+) {
   await dbConnect();
-  const { cognitoId, propertyId: propertyIdStr } = params;
+  const { cognitoId, propertyId: propertyIdStr } = await params;
 
   const result = await getTenantAndValidate(cognitoId, propertyIdStr);
   if (result.error) return result.error;
