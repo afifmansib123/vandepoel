@@ -7,6 +7,7 @@ import {
   useUpdateBuyerSettingsMutation// You'll need to create this mutation hook
 } from "@/state/api";
 import React, { useState, useEffect } from "react";
+import TutorialModal from "@/components/TutorialModal";
 
 // Interface for Buyer data structure
 interface BuyerProfile {
@@ -30,8 +31,24 @@ type EditableBuyerProfile = Partial<
   >
 >;
 
+
 const BuyerProfile = () => {
   const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
+
+  const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
+
+useEffect(() => {
+    if (authUser?.userRole === 'buyer') {
+      try {
+        const tutorialSeen = localStorage.getItem(`tutorial_seen_buyer`);
+        if (!tutorialSeen) {
+            setIsTutorialModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Could not access local storage:", error);
+      }
+    }
+}, [authUser]);
 
   // You'll need to create this mutation hook in your API state
   const [updateProfile, { isLoading: isUpdating }] =
@@ -348,6 +365,13 @@ const BuyerProfile = () => {
           )}
         </div>
       </form>
+      {authUser && (
+    <TutorialModal 
+        isOpen={isTutorialModalOpen}
+        onClose={() => setIsTutorialModalOpen(false)}
+        userRole={authUser.userRole}
+    />
+)}
     </div>
   );
 };

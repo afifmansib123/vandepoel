@@ -24,10 +24,13 @@ const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  console.log('authuser object', authUser)
+  console.log("authuser object", authUser);
 
   const isDashboardPage =
-    pathname.includes("/managers") || pathname.includes("/tenants") || pathname.includes("/landlords") || pathname.includes("/buyers");;
+    pathname.includes("/managers") ||
+    pathname.includes("/tenants") ||
+    pathname.includes("/landlords") ||
+    pathname.includes("/buyers");
 
   const handleSignOut = async () => {
     await signOut();
@@ -69,32 +72,33 @@ const Navbar = () => {
           </Link>
           {isDashboardPage && authUser && (
             <Button
-  variant="secondary"
-  className="md:ml-4 bg-primary-50 text-primary-700 hover:bg-secondary-500 hover:text-primary-50"
-  onClick={() => {
-    if (authUser.userRole?.toLowerCase() === "manager") {
-      router.push("/managers/newproperty")
-    } else if (authUser.userRole?.toLowerCase() === "landlord") {
-      router.push("/landlords/newproperty")
-    } else {
-      router.push("/search")
-    }
-  }}
->
-  {authUser.userRole?.toLowerCase() === "manager" || authUser.userRole?.toLowerCase() === "landlord" ? (
-    <>
-      <Plus className="h-4 w-4" />
-      <span className="hidden md:block ml-2">Add New Property</span>
-    </>
-  ) : (
-    <>
-      <Search className="h-4 w-4" />
-      <span className="hidden md:block ml-2">
-        Search Properties
-      </span>
-    </>
-  )}
-</Button>
+              variant="secondary"
+              className="md:ml-4 bg-primary-50 text-primary-700 hover:bg-secondary-500 hover:text-primary-50"
+              onClick={() => {
+                if (authUser.userRole?.toLowerCase() === "manager") {
+                  router.push("/managers/newproperty");
+                } else if (authUser.userRole?.toLowerCase() === "landlord") {
+                  router.push("/landlords/newproperty");
+                } else {
+                  router.push("/search");
+                }
+              }}
+            >
+              {authUser.userRole?.toLowerCase() === "manager" ||
+              authUser.userRole?.toLowerCase() === "landlord" ? (
+                <>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden md:block ml-2">Add New Property</span>
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  <span className="hidden md:block ml-2">
+                    Search Properties
+                  </span>
+                </>
+              )}
+            </Button>
           )}
         </div>
         {!isDashboardPage && (

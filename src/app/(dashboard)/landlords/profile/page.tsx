@@ -8,6 +8,7 @@ import {
 } from "@/state/api";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import TutorialModal from "@/components/TutorialModal";
 
 // Interface for Landlord data structure
 interface LandlordProfile {
@@ -48,6 +49,22 @@ const LandlordProfile = () => {
 
   // Directly access the landlord's data from the auth hook result
   const landlordData = authUser?.userInfo as LandlordProfile | undefined;
+
+  // (Replace 'buyer' with 'tenant', 'landlord', or 'manager' as appropriate)
+const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
+
+useEffect(() => {
+    if (authUser?.userRole === 'landlord') {
+      try {
+        const tutorialSeen = localStorage.getItem(`tutorial_seen_buyer`);
+        if (!tutorialSeen) {
+            setIsTutorialModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Could not access local storage:", error);
+      }
+    }
+}, [authUser]);
 
   // These variables provide immediate visual feedback for selected images
   const displayedProfileImage = profileImageFile
@@ -278,6 +295,13 @@ const LandlordProfile = () => {
           )}
         </div>
       </form>
+      {authUser && (
+    <TutorialModal 
+        isOpen={isTutorialModalOpen}
+        onClose={() => setIsTutorialModalOpen(false)}
+        userRole={authUser.userRole}
+    />
+)}
     </div>
   );
 };

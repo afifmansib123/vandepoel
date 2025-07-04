@@ -8,6 +8,7 @@ import {
 } from "@/state/api";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import TutorialModal from '@/components/TutorialModal';
 
 // Interface for Tenant data structure
 interface TenantProfile {
@@ -45,6 +46,22 @@ const TenantProfile = () => {
   // State for managing edit mode and form data
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<EditableTenantProfile>({});
+
+  // (Replace 'buyer' with 'tenant', 'landlord', or 'manager' as appropriate)
+const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
+
+useEffect(() => {
+    if (authUser?.userRole === 'tenant') {
+      try {
+        const tutorialSeen = localStorage.getItem(`tutorial_seen_buyer`);
+        if (!tutorialSeen) {
+            setIsTutorialModalOpen(true);
+        }
+      } catch (error) {
+        console.error("Could not access local storage:", error);
+      }
+    }
+}, [authUser]);
 
   // Data fetching logic
   useEffect(() => {
@@ -351,6 +368,14 @@ const TenantProfile = () => {
           )}
         </div>
       </form>
+      {authUser && (
+    <TutorialModal 
+        isOpen={isTutorialModalOpen}
+        onClose={() => setIsTutorialModalOpen(false)}
+        userRole={authUser.userRole}
+    />
+)}
+
     </div>
   );
 };
