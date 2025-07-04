@@ -10,37 +10,35 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "./ui/sidebar"; // Assuming these are your custom UI components
+} from "./ui/sidebar";
 import {
-  Building, // For Properties (Manager/Landlord)
-  FileText, // For Applications
-  Heart, // For Favorites (Tenant/Buyer)
-  Home, // For Residences (Tenant), Dashboard (Buyer)
-  Menu, // Hamburger menu icon
-  Settings, // For Settings
-  X, // Close icon
-  Search, // For Property Search (Buyer)
-  Briefcase, // For My Listings/Portfolio (Landlord) - example
-  UserCircle, // For Profile/Account (generic or specific if needed)
+  Building,
+  FileText,
+  Heart,
+  Home,
+  Menu,
+  Settings,
+  X,
+  Search,
+  Briefcase,
+  UserCircle,
   ShieldCheck,
-  User, // Example for Admin/MasterAdmin if you add that later
+  User,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-// Define the props for AppSidebar
 interface AppSidebarProps {
-  userType: "manager" | "tenant" | "landlord" | "buyer" | string; // Allow string for future roles
+  userType: "manager" | "tenant" | "landlord" | "buyer" | "superadmin" | string;
 }
 
 const AppSidebar = ({ userType }: AppSidebarProps) => {
   const pathname = usePathname();
-  const { toggleSidebar, open } = useSidebar(); // Assuming useSidebar hook provides these
+  const { toggleSidebar, open } = useSidebar();
 
-  // --- MODIFICATION START: Define navLinks based on userType ---
   let navLinks = [];
-  let sidebarTitle = "Dashboard"; // Default title
+  let sidebarTitle = "Dashboard";
 
   switch (userType) {
     case "manager":
@@ -79,15 +77,11 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
           label: "My Properties",
           href: "/landlords/properties",
         },
-        // Example: Link to add a new property
-        // { icon: PlusCircle, label: "Add Property", href: "/landlords/properties/new" },
         {
-          icon: FileText, // Assuming landlords also see applications for their properties
+          icon: FileText,
           label: "Applications",
           href: "/landlords/applications",
         },
-        // Example: Link to view tenants of all properties or manage them
-        // { icon: Users, label: "My Tenants", href: "/landlords/tenants" },
         { icon: Settings, label: "Settings", href: "/landlords/settings" },
       ];
       break;
@@ -95,21 +89,18 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Buyer View";
       navLinks = [
         { icon: User, label: "Profile", href: "/buyers/profile" },
-        { icon: Search, label: "Search Properties", href: "/buyers/search" }, // Or just "/properties" if search is public but this is buyer dashboard
+        { icon: Search, label: "Search Properties", href: "/buyers/search" },
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
         {
-          icon: FileText, // Assuming landlords also see applications for their properties
+          icon: FileText,
           label: "Applications",
           href: "/buyers/applications",
         },
-        {
-          icon: UserCircle, // Or Settings icon
-          label: "Profile Settings",
-          href: "/buyers/settings",
-        },
+        { icon: Settings, label: "Settings", href: "/buyers/settings" },
       ];
       break;
     case "superadmin":
+      sidebarTitle = "Admin Panel";
       navLinks = [
         { href: "/admin/users", label: "User Management", icon: User },
         { href: "/admin/properties", label: "All Properties", icon: Home },
@@ -126,21 +117,20 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         { href: "/admin/services/banking", label: "Banking", icon: Building },
         { href: "/admin/settings", label: "Admin Settings", icon: Settings },
       ];
+      break; // Added missing break statement
     default:
-      // Fallback or links for an unknown role (should ideally not happen if roles are managed)
       sidebarTitle = "My Account";
       navLinks = [
         { icon: Home, label: "Dashboard", href: "/" },
-        { icon: Settings, label: "Settings", href: "/settings" }, // Generic settings link
+        { icon: Settings, label: "Settings", href: "/settings" },
       ];
       break;
   }
-  // --- MODIFICATION END ---
 
   return (
     <Sidebar
-      collapsible="icon" // Props from your UI library
-      className="fixed left-0 bg-white shadow-lg z-40" // Added z-index
+      collapsible="icon"
+      className="fixed left-0 bg-white shadow-lg z-40"
       style={{
         top: `${NAVBAR_HEIGHT}px`,
         height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
@@ -149,23 +139,20 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            {" "}
-            {/* This seems to be a wrapper, ensure it's used correctly by your UI lib */}
             <div
               className={cn(
-                "flex min-h-[56px] w-full items-center pt-3 mb-3", // Original styling
+                "flex min-h-[56px] w-full items-center pt-3 mb-3",
                 open ? "justify-between px-6" : "justify-center"
               )}
             >
               {open ? (
                 <>
-                  {/* --- MODIFICATION: Use dynamic sidebarTitle --- */}
                   <h1 className="text-xl font-bold text-gray-800">
                     {sidebarTitle}
                   </h1>
                   <button
-                    className="hover:bg-gray-100 p-2 rounded-md"
-                    onClick={toggleSidebar} // Corrected: directly call toggleSidebar
+                    className="hover:bg-gray-100 p-2 rounded-md transition-colors"
+                    onClick={toggleSidebar}
                     aria-label="Close sidebar"
                   >
                     <X className="h-6 w-6 text-gray-600" />
@@ -173,8 +160,8 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
                 </>
               ) : (
                 <button
-                  className="hover:bg-gray-100 p-2 rounded-md"
-                  onClick={toggleSidebar} // Corrected: directly call toggleSidebar
+                  className="hover:bg-gray-100 p-2 rounded-md transition-colors"
+                  onClick={toggleSidebar}
                   aria-label="Open sidebar"
                 >
                   <Menu className="h-6 w-6 text-gray-600" />
@@ -186,54 +173,41 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       </SidebarHeader>
 
       <SidebarContent className="overflow-y-auto">
-        {" "}
-        {/* Added overflow for scrollable content */}
         <SidebarMenu>
           {navLinks.map((link) => {
-            // Determine if the current link is active.
-            // For nested routes, you might want `pathname.startsWith(link.href)`
-            // For exact matches: `pathname === link.href`
-            const isActive =
-              pathname === link.href ||
-              (link.href !== "/" &&
-                pathname.startsWith(link.href) &&
-                link.href.split("/").length > 2);
+            // Fixed active link logic
+            const isActive = pathname === link.href || 
+              (link.href !== "/" && pathname.startsWith(link.href + "/"));
 
             return (
               <SidebarMenuItem key={link.href}>
                 <SidebarMenuButton
-                  asChild // Important if Link is the direct child for proper behavior
+                  asChild
                   className={cn(
-                    "flex items-center w-full text-left", // Ensure full width for click area
-                    // Conditional styling based on 'open' state and 'isActive'
-                    open ? "px-6 py-3" : "justify-center py-3 px-2 mx-1", // Adjust padding when collapsed
+                    "flex items-center w-full text-left transition-all duration-200",
+                    open ? "px-6 py-3" : "justify-center py-3 px-2 mx-1",
                     isActive
-                      ? "bg-primary-100 text-primary-700 font-semibold" // Active link styling
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-800", // Inactive link styling
-                    "rounded-md transition-colors duration-150" // General styling
+                      ? "bg-primary-100 text-primary-700 font-semibold border-r-2 border-primary-600"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-800",
+                    "rounded-md"
                   )}
                 >
-                  <Link href={link.href} className="w-full" scroll={false}>
+                  <Link href={link.href} className="w-full flex items-center" scroll={false}>
                     <div
                       className={cn(
                         "flex items-center gap-3",
-                        !open && "justify-center" // Center icon when collapsed
+                        !open && "justify-center"
                       )}
                     >
-                      <link.icon // Lucide icon component
+                      <link.icon
                         className={cn(
-                          "h-5 w-5 flex-shrink-0", // Icon size
-                          isActive ? "text-primary-600" : "text-gray-500" // Icon color
+                          "h-5 w-5 flex-shrink-0",
+                          isActive ? "text-primary-600" : "text-gray-500"
                         )}
                         aria-hidden="true"
                       />
-                      {open && ( // Only show label if sidebar is open
-                        <span
-                          className={cn(
-                            "font-medium text-sm" // Label styling
-                            // isActive ? "text-primary-700" : "text-gray-700" // Text color already handled by parent
-                          )}
-                        >
+                      {open && (
+                        <span className="font-medium text-sm truncate">
                           {link.label}
                         </span>
                       )}
@@ -245,7 +219,6 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
           })}
         </SidebarMenu>
       </SidebarContent>
-      {/* SidebarFooter can be added here if needed */}
     </Sidebar>
   );
 };
