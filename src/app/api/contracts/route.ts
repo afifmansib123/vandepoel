@@ -9,10 +9,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { propertyId, tenantId, managerId, duration } = body;
 
-    if (tenantId || !managerId) {
-      return NextResponse.json({ message: 'Missing required fields for contract creation' }, { status: 400 });
-    }
-
     const newContract = await Contract.create({ propertyId, tenantId, managerId, duration });
     return NextResponse.json({ message: 'Contract created successfully', data: newContract }, { status: 201 });
   } catch (error: any) {
