@@ -115,7 +115,7 @@ export type AppTag =
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseUrl: "/api",
     prepareHeaders: async (headers) => {
       const session = await fetchAuthSession();
       const accessToken = session.tokens?.accessToken?.toString(); 
