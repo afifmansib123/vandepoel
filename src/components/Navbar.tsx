@@ -57,15 +57,15 @@ const Navbar = () => {
             <div className="flex items-center gap-3">
               <Image
                 src="/logo.svg"
-                alt="Vandepoel Logo"
+                alt="AssetXToken Logo"
                 width={24}
                 height={24}
                 className="w-6 h-6"
               />
               <div className="text-xl font-bold">
-                Vande
+                AssetX
                 <span className="text-secondary-500 font-light hover:!text-primary-300">
-                  poel
+                  Token
                 </span>
               </div>
             </div>

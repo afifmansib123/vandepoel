@@ -10,7 +10,7 @@ const CallToActionSection = () => {
     <div className="relative py-24">
       <Image
         src="/landing-call-to-action.jpg"
-        alt="Vandepoel Search Section Background"
+        alt="AssetXToken Search"
         fill
         className="object-cover object-center"
       />

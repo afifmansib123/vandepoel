@@ -28,9 +28,9 @@ const components = {
     return (
       <View className="mt-4 mb-7">
         <Heading level={3} className="!text-2xl !font-bold">
-          Vande
+          AssetX
           <span className="text-secondary-500 font-light hover:!text-primary-300">
-            Poel
+            Token
           </span>
         </Heading>
         <p className="text-muted-foreground mt-2">
