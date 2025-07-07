@@ -7,7 +7,22 @@ export async function POST(req: NextRequest) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { propertyId, tenantId, managerId, duration } = body;
+    
+    // Extract IDs from the nested structure
+    const propertyId = body.property?._id;
+    const tenantId = body.tenantId;
+    const managerId = body.managerId;
+    const duration = body.duration;
+
+    // Fixed validation logic - check if required fields are missing
+    if (!tenantId || !managerId || !propertyId) {
+      return NextResponse.json({ 
+        message: 'Missing required fields for contract creation',
+        required: ['property._id', 'tenantId', 'managerId'],
+        received: { propertyId, tenantId, managerId, duration },
+        originalBody: body
+      }, { status: 400 });
+    }
 
     const newContract = await Contract.create({ propertyId, tenantId, managerId, duration });
     return NextResponse.json({ message: 'Contract created successfully', data: newContract }, { status: 201 });
