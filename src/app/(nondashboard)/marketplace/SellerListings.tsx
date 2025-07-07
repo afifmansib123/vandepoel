@@ -17,6 +17,10 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
     if (!allProperties) return []; // Handle case where allProperties might be initially undefined/null
 
     return allProperties.filter(property => {
+            if (filters.listingType && filters.listingType !== "any" && property.propertyStatus !== filters.listingType) {
+        return false;
+      }
+
       // Location filtering
       // Ensure property.location exists and has the country, state, city fields
       if (filters.country && (!property.location || property.location.country !== filters.country)) {
@@ -28,6 +32,7 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
       if (filters.city && (!property.location || property.location.city !== filters.city)) {
         return false;
       }
+      
 
       // Other filters
       if (filters.propertyType && filters.propertyType !== "any" && property.propertyType !== filters.propertyType) {

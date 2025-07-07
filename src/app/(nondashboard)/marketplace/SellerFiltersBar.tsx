@@ -25,7 +25,11 @@ interface Country {
   code: string;
   provinces: Province[];
 }
-
+const ListingTypeOptions: Record<string, string> = {
+  any: "For Sale or Rent",
+  Sell: "For Sale",
+  Rent: "For Rent",
+};
 const SellerPropertyTypeOptions: Record<string, string> = {
   any: "Any Type",
   "Condominium / Apartment": "Condo/Apartment",
@@ -70,6 +74,9 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
   );
 
   // Other filter states
+  const [listingTypeSelect, setListingTypeSelect] = useState(
+  initialFilters.listingType || "any"
+);
   const [minPriceInput, setMinPriceInput] = useState<string>(
     initialFilters.salePriceRange?.[0]?.toString() || ""
   );
@@ -218,6 +225,7 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
       state: selectedProvince || null,
       city: selectedCity || null,
       salePriceRange: currentPriceRange,
+      listingType: listingTypeSelect === "any" ? null : listingTypeSelect,
       propertyType: propertyTypeSelect === "any" ? null : propertyTypeSelect,
       beds: bedsSelect === "any" ? null : bedsSelect,
     };
@@ -228,6 +236,7 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
     selectedCity,
     minPriceInput,
     maxPriceInput,
+    listingTypeSelect,
     propertyTypeSelect,
     bedsSelect,
     triggerFilterChange,
@@ -301,6 +310,24 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
           ))}
         </SelectContent>
       </Select>
+
+      {/*rent or sell*/}
+            <Select
+        value={listingTypeSelect}
+        onValueChange={(value) => setListingTypeSelect(value)}
+      >
+        <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[150px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
+          <SelectValue placeholder="For Sale or Rent" />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(ListingTypeOptions).map(([key, name]) => (
+            <SelectItem key={key} value={key}>
+              {name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
 
       {/* Price Range Inputs */}
       <div className="flex items-center gap-1 w-full sm:w-auto">

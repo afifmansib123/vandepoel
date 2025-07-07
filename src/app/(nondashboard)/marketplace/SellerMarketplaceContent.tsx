@@ -34,6 +34,7 @@ const SellerMarketplacePage = () => {
     if (params.has('country')) filtersFromUrl.country = params.get('country')!;
     if (params.has('state')) filtersFromUrl.state = params.get('state')!;
     if (params.has('city')) filtersFromUrl.city = params.get('city')!;
+    if (params.has('listingType')) filtersFromUrl.listingType = params.get('listingType') as ('Sell' | 'Rent'); 
 
     // Existing filter reading
     if (params.has('salePriceRange')) {
@@ -93,6 +94,10 @@ const SellerMarketplacePage = () => {
     if (isLoading || !allProperties) return [];
     return allProperties.filter(property => {
         let match = true;
+
+                if (memoizedFilters.listingType && property.propertyStatus !== memoizedFilters.listingType) {
+            match = false;
+        }
 
         // Location filtering
         if (memoizedFilters.country && property.location.country !== memoizedFilters.country) {

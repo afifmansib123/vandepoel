@@ -36,6 +36,7 @@ export interface SellerMarketplaceFilters {
   salePriceRange: [number | null, number | null];
   propertyType?: string | null;
   beds?: string | null;
+  listingType?: 'Sell' | 'Rent' | any; 
 }
 
 // Updated initial filters
@@ -46,6 +47,7 @@ export const initialSellerMarketplaceFilters: SellerMarketplaceFilters = {
   salePriceRange: [null, null],
   propertyType: null, // Represents "any"
   beds: null,       // Represents "any"
+  listingType: null,
 };
 
 // Updated function to clean filters for URL
