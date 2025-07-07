@@ -547,7 +547,7 @@ const SuperadminPropertiesPage = () => {
                         {property.location?.city}, {property.location?.country}
                       </TableCell>
                       <TableCell>
-                        ${property.salePrice?.toLocaleString()}
+                        {property.salePrice?.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-center">
                         <Button

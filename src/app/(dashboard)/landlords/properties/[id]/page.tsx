@@ -968,18 +968,7 @@ const handleNextImage = () => {
           {/* Right Column (Contact Widget) */}
           <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit">
             <div className="bg-white border border-primary-200 rounded-2xl p-7 h-fit min-w-[300px]">
-                  {/* Contact Property */}
-                  <div className="flex items-center gap-5 mb-4 border border-primary-200 p-4 rounded-xl">
-                    <div className="flex items-center p-4 bg-primary-900 rounded-full">
-                      <Phone className="text-primary-50" size={15} />
-                    </div>
-                    <div>
-                      <p>Phone Number to Display</p>
-                      <div className="text-lg font-bold text-primary-800">
-                        (424) 340-5574
-                      </div>
-                    </div>
-                  </div>
+
                   <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit">
   <div className="bg-white border border-primary-200 rounded-2xl p-7 h-fit min-w-[300px] space-y-4">
     <Button
