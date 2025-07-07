@@ -102,27 +102,26 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
     case "superadmin":
       sidebarTitle = "Admin Panel";
       navLinks = [
-        { href: "/admin/users", label: "User Management", icon: User },
-        { href: "/admin/properties", label: "All Properties", icon: Home },
+        { href: "/superadmins/profile", label: "User Management", icon: User },
+        { href: "/superadmins/properties", label: "All Properties", icon: Home },
         {
-          href: "/admin/applications",
+          href: "/superadmins/allmaintenence",
           label: "All Applications",
           icon: FileText,
         },
         {
-          href: "/admin/services/maintenance",
+          href: "/superadmins/maintenance",
           label: "Maintenance",
           icon: Briefcase,
         },
-        { href: "/admin/services/banking", label: "Banking", icon: Building },
-        { href: "/admin/settings", label: "Admin Settings", icon: Settings },
+        { href: "/superadmins/banking", label: "Banking", icon: Building },
       ];
       break; // Added missing break statement
     default:
       sidebarTitle = "My Account";
       navLinks = [
         { icon: Home, label: "Dashboard", href: "/" },
-        { icon: Settings, label: "Settings", href: "/settings" },
+        { icon: Settings, label: "Settings", href: "/profile" },
       ];
       break;
   }

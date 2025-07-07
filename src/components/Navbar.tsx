@@ -135,7 +135,7 @@ const Navbar = () => {
                     className="cursor-pointer hover:!bg-primary-700 hover:!text-primary-100 font-bold"
                     onClick={() =>
                       router.push(
-                        `/${authUser.userRole?.toLowerCase()}s/settings`,
+                        `/${authUser.userRole?.toLowerCase()}s/profile`,
                         { scroll: false }
                       )
                     }
