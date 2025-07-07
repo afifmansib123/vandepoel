@@ -6,6 +6,7 @@ import SellerPropertyCard from "@/components/SellerPropertyCard";
 import { useGetAuthUserQuery } from "@/state/api";
 import React, { useState, useEffect } from "react";
 import { SellerPropertyLocation } from "@/types/sellerMarketplaceTypes";
+import Link from "next/link";
 
 // Types for the API response
 interface FavoriteProperty {
@@ -186,12 +187,12 @@ const Favorites = () => {
             <p className="text-gray-600 mb-6">
               Start browsing properties and click the heart icon to save your favorites here.
             </p>
-            <a
+            <Link
               href="/marketplace"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Browse Properties
-            </a>
+            </Link>
           </div>
         </div>
       )}
