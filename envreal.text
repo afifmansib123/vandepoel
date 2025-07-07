@@ -2,8 +2,8 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoidHJhbnN0aGVjb250aW5lbnRhbCIsImEiOiJjbWF4eTA1bDUwM2k2Mm1wcHR2bnpsczhyIn0.4zC4gD5CEZmGwyDf3idZ9g
 NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID=ap-southeast-2_BZGMt53ZV
 NEXT_PUBLIC_AWS_COGNITO_USER_POOL_CLIENT_ID=39s2g4sl8k385c10u153cjalri
-MONGODB_URI=mongodb+srv://afif:einstein14thmarch@cluster0.gdmmqkc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-AWS_ACCESS_KEY_ID=AKIAUS5UZU3UCJEE4LP4
-AWS_SECRET_ACCESS_KEY=1f1c8rcv7dtn4isc0t4mc0a1jhk1nn4rgac3eo504njfreqcav9n
+MONGODB_URI=mongodb+srv://afif:Ageekis0cool!@cluster0.hfyyyf2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+AWS_ACCESS_KEY_ID=AKIAUS5UZU3UCJEE4LP4   new -> AKIAZBQ3IWVH3557HXM2
+AWS_SECRET_ACCESS_KEY=1f1c8rcv7dtn4isc0t4mc0a1jhk1nn4rgac3eo504njfreqcav9n   new -> 44IFAp24usj3ciDdUFawsS7Y7PS52GvhXEXaXsW1
 AWS_REGION=ap-southeast-1
 S3_BUCKET_NAME=anewtestingbucketisbetter
