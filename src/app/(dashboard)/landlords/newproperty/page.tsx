@@ -311,7 +311,7 @@ const NewSellerPropertyPage = () => {
           {/* Location Section */}
           <div className={sectionCardClassName}>
             <h2 className={sectionTitleClassName}>Location</h2>
-            <p className={sectionDescriptionClassName}>Specify the property's location details.</p>
+            <p className={sectionDescriptionClassName}>Specify the property&apos;s location details.</p>
             <div className="space-y-4">
               <FormField control={control} name="country" render={({ field }) => (
                 <FormItem>
@@ -516,7 +516,7 @@ const NewSellerPropertyPage = () => {
             <div className="space-y-4">
               <FormField control={control} name="openHouseDates" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Open House Dates & Times (e.g., "Sat 2-4pm, Sun 1-3pm")</FormLabel>
+                  <FormLabel>Open House Dates & Times (e.g.Sat 2-4pm, Sun 1-3pm)</FormLabel>
                   <FormControl><Input placeholder="Enter dates, comma-separated" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
