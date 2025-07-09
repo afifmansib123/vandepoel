@@ -24,7 +24,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Description is required.'],
+    required: [false, 'Description is required.'],
   },
   salePrice: {
     type: Number,
@@ -32,12 +32,12 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
   },
   propertyType: {
     type: String,
-    required: [true, 'Property type is required.'],
+    required: [false, 'Property type is required.'],
   },
   propertyStatus: {
     type: String,
     default: 'For Sale',
-    required: true,
+    required: false,
   },
    features: {
     type: Map,
@@ -46,7 +46,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
   },
   squareFeet: {
     type: Number,
-    required: [true, 'Square footage is required.'],
+    required: [false, 'Square footage is required.'],
   },
   yearBuilt: {
     type: Number,
@@ -93,7 +93,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
   },
   locationId: {
     type: Number,
-    required: true,
+    required: false,
     index: true,
   },
   sellerCognitoId: {

@@ -36,19 +36,19 @@ interface FeatureDetail {
 
 interface SellerPropertyDataFromFrontend {
   name: string; 
-  description: string; 
+  description?: string; 
   salePrice: number; 
-  propertyType: string; 
-  propertyStatus: string;
-  squareFeet: number; 
+  propertyType?: string; 
+  propertyStatus?: string;
+  squareFeet?: number; 
   yearBuilt?: number | null; 
   HOAFees?: number | null;
-  features: { [key: string]: FeatureDetail };
-  amenities: string[]; 
-  highlights: string[];
+  features?: { [key: string]: FeatureDetail };
+  amenities?: string[]; 
+  highlights?: string[];
   openHouseDates?: string[]; // Changed to string[] for consistency
   sellerNotes?: string; 
-  allowBuyerApplications: boolean;
+  allowBuyerApplications?: boolean;
   preferredFinancingInfo?: string; 
   insuranceRecommendation?: string;
   address: string; 
@@ -56,7 +56,7 @@ interface SellerPropertyDataFromFrontend {
   state: string; 
   country: string; 
   postalCode: string;
-  managedBy : string;
+  managedBy? : string;
   // sellerCognitoId is added separately from auth
 }
 
