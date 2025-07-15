@@ -3,12 +3,12 @@
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { useGetAuthUserQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
-import { Bell, MessageCircle, Plus, Search } from "lucide-react";
+import { Bell, MessageCircle, Plus, Search, HelpCircle, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,11 +18,14 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { SidebarTrigger } from "./ui/sidebar";
+import TutorialModal from "./TutorialModal";
 
 const Navbar = () => {
   const { data: authUser } = useGetAuthUserQuery();
   const router = useRouter();
   const pathname = usePathname();
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
 
   console.log("authuser object", authUser);
 
@@ -31,6 +34,54 @@ const Navbar = () => {
     pathname.includes("/tenants") ||
     pathname.includes("/landlords") ||
     pathname.includes("/buyers");
+
+  // Fetch notification count based on user role
+  useEffect(() => {
+    if (!authUser?.cognitoInfo?.userId || !authUser?.userRole) return;
+
+    const fetchNotificationCount = async () => {
+      try {
+        const userRole = authUser.userRole.toLowerCase();
+        const userId = authUser.cognitoInfo.userId;
+        let url = '';
+
+        if (userRole === 'landlord' || userRole === 'manager') {
+          // Count pending applications received by landlords/managers
+          url = `/api/applications?receiverId=${userId}`;
+        } else if (userRole === 'buyer' || userRole === 'tenant') {
+          // Count approved applications sent by buyers/tenants
+          url = `/api/applications?senderId=${userId}`;
+        }
+
+        if (url) {
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            const applications = data.data || [];
+            
+            let count = 0;
+            if (userRole === 'landlord' || userRole === 'manager') {
+              // Count pending applications
+              count = applications.filter((app: any) => app.status === 'pending').length;
+            } else if (userRole === 'buyer' || userRole === 'tenant') {
+              // Count approved applications
+              count = applications.filter((app: any) => app.status === 'approved').length;
+            }
+            
+            setNotificationCount(count);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching notification count:', error);
+      }
+    };
+
+    fetchNotificationCount();
+    
+    // Optional: Set up polling to refresh count every 30 seconds
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, [authUser]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -110,12 +161,34 @@ const Navbar = () => {
           {authUser ? (
             <>
               <div className="relative hidden md:block">
-                <MessageCircle className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-secondary-700 rounded-full"></span>
+                <div 
+                  className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400 transition-colors"
+                  onClick={() => setIsTutorialModalOpen(!isTutorialModalOpen)}
+                  title={isTutorialModalOpen ? "Close Tutorial" : "Open Tutorial"}
+                >
+                  {isTutorialModalOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <HelpCircle className="w-6 h-6" />
+                  )}
+                </div>
               </div>
               <div className="relative hidden md:block">
-                <Bell className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-secondary-700 rounded-full"></span>
+                <Bell 
+                  className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400"
+                  onClick={() => {
+                    // Navigate to applications page based on user role
+                    const role = authUser.userRole?.toLowerCase();
+                    if (role) {
+                      router.push(`/${role}s/applications`);
+                    }
+                  }}
+                />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </span>
+                )}
               </div>
 
               <DropdownMenu>
@@ -185,6 +258,15 @@ const Navbar = () => {
           )}
         </div>
       </div>
+      
+      {/* Tutorial Modal */}
+      {authUser && (
+        <TutorialModal 
+          isOpen={isTutorialModalOpen}
+          onClose={() => setIsTutorialModalOpen(false)}
+          userRole={authUser.userRole}
+        />
+      )}
     </div>
   );
 };

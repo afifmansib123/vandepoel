@@ -16,7 +16,6 @@ const SellerMap: React.FC<SellerMapProps> = ({ properties, isLoading }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>("");
 
   // Function to geocode a location string
   const geocodeLocation = useCallback(async (locationString: string): Promise<{longitude: number, latitude: number} | null> => {
@@ -228,14 +227,6 @@ const popupHTML = `
     console.log("mapContainerRef.current:", mapContainerRef.current);
     console.log("Mapbox token exists:", !!mapboxgl.accessToken);
 
-    // Debug info for display
-    setDebugInfo(`
-      Properties count: ${properties?.length || 0}
-      IsLoading: ${isLoading}
-      Container ready: ${!!mapContainerRef.current}
-      Token exists: ${!!mapboxgl.accessToken}
-    `);
-
     if (!mapContainerRef.current) {
       console.log("No map container ref");
       return;
@@ -314,7 +305,6 @@ const popupHTML = `
       <div className="h-full flex flex-col items-center justify-center bg-red-50 rounded-md p-4">
         <div className="text-red-600 font-semibold mb-2">Map Error:</div>
         <div className="text-red-500 text-sm text-center">{mapError}</div>
-        <div className="text-gray-500 text-xs mt-4 whitespace-pre-line">{debugInfo}</div>
       </div>
     );
   }
@@ -342,11 +332,6 @@ const popupHTML = `
         }}
       />
       
-      {/* Debug overlay */}
-      <div className="absolute top-2 left-2 bg-white bg-opacity-90 p-2 rounded text-xs max-w-xs z-10">
-        <div className="font-semibold">Debug Info:</div>
-        <div className="whitespace-pre-line">{debugInfo}</div>
-      </div>
     </div>
   );
 };

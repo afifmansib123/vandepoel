@@ -79,7 +79,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose, userRole
             <DialogContent className="sm:max-w-[600px] bg-white rounded-lg p-0 flex flex-col max-h-[90vh]">
                 <DialogHeader className="p-6 border-b flex flex-row justify-between items-start">
                     <div>
-                        <DialogTitle className="text-2xl font-bold text-gray-800">Welcome to Your Dashboard!</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold text-gray-800">User Manual</DialogTitle>
                         <p className="text-sm text-gray-500 mt-1">Here’s a quick guide to get you started as a {userRole}.</p>
                     </div>
                      <button
@@ -104,19 +104,6 @@ const TutorialModal: React.FC<TutorialModalProps> = ({ isOpen, onClose, userRole
                     ))}
                 </div>
                 <DialogFooter className="p-6 border-t bg-gray-50 sm:justify-between">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox 
-                            id="dont-show-again"
-                            checked={dontShowAgain}
-                            onCheckedChange={(checked) => setDontShowAgain(checked as boolean)}
-                        />
-                        <Label htmlFor="dont-show-again" className="text-sm font-medium text-gray-700 cursor-pointer">
-                            Don&apos;t show this again
-                        </Label>
-                    </div>
-                    <Button onClick={handleClose} className="bg-blue-600 hover:bg-blue-700">
-                        Get Started <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
