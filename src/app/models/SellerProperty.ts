@@ -1,5 +1,20 @@
+// FILE: /app/models/SellerProperty.js 
+// STATUS: UPDATE EXISTING FILE
+
 import mongoose , {Schema} from 'mongoose';
 
+// NEW: Add this schema for individual rooms
+const IndividualRoomSchema = new mongoose.Schema({
+  description: {
+    type: String,
+  },
+  images: {
+    type: [String],
+    default: [],
+  }
+}, { _id: false });
+
+// UPDATED: Enhanced FeatureDetailSchema with individual room support
 const FeatureDetailSchema = new mongoose.Schema({
   count: { 
     type: Number,
@@ -10,9 +25,17 @@ const FeatureDetailSchema = new mongoose.Schema({
   images: {
     type: [String],
     default: [],
+  },
+  // ADD THIS: Individual room details (optional for backwards compatibility)
+  individual: {
+    type: Map,
+    of: IndividualRoomSchema,
+    default: {},
+    required: false  // Makes it optional - existing data won't break
   }
 }, { _id: false });
 
+// UNCHANGED: Keep your exact same SellerPropertySchema
 const SellerPropertySchema : Schema = new mongoose.Schema({
   id: {
     type: Number,
@@ -41,7 +64,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
   },
    features: {
     type: Map,
-    of: FeatureDetailSchema,
+    of: FeatureDetailSchema, // Now supports individual rooms
     default: {},
   },
   squareFeet: {
@@ -89,7 +112,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
     type: String,
   },
   insuranceRecommendation: {
-    type: String, // Optional
+    type: String,
   },
   locationId: {
     type: Number,
@@ -114,7 +137,7 @@ const SellerPropertySchema : Schema = new mongoose.Schema({
     default: 'Sale',
   }
 }, {
-  timestamps: true, // Adds createdAt and updatedAt
+  timestamps: true,
 });
 
 SellerPropertySchema.index({ propertyType: 1, salePrice: 1, propertyStatus: 1 });

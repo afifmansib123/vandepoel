@@ -1,15 +1,16 @@
-// src/app/api/seller-properties/route.ts
+// FILE: /app/api/seller-properties/route.ts
+// STATUS: UPDATE EXISTING FILE
+
 import { NextRequest, NextResponse } from 'next/server';
-import { Types } from 'mongoose'; // Keep for _id typing
+import { Types } from 'mongoose';
 import dbConnect from '../../../utils/dbConnect';
-import SellerProperty from '@/app/models/SellerProperty'; // Your simplified Mongoose model
+import SellerProperty from '@/app/models/SellerProperty';
 import Location from '@/app/models/Location';
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import axios, { AxiosResponse } from 'axios';
 
-// --- Type Definitions (largely same, but schema enum values are now just strings) ---
-
+// UPDATED: Enhanced interfaces to support individual rooms
 interface NominatimResult {
     lat: string;
     lon: string;
@@ -26,12 +27,19 @@ interface FormattedLocationForResponse {
   coordinates: { longitude: number; latitude: number } | null;
 }
 
-// Interface for data from frontend (matches SellerPropertyFormData keys)
-// Used for constructing the object to save.
+// NEW: Individual room detail interface
+interface IndividualRoomDetail {
+  description?: string;
+  images?: string[];
+}
+
+// UPDATED: Enhanced FeatureDetail interface
 interface FeatureDetail {
   count?: number;
   description?: string;
-  images?: string[]; // URLs will be populated on the server
+  images?: string[];
+  // ADD THIS: Individual room support (optional)
+  individual?: { [key: string]: IndividualRoomDetail };
 }
 
 interface SellerPropertyDataFromFrontend {
@@ -46,7 +54,7 @@ interface SellerPropertyDataFromFrontend {
   features?: { [key: string]: FeatureDetail };
   amenities?: string[]; 
   highlights?: string[];
-  openHouseDates?: string[]; // Changed to string[] for consistency
+  openHouseDates?: string[];
   sellerNotes?: string; 
   allowBuyerApplications?: boolean;
   preferredFinancingInfo?: string; 
@@ -57,10 +65,9 @@ interface SellerPropertyDataFromFrontend {
   country: string; 
   postalCode: string;
   managedBy? : string;
-  // sellerCognitoId is added separately from auth
 }
 
-// For the SellerProperty document after saving
+// Keep all other existing interfaces the same...
 interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
   _id: Types.ObjectId | string;
   id: number;
@@ -71,11 +78,10 @@ interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
   postedDate: Date;
   createdAt: Date;
   updatedAt: Date;
-  buyerInquiries: any[]; // Or a more specific type
-  openHouseDates?: string[]; // Schema stores as array of strings now
+  buyerInquiries: any[];
+  openHouseDates?: string[];
 }
 
-// For the final API response
 interface CreatedSellerPropertyResponse extends Omit<SavedSellerPropertyDocument, '_id' | 'locationId'> {
   _id: string;
   location: FormattedLocationForResponse;
@@ -116,7 +122,7 @@ const getNumericFormValue = (formData: FormData, key: string, isFloat: boolean =
 
 export async function POST(request: NextRequest) {
   await dbConnect();
-  console.log("POST /api/seller-properties called (simplified)");
+  console.log("POST /api/seller-properties called (enhanced with individual rooms)");
 
   if (!S3_BUCKET_NAME || !s3Client.config.region) {
     console.error("S3 environment variables missing or incomplete.");
@@ -134,15 +140,15 @@ export async function POST(request: NextRequest) {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       salePrice: getNumericFormValue(formData, 'salePrice', true)!,
-      propertyType: formData.get('propertyType') as string, // Will be stored as sent
-      propertyStatus: formData.get('propertyStatus') as string, // Will be stored as sent
-      features: features, // Use the parsed features
+      propertyType: formData.get('propertyType') as string,
+      propertyStatus: formData.get('propertyStatus') as string,
+      features: features,
       squareFeet: getNumericFormValue(formData, 'squareFeet')!,
-      yearBuilt: getNumericFormValue(formData, 'yearBuilt'), // Optional
-      HOAFees: getNumericFormValue(formData, 'HOAFees', true),   // Optional
-      amenities: JSON.parse(formData.get('amenities') as string || '[]'), // Stored as array of strings
-      highlights: JSON.parse(formData.get('highlights') as string || '[]'), // Stored as array of strings
-      openHouseDates: JSON.parse(formData.get('openHouseDates') as string || '[]'), // Stored as array of strings
+      yearBuilt: getNumericFormValue(formData, 'yearBuilt'),
+      HOAFees: getNumericFormValue(formData, 'HOAFees', true),
+      amenities: JSON.parse(formData.get('amenities') as string || '[]'),
+      highlights: JSON.parse(formData.get('highlights') as string || '[]'),
+      openHouseDates: JSON.parse(formData.get('openHouseDates') as string || '[]'),
       sellerNotes: formData.get('sellerNotes') as string | undefined,
       allowBuyerApplications: getBooleanFormValue(formData, 'allowBuyerApplications', true),
       preferredFinancingInfo: formData.get('preferredFinancingInfo') as string | undefined,
@@ -152,7 +158,7 @@ export async function POST(request: NextRequest) {
       state: formData.get('state') as string,
       country: formData.get('country') as string,
       postalCode: formData.get('postalCode') as string,
-      sellerCognitoId: formData.get('sellerCognitoId') as string, // Crucial for linking
+      sellerCognitoId: formData.get('sellerCognitoId') as string,
       managedBy : formData.get('managedBy') as string,
     };
 
@@ -183,35 +189,107 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // Upload feature-specific images
-    for (const featureKey of Object.keys(features)) {
-        // The key in formData will be e.g., 'features[bedroom][images]'
-        const featureImageFiles = formData.getAll(`features[${featureKey}][images]`) as File[];
-        
-        if (featureImageFiles.length > 0) {
-            const uploadedFeatureImageUrls: string[] = [];
-            for (const file of featureImageFiles) {
-                if (file.size > 0) {
-                    const uploadParams = {
-                        Bucket: S3_BUCKET_NAME,
-                        Key: `seller-properties/features/${featureKey}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
-                        Body: Buffer.from(await file.arrayBuffer()),
-                        ContentType: file.type,
-                    };
-                    const upload = new Upload({ client: s3Client, params: uploadParams });
-                    const result = await upload.done();
-                    if ((result as { Location?: string }).Location) {
-                        uploadedFeatureImageUrls.push((result as { Location: string }).Location);
-                    }
+    // ENHANCED: Upload feature-specific images (supports individual rooms)
+for (const featureKey of Object.keys(features)) {
+    console.log(`Processing feature: ${featureKey}`);
+    
+    // Handle general feature images (existing functionality)
+    const featureImageFiles = formData.getAll(`features[${featureKey}][images]`) as File[];
+    console.log(`Found ${featureImageFiles.length} general images for ${featureKey}`);
+    
+    if (featureImageFiles.length > 0) {
+        const uploadedFeatureImageUrls: string[] = [];
+        for (const file of featureImageFiles) {
+            if (file.size > 0) {
+                const uploadParams = {
+                    Bucket: S3_BUCKET_NAME,
+                    Key: `seller-properties/features/${featureKey}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
+                    Body: Buffer.from(await file.arrayBuffer()),
+                    ContentType: file.type,
+                };
+                const upload = new Upload({ client: s3Client, params: uploadParams });
+                const result = await upload.done();
+                if ((result as { Location?: string }).Location) {
+                    uploadedFeatureImageUrls.push((result as { Location: string }).Location);
                 }
             }
-            // Add the uploaded URLs back to our features object
-            if (!features[featureKey].images) {
-                features[featureKey].images = [];
+        }
+        if (!features[featureKey].images) {
+            features[featureKey].images = [];
+        }
+        features[featureKey].images = [...(features[featureKey].images || []), ...uploadedFeatureImageUrls];
+    }
+
+    // ENHANCED: Handle individual room images with better file detection
+    if (features[featureKey].individual) {
+        console.log(`Processing individual rooms for ${featureKey}`);
+        
+        // Initialize individual rooms object if it doesn't exist
+        if (!features[featureKey].individual) {
+            features[featureKey].individual = {};
+        }
+        
+        const individualRooms = features[featureKey].individual!;
+        
+        // Check for individual room images using multiple patterns
+        const roomIndices = Object.keys(individualRooms);
+        
+        for (const roomIndex of roomIndices) {
+            console.log(`Processing room ${roomIndex} for ${featureKey}`);
+            
+            // Try multiple FormData key patterns to find images
+            const patterns = [
+                `features[${featureKey}][individual][${roomIndex}][images]`,
+                `features[${featureKey}][individual][${roomIndex}][images][0]`,
+                `features[${featureKey}][individual][${roomIndex}][images][1]`,
+                `features[${featureKey}][individual][${roomIndex}][images][2]`
+            ];
+            
+            let individualImageFiles: File[] = [];
+            
+            // Collect all individual room images
+            for (const pattern of patterns) {
+                const files = formData.getAll(pattern) as File[];
+                individualImageFiles = [...individualImageFiles, ...files.filter(f => f.size > 0)];
             }
-            features[featureKey].images = [...(features[featureKey].images || []), ...uploadedFeatureImageUrls];
+            
+            console.log(`Found ${individualImageFiles.length} individual images for ${featureKey} room ${roomIndex}`);
+            
+            if (individualImageFiles.length > 0) {
+                const uploadedIndividualImageUrls: string[] = [];
+                
+                for (const file of individualImageFiles) {
+                    if (file.size > 0) {
+                        console.log(`Uploading individual room image: ${file.name}`);
+                        const uploadParams = {
+                            Bucket: S3_BUCKET_NAME,
+                            Key: `seller-properties/features/${featureKey}/individual/${roomIndex}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
+                            Body: Buffer.from(await file.arrayBuffer()),
+                            ContentType: file.type,
+                        };
+                        const upload = new Upload({ client: s3Client, params: uploadParams });
+                        const result = await upload.done();
+                        if ((result as { Location?: string }).Location) {
+                            uploadedIndividualImageUrls.push((result as { Location: string }).Location);
+                            console.log(`Successfully uploaded: ${(result as { Location: string }).Location}`);
+                        }
+                    }
+                }
+                
+                // Ensure the room object exists and add images
+                if (!individualRooms[roomIndex]) {
+                    individualRooms[roomIndex] = {};
+                }
+                if (!individualRooms[roomIndex].images) {
+                    individualRooms[roomIndex].images = [];
+                }
+                individualRooms[roomIndex].images = [...(individualRooms[roomIndex].images || []), ...uploadedIndividualImageUrls];
+                
+                console.log(`Room ${roomIndex} now has ${individualRooms[roomIndex].images?.length} images`);
+            }
         }
     }
+}
 
     // Upload agreement document
     if (agreementFile && agreementFile.size > 0) {
@@ -228,7 +306,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Geocoding and Location Handling
+    // Geocoding and Location Handling (unchanged)
     let longitude = 0, latitude = 0;
     try {
       const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
@@ -254,7 +332,7 @@ export async function POST(request: NextRequest) {
     
     const wktCoordinates = `POINT(${longitude} ${latitude})`;
 
-    // Create Location
+    // Create Location (unchanged)
     const lastLocation = await Location.findOne().sort({ id: -1 }).select('id').lean().exec() as { id?: number } | null;
     const nextLocationId = (lastLocation?.id ?? 0) + 1;
 
@@ -269,7 +347,7 @@ export async function POST(request: NextRequest) {
     });
     await newLocation.save();
 
-    // Create SellerProperty Document
+    // Create SellerProperty Document (unchanged)
     const lastSellerProperty = await SellerProperty.findOne().sort({ id: -1 }).select('id').lean().exec() as { id?: number } | null;
     const nextSellerPropertyId = (lastSellerProperty?.id ?? 0) + 1;
 
@@ -277,15 +355,14 @@ export async function POST(request: NextRequest) {
       ...dataForDb,
       id: nextSellerPropertyId,
       locationId: newLocation.id,
-      features: features, // Use the updated features object with image URLs
+      features: features, // Now includes individual room data
       photoUrls: uploadedPhotoUrls,
       agreementDocumentUrl: agreementDocumentUrl,
-      // Mongoose schema defaults will handle `postedDate`, `buyerInquiries`
     });
 
     const savedSellerProperty = await sellerPropertyToSave.save();
 
-    // Prepare Response
+    // Prepare Response (unchanged)
     const propertyDocObject = savedSellerProperty.toObject({ virtuals: true }) as SavedSellerPropertyDocument;
     const { _id: propMongoId, locationId: propLocId, ...restOfSavedProp } = propertyDocObject;
 
@@ -315,17 +392,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Keep your existing GET function exactly the same
 export async function GET() {
   await dbConnect();
   try {
-    // Fetch all seller properties
     const properties = await SellerProperty.find().lean();
-
-    // Get all referenced locations by their IDs
     const locationIds = properties.map(p => p.locationId);
     const locations = await Location.find({ id: { $in: locationIds } }).lean();
 
-    // Format each property with corresponding location
     const response = properties.map(property => {
       const location = locations.find(loc => loc.id === property.locationId);
 

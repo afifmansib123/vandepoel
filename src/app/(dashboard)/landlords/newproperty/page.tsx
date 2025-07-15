@@ -363,7 +363,6 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
     return;
   }
 
-  // Ensure managedBy is set
   if (!submittedData.managedBy) {
     submittedData.managedBy = authUser.cognitoInfo.userId;
   }
@@ -381,37 +380,37 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
     }
   });
 
-  // Handle features with individual room data - FIXED VERSION
+  // ENHANCED: Handle features with individual room data
   const featuresForJson: { [key: string]: any } = {};
   
   if (submittedData.features) {
     Object.entries(submittedData.features).forEach(([featureKey, featureDetail]) => {
-      // Type assertion to ensure we have the right structure
       const detail = featureDetail as FeatureDetail;
       
-      // Prepare the basic feature data
+      // Prepare the basic feature data (no images yet)
       featuresForJson[featureKey] = {
         count: Number(detail.count),
         description: detail.description,
       };
 
-      // Handle individual room data
+      // Handle individual room data (descriptions only, images handled separately)
       if (detail.individual) {
         const individualData: { [key: string]: any } = {};
         
         Object.entries(detail.individual).forEach(([roomIndex, roomData]) => {
-          // Type assertion for roomData
           const room = roomData as { description?: string; images?: File[] };
           
+          // Store only description in JSON, images handled as files
           individualData[roomIndex] = {
             description: room.description,
           };
           
-          // Handle individual room images
+          // CRITICAL: Handle individual room images as separate FormData entries
           if (room.images && room.images.length > 0) {
-            room.images.forEach((file, fileIndex) => 
-              formDataToSubmit.append(`features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`, file)
-            );
+            room.images.forEach((file, fileIndex) => {
+              console.log(`Adding individual room image: features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`);
+              formDataToSubmit.append(`features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`, file);
+            });
           }
         });
         
@@ -420,9 +419,10 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
 
       // Handle general feature images
       if (detail.images && detail.images.length > 0) {
-        detail.images.forEach((file) =>
-          formDataToSubmit.append(`features[${featureKey}][images]`, file)
-        );
+        detail.images.forEach((file, fileIndex) => {
+          console.log(`Adding general feature image: features[${featureKey}][images][${fileIndex}]`);
+          formDataToSubmit.append(`features[${featureKey}][images][${fileIndex}]`, file);
+        });
       }
     });
   }
@@ -441,6 +441,12 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
   }
 
   formDataToSubmit.append("sellerCognitoId", authUser.cognitoInfo.userId);
+
+  // DEBUG: Log what we're sending
+  console.log("=== FORM DATA DEBUG ===");
+  for (let [key, value] of formDataToSubmit.entries()) {
+    console.log(`${key}:`, value instanceof File ? `File: ${value.name}` : value);
+  }
 
   const response = await createSellerPropertyAPI(formDataToSubmit);
   if (response.success) {

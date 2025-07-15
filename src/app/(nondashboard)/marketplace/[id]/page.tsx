@@ -54,7 +54,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetAuthUserQuery } from "@/state/api";
 
-// Define the expected shape of seller information
 interface SellerInfo {
   name: string;
   email: string;
@@ -62,17 +61,28 @@ interface SellerInfo {
   companyName?: string;
 }
 
+// NEW: Individual room detail interface
+interface IndividualRoomDetail {
+  description?: string;
+  images?: string[];
+}
+
+// UPDATED: Enhanced FeatureDetail interface
 interface FeatureDetail {
   count: number;
-  description: string;
-  images: string[];
+  description?: string;
+  images?: string[];
+  // ADD THIS: Individual room support (optional for backwards compatibility)
+  individual?: {
+    [key: string]: IndividualRoomDetail;
+  };
 }
 
 interface PropertyFeatures {
   [key: string]: FeatureDetail;
 }
 
-// Updated property data interface
+// UPDATED: Enhanced property data interface
 interface SellerPropertyDetail {
   _id: string;
   id: number;
@@ -116,9 +126,8 @@ interface SellerPropertyDetail {
   isParkingIncluded?: boolean;
   managedBy?: string;
   seller?: SellerInfo;
-  features?: PropertyFeatures;
+  features?: PropertyFeatures; // Now supports individual rooms
 }
-
 const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
   "Air Conditioning": { icon: Snowflake },
   Heating: { icon: Flame },
@@ -249,9 +258,13 @@ interface PropertyFeaturesDisplayProps {
   onImageClick: (url: string) => void; // Define the prop correctly
 }
 
+// FILE: PropertyDetailView.tsx
+// STATUS: UPDATE EXISTING FILE  
+// SECTION: Replace your existing PropertyFeaturesDisplay component with this enhanced version
+
 const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
   features,
-  onImageClick, // <<< FIX #1: Actually receive the onImageClick function here
+  onImageClick,
 }) => {
   if (!features || Object.keys(features).length === 0) {
     return (
@@ -268,67 +281,142 @@ const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
       <h3 className="text-xl font-semibold text-gray-800 border-b pb-2 mb-4">
         Room Details & Features
       </h3>
+      
       {Object.entries(features).map(([featureName, details]) => {
-        const IconComponent =
-          featureToIconMap[featureName.toLowerCase()] ||
-          featureToIconMap.default;
+        const IconComponent = featureToIconMap[featureName.toLowerCase()] || featureToIconMap.default;
+        
         return (
-          <div
-            key={featureName}
-            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center mb-3">
-              <IconComponent className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" />
-              <h4 className="text-lg font-medium text-gray-700">
-                {capitalizeFirstLetter(featureName)}
+          <div key={featureName} className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature Header */}
+            <div className="flex items-center mb-4">
+              <IconComponent className="w-7 h-7 text-blue-600 mr-3 flex-shrink-0" />
+              <div>
+                <h4 className="text-xl font-semibold text-gray-800 capitalize">
+                  {featureName.replace("_", " ")}
+                </h4>
                 {details.count > 0 && (
-                  <span className="text-sm font-normal text-gray-500 ml-2">
-                    ({details.count})
+                  <span className="text-sm font-medium text-gray-500">
+                    {details.count} {featureName.replace("_", " ")}{details.count > 1 ? 's' : ''}
                   </span>
                 )}
-              </h4>
+              </div>
             </div>
 
+            {/* General Description */}
             {details.description && (
-              <p className="text-gray-600 mb-4 text-sm leading-relaxed pl-9">
-                {details.description}
-              </p>
+              <div className="mb-6">
+                <h5 className="text-sm font-medium text-gray-700 mb-2">General Description:</h5>
+                <p className="text-gray-600 text-sm leading-relaxed pl-4 border-l-2 border-gray-200">
+                  {details.description}
+                </p>
+              </div>
             )}
 
+            {/* General Feature Photos */}
             {details.images && details.images.length > 0 && (
-              <div className="pl-9">
-                <h5 className="text-sm font-medium text-gray-600 mb-2">
-                  Gallery:
+              <div className="mb-6">
+                <h5 className="text-sm font-medium text-gray-700 mb-3">
+                  General {capitalizeFirstLetter(featureName.replace("_", " "))} Photos:
                 </h5>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {details.images.map((imageUrl, imgIndex) => (
-                    // ▼▼▼ FIX #2: Change the `div` to a `button` and add the `onClick` handler ▼▼▼
                     <button
                       key={imageUrl + imgIndex}
                       onClick={() => onImageClick(imageUrl)}
-                      className="relative h-32 w-full rounded-md overflow-hidden border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group"
+                      className="relative h-28 w-full rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 group transition-all duration-200"
                     >
                       <Image
                         src={imageUrl}
-                        alt={`${capitalizeFirstLetter(featureName)} - Image ${
-                          imgIndex + 1
-                        }`}
+                        alt={`${capitalizeFirstLetter(featureName)} - General Image ${imgIndex + 1}`}
                         layout="fill"
                         objectFit="cover"
-                        className="group-hover:opacity-80 transition-opacity"
+                        className="group-hover:scale-105 transition-transform duration-300"
                       />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200" />
                     </button>
                   ))}
                 </div>
               </div>
             )}
-            {(!details.images || details.images.length === 0) &&
-              !details.description &&
-              details.count > 0 && (
-                <p className="text-gray-500 text-xs pl-9 italic">
-                  Further details or images for this feature are not specified.
-                </p>
-              )}
+
+            {/* Individual Room Details - THE NEW ENHANCED SECTION */}
+            {details.individual && Object.keys(details.individual).length > 0 && (
+              <div className="space-y-4">
+                <h5 className="text-lg font-medium text-gray-800 border-b border-gray-200 pb-2">
+                  Individual {capitalizeFirstLetter(featureName.replace("_", " "))} Details:
+                </h5>
+                
+                <div className="grid gap-4">
+                  {Object.entries(details.individual).map(([roomIndex, roomData]) => (
+                    <div 
+                      key={roomIndex} 
+                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      {/* Individual Room Header */}
+                      <h6 className="text-md font-medium text-gray-800 mb-3 capitalize flex items-center">
+                        <span className="w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold mr-2">
+                          {parseInt(roomIndex) + 1}
+                        </span>
+                        {featureName.replace("_", " ")} {parseInt(roomIndex) + 1}
+                      </h6>
+                      
+                      {/* Individual Room Description */}
+                      {roomData.description && (
+                        <div className="mb-4">
+                          <p className="text-gray-700 text-sm leading-relaxed pl-8">
+                            {roomData.description}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Individual Room Photos */}
+                      {roomData.images && roomData.images.length > 0 && (
+                        <div className="pl-8">
+                          <p className="text-xs font-medium text-gray-600 mb-2">
+                            Photos for this {featureName.replace("_", " ")}:
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {roomData.images.map((imageUrl, imgIndex) => (
+                              <button
+                                key={imageUrl + imgIndex}
+                                onClick={() => onImageClick(imageUrl)}
+                                className="relative h-24 w-full rounded-md overflow-hidden border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 group transition-all duration-200"
+                              >
+                                <Image
+                                  src={imageUrl}
+                                  alt={`${capitalizeFirstLetter(featureName)} ${parseInt(roomIndex) + 1} - Image ${imgIndex + 1}`}
+                                  layout="fill"
+                                  objectFit="cover"
+                                  className="group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Empty State for Individual Room */}
+                      {!roomData.description && (!roomData.images || roomData.images.length === 0) && (
+                        <p className="text-gray-500 text-xs italic pl-8">
+                          No specific details provided for this {featureName.replace("_", " ")}.
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Empty State for Entire Feature */}
+            {!details.description && 
+             (!details.images || details.images.length === 0) && 
+             (!details.individual || Object.keys(details.individual).length === 0) && 
+             details.count > 0 && (
+              <p className="text-gray-500 text-sm italic">
+                Basic count information available. No detailed descriptions or images provided.
+              </p>
+            )}
           </div>
         );
       })}
