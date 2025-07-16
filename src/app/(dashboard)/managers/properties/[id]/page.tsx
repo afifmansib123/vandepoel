@@ -33,6 +33,8 @@ import {
   Coffee,
   Gamepad2,
   Baby,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 import Loading from "@/components/Loading";
@@ -96,6 +98,24 @@ interface CreateMaintenanceRequestModalProps {
   };
   managerId: string;
   onSuccess: () => void;
+}
+
+interface IndividualRoomDetail {
+  description?: string;
+  images?: string[];
+}
+
+interface FeatureDetail {
+  count: number;
+  description?: string;
+  images?: string[];
+  individual?: {
+    [key: string]: IndividualRoomDetail;
+  };
+}
+
+interface PropertyFeatures {
+  [key: string]: FeatureDetail;
 }
 
 // 3. ADD THESE CONSTANTS (paste after your type definitions)
@@ -292,6 +312,7 @@ interface SellerPropertyDetail {
   securityDeposit?: number;
   isPetsAllowed?: boolean;
   isParkingIncluded?: boolean;
+  features?: PropertyFeatures;
 }
 
 const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
@@ -379,6 +400,15 @@ const HighlightVisuals: Record<string, { icon: React.ElementType }> = {
   DEFAULT: { icon: Star },
 };
 
+const featureToIconMap: Record<string, React.ElementType> = {
+  bedroom: BedDouble,
+  bathroom: Bath,
+  dining: ChefHat,
+  kitchen: ChefHat,
+  livingroom: Tv,
+  drawingroom: ImageIcon,
+  default: Home,
+};
 const CreateMaintenanceRequestModal: React.FC<
   CreateMaintenanceRequestModalProps
 > = ({ isOpen, onClose, property, managerId, onSuccess }) => {
@@ -698,7 +728,360 @@ const CreateMaintenanceRequestModal: React.FC<
     </div>
   );
 };
+interface ImageLightboxProps {
+  imageUrl: string | null;
+  onClose: () => void;
+}
 
+const ImageLightbox: React.FC<ImageLightboxProps> = ({ imageUrl, onClose }) => {
+  if (!imageUrl) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <button
+        className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+        onClick={onClose}
+      >
+        <X className="w-8 h-8" />
+      </button>
+      <div
+        className="relative w-full h-full max-w-5xl max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Image
+          src={imageUrl}
+          alt="Enlarged property view"
+          layout="fill"
+          objectFit="contain"
+        />
+      </div>
+    </div>
+  );
+};
+
+interface PropertyFeaturesDisplayProps {
+  features?: PropertyFeatures;
+  onImageClick: (url: string) => void;
+}
+
+const PropertyFeaturesDisplay: React.FC<PropertyFeaturesDisplayProps> = ({
+  features,
+  onImageClick,
+}) => {
+  const [expandedFeature, setExpandedFeature] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<{
+    featureName: string;
+    roomIndex: string;
+    roomData: IndividualRoomDetail;
+  } | null>(null);
+
+  if (!features || Object.keys(features).length === 0) {
+    return (
+      <div className="mt-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-6">
+          Property Features
+        </h3>
+        <div className="bg-gray-50 rounded-2xl p-8 text-center">
+          <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">
+            No specific room features listed for this property.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const capitalizeFeatureName = (name: string) => {
+    return name.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
+  return (
+    <div className="mt-8">
+      <h3 className="text-2xl font-bold text-gray-900 mb-6">
+        Property Features
+      </h3>
+
+      {/* Feature Overview Boxes */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+        {Object.entries(features).map(([featureName, details]) => {
+          const IconComponent =
+            featureToIconMap[featureName.toLowerCase()] ||
+            featureToIconMap.default;
+          const isExpanded = expandedFeature === featureName;
+
+          return (
+            <div
+              key={featureName}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-lg p-6 rounded-xl border-2 ${
+                isExpanded
+                  ? "border-blue-500 shadow-lg bg-blue-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}
+              onClick={() =>
+                setExpandedFeature(isExpanded ? null : featureName)
+              }
+            >
+              <div className="text-center">
+                <div
+                  className={`p-3 rounded-full transition-colors mx-auto mb-3 w-fit ${
+                    isExpanded ? "bg-blue-100" : "bg-gray-100"
+                  }`}
+                >
+                  <IconComponent
+                    className={`w-8 h-8 transition-colors ${
+                      isExpanded ? "text-blue-600" : "text-gray-600"
+                    }`}
+                  />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                    {capitalizeFeatureName(featureName)}
+                  </h4>
+                  <span
+                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                      isExpanded
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {details.count}
+                  </span>
+                </div>
+                <div
+                  className={`transition-transform duration-300 mt-2 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                >
+                  <ChevronDown className="w-4 h-4 text-gray-400 mx-auto" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Expanded Feature Details */}
+      {expandedFeature && features[expandedFeature] && (
+        <div className="mb-8 border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="text-2xl font-bold text-gray-900 capitalize flex items-center">
+              {React.createElement(
+                featureToIconMap[expandedFeature.toLowerCase()] ||
+                  featureToIconMap.default,
+                { className: "w-8 h-8 text-blue-600 mr-3" }
+              )}
+              {capitalizeFeatureName(expandedFeature)} Details
+            </h4>
+            <button
+              onClick={() => setExpandedFeature(null)}
+              className="text-gray-500 hover:text-gray-700 p-2"
+            >
+              <ChevronUp className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* General Description */}
+          {features[expandedFeature].description && (
+            <div className="mb-6 p-4 bg-white rounded-xl">
+              <h5 className="font-semibold text-gray-800 mb-2">
+                General Description
+              </h5>
+              <p className="text-gray-600">
+                {features[expandedFeature].description}
+              </p>
+            </div>
+          )}
+
+          {/* General Photos */}
+          {features[expandedFeature].images &&
+            features[expandedFeature].images!.length > 0 && (
+              <div className="mb-6">
+                <h5 className="font-semibold text-gray-800 mb-4">
+                  General Photos
+                </h5>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {features[expandedFeature].images!.map(
+                    (imageUrl, imgIndex) => (
+                      <button
+                        key={imageUrl + imgIndex}
+                        onClick={() => onImageClick(imageUrl)}
+                        className="relative h-32 w-full rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 group transition-all duration-300"
+                      >
+                        <Image
+                          src={imageUrl}
+                          alt={`${capitalizeFeatureName(
+                            expandedFeature
+                          )} - General Image ${imgIndex + 1}`}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+          {/* Individual Rooms */}
+          {features[expandedFeature].individual &&
+            Object.keys(features[expandedFeature].individual!).length > 0 && (
+              <div>
+                <h5 className="font-semibold text-gray-800 mb-4">
+                  Individual {capitalizeFeatureName(expandedFeature)}s
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(features[expandedFeature].individual!).map(
+                    ([roomIndex, roomData]) => (
+                      <div
+                        key={roomIndex}
+                        className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white rounded-xl p-4 border border-gray-200"
+                        onClick={() =>
+                          setSelectedRoom({
+                            featureName: expandedFeature,
+                            roomIndex,
+                            roomData,
+                          })
+                        }
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h6 className="font-semibold text-gray-800 capitalize">
+                            {expandedFeature.replace("_", " ")}{" "}
+                            {parseInt(roomIndex) + 1}
+                          </h6>
+                          <span className="inline-block px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                            {roomData.images?.length || 0} photos
+                          </span>
+                        </div>
+
+                        {roomData.description && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {roomData.description}
+                          </p>
+                        )}
+
+                        {roomData.images && roomData.images.length > 0 && (
+                          <div className="grid grid-cols-2 gap-2">
+                            {roomData.images
+                              .slice(0, 2)
+                              .map((imageUrl, imgIndex) => (
+                                <div
+                                  key={imgIndex}
+                                  className="relative h-20 w-full rounded-md overflow-hidden"
+                                >
+                                  <Image
+                                    src={imageUrl}
+                                    alt={`${expandedFeature} ${
+                                      parseInt(roomIndex) + 1
+                                    } preview`}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  {roomData.images!.length > 2 &&
+                                    imgIndex === 1 && (
+                                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                        <span className="text-white text-xs font-medium">
+                                          +{roomData.images!.length - 2} more
+                                        </span>
+                                      </div>
+                                    )}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+
+                        <div className="mt-3 text-center">
+                          <span className="text-xs text-blue-600 font-medium">
+                            Click to view details
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+        </div>
+      )}
+
+      {/* Room Detail Modal */}
+      {selectedRoom && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 capitalize">
+                  {selectedRoom.featureName.replace("_", " ")}{" "}
+                  {parseInt(selectedRoom.roomIndex) + 1}
+                </h3>
+                <button
+                  onClick={() => setSelectedRoom(null)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {selectedRoom.roomData.description && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                    Description
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg">
+                    {selectedRoom.roomData.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedRoom.roomData.images &&
+                selectedRoom.roomData.images.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                      Photos
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {selectedRoom.roomData.images.map(
+                        (imageUrl, imgIndex) => (
+                          <button
+                            key={imageUrl + imgIndex}
+                            onClick={() => onImageClick(imageUrl)}
+                            className="relative h-48 w-full rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 group transition-all duration-300"
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={`${selectedRoom.featureName} ${
+                                parseInt(selectedRoom.roomIndex) + 1
+                              } - Image ${imgIndex + 1}`}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {!selectedRoom.roomData.description &&
+                (!selectedRoom.roomData.images ||
+                  selectedRoom.roomData.images.length === 0) && (
+                  <div className="text-center py-8">
+                    <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">
+                      No additional details available for this room.
+                    </p>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 const SellerPropertyDetailsPage = () => {
   const params = useParams();
   const router = useRouter();
@@ -707,6 +1090,7 @@ const SellerPropertyDetailsPage = () => {
   const [property, setProperty] = useState<SellerPropertyDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
 
   // ... other imports
 
@@ -737,29 +1121,45 @@ const SellerPropertyDetailsPage = () => {
   const propertyIdForModal = Number(property?.id);
 
   const formatPrice = (price: number, country?: string) => {
+    // Normalize country name for easier matching
     const countryLower = country?.toLowerCase().trim();
 
-    const options: Intl.NumberFormatOptions = {
-      style: "currency",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0, // Or 2 if you want decimals
-    };
-    let locale = "en-US"; // Default locale
-
-    if (countryLower === "thailand") {
-      options.currency = "THB";
-      locale = "th-TH";
-    } else if (countryLower === "belgium") {
-      options.currency = "EUR";
-      locale = "nl-BE"; 
-    } else {
-      // Default to USD if no specific country matches
-      options.currency = "USD";
+    // Thailand variations
+    if (
+      countryLower === "thailand" ||
+      countryLower === "th" ||
+      countryLower === "thai"
+    ) {
+      return new Intl.NumberFormat("th-TH", {
+        style: "currency",
+        currency: "THB",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(price);
     }
 
-    return new Intl.NumberFormat(locale, options).format(price);
+    // Belgium/Europe variations
+    if (
+      countryLower === "belgium" ||
+      countryLower === "be" ||
+      countryLower === "belgian"
+    ) {
+      return new Intl.NumberFormat("nl-BE", {
+        style: "currency",
+        currency: "EUR",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(price);
+    }
+
+    // Default to EUR if country is not specified or unrecognized
+    return new Intl.NumberFormat("nl-BE", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
-  
 
   useEffect(() => {
     if (!propertyIdParams || isNaN(Number(propertyIdParams))) {
@@ -941,7 +1341,10 @@ const SellerPropertyDetailsPage = () => {
                       Sale Price
                     </div>
                     <div className="font-semibold text-gray-800">
-                       {formatPrice(property.salePrice, property.location?.country)}
+                      {formatPrice(
+                        property.salePrice,
+                        property.location?.country
+                      )}
                     </div>
                   </div>
                   <div className="relative">
@@ -982,6 +1385,13 @@ const SellerPropertyDetailsPage = () => {
                 {property.description}
               </p>
             </div>
+
+            {property.features && Object.keys(property.features).length > 0 && (
+              <PropertyFeaturesDisplay
+                features={property.features}
+                onImageClick={setLightboxImageUrl}
+              />
+            )}
 
             {property.amenities && property.amenities.length > 0 && (
               <div>
@@ -1180,6 +1590,10 @@ const SellerPropertyDetailsPage = () => {
           }}
         />
       )}
+      <ImageLightbox
+        imageUrl={lightboxImageUrl}
+        onClose={() => setLightboxImageUrl(null)}
+      />
     </div>
   );
 };

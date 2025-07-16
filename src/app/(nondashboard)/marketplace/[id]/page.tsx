@@ -1304,7 +1304,7 @@ const PropertyDetailView: React.FC = () => {
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <Button
-            onClick={() => router.push("/properties")}
+            onClick={() => router.push("/marketplace")}
             className="inline-flex items-center"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1822,7 +1822,7 @@ const PropertyDetailView: React.FC = () => {
                 )}
 
                 {userRole === "tenant" &&
-                  property.propertyStatus === "Rent" && (
+                  property.propertyStatus === "For Rent" && (
                     <>
                       <Button
                         onClick={() => setIsScheduleVisitModalOpen(true)}

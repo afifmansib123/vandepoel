@@ -82,29 +82,40 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       : "https://via.placeholder.com/400x300.png?text=No+Image";
 
   // <<< CHANGE 1: ADD THE DYNAMIC CURRENCY FORMATTING FUNCTION
-  const formatPrice = (price: number, country?: string) => {
-    const countryLower = country?.toLowerCase().trim();
+const formatPrice = (price: number, country?: string) => {
+  // Normalize country name for easier matching
+  const countryLower = country?.toLowerCase().trim();
 
-    const options: Intl.NumberFormatOptions = {
-      style: "currency",
+  // Thailand variations
+  if (countryLower === "thailand" || countryLower === "th" || countryLower === "thai") {
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0, // Thai prices usually don't show decimals
+    }).format(price);
+  }
+  
+  // Belgium/Europe variations - default to EUR
+  if (countryLower === "belgium" || countryLower === "be" || countryLower === "belgian" || 
+      countryLower === "europe" || countryLower === "eur") {
+    return new Intl.NumberFormat('nl-BE', {
+      style: 'currency', 
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    };
-    let locale = "en-US"; // Default locale
-
-    if (countryLower === "thailand") {
-      options.currency = "THB";
-      locale = "th-TH";
-    } else if (countryLower === "belgium") {
-      options.currency = "EUR";
-      locale = "nl-BE";
-    } else {
-      // Default to USD if no specific country matches
-      options.currency = "USD";
-    }
-
-    return new Intl.NumberFormat(locale, options).format(price);
-  };
+    }).format(price);
+  }
+  
+  // Default to EUR if country is not specified or unrecognized
+  // (assuming most of your properties are in Belgium)
+  return new Intl.NumberFormat('nl-BE', {
+    style: 'currency',
+    currency: 'EUR', 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
 
 
   const formattedDate = new Date(postedDate).toLocaleDateString("en-US", {
