@@ -46,6 +46,29 @@ interface User {
 }
 
 // --- NEW --- Modal component to show detailed user information
+// Enhanced UserDetailsModal component - replace the existing one
+// Helper functions - add these before the UserDetailsModal component
+const isUrl = (value: any): boolean => {
+  if (typeof value !== 'string') return false;
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const isBase64Image = (value: any): boolean => {
+  if (typeof value !== 'string') return false;
+  return value.startsWith('data:image/');
+};
+
+const truncateUrl = (url: string, maxLength: number = 40) => {
+  if (url.length <= maxLength) return url;
+  return url.substring(0, maxLength) + '...';
+};
+
+// Complete UserDetailsModal component - replace the existing one entirely
 const UserDetailsModal = ({
   user,
   isOpen,
@@ -57,25 +80,177 @@ const UserDetailsModal = ({
 }) => {
   if (!user) return null;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-white rounded-lg">
-        <DialogHeader>
-          <DialogTitle>User Details: {user.name}</DialogTitle>
-        </DialogHeader>
-        <div className="mt-4 space-y-2 text-sm max-h-[70vh] overflow-y-auto pr-2">
-          {Object.entries(user).map(([key, value]) => (
-            <div key={key} className="grid grid-cols-3 gap-2 py-2 border-b">
-              <span className="font-semibold capitalize text-gray-600 col-span-1">
-                {key.replace(/([A-Z])/g, " $1")}
+  // Group fields for better organization
+  const basicFields = ['name', 'email', 'role', 'status', 'createdAt', 'updatedAt'];
+  const businessFields = ['companyName', 'businessAddress', 'cityName', 'postalCode', 'country', 'vatId', 'website'];
+  const contactFields = ['phoneNumber', 'address'];
+  const imageFields = ['profileImage', 'businessLicense'];
+  const systemFields = ['_id', 'cognitoId', '__v', 'id'];
+
+// Replace the renderFieldValue function with this fixed version:
+
+const renderFieldValue = (field: string, value: any) => {
+  if (!value) return 'Not provided';
+
+  // Handle dates
+  if (field === 'createdAt' || field === 'updatedAt') {
+    return new Date(value).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  // Handle website URLs
+  if (field === 'website' && isUrl(value)) {
+    return (
+      <a 
+        href={value} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className="text-blue-600 hover:underline"
+        title={value}
+      >
+        {truncateUrl(value)}
+      </a>
+    );
+  }
+
+  // Handle base64 images
+  if (isBase64Image(value)) {
+    return (
+      <div className="flex items-center space-x-2">
+        <img 
+          src={value} 
+          alt={field} 
+          className="w-12 h-12 rounded object-cover border"
+        />
+        <span className="text-sm text-gray-500">Image uploaded</span>
+      </div>
+    );
+  }
+
+  // Handle regular URLs (like S3 image URLs)
+  if (isUrl(value)) {
+    // Check if it's likely an image URL
+    if (value.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+      return (
+        <div className="flex items-center space-x-2">
+          <img 
+            src={value} 
+            alt={field} 
+            className="w-12 h-12 rounded object-cover border"
+            onError={(e) => {
+              // If image fails to load, hide the image and show the link
+              const img = e.currentTarget;
+              const link = img.parentElement?.querySelector('a');
+              if (img && link) {
+                img.style.display = 'none';
+                link.style.display = 'inline';
+              }
+            }}
+          />
+          <a 
+            href={value} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 hover:underline text-sm hidden"
+            title={value}
+          >
+            {truncateUrl(value)}
+          </a>
+        </div>
+      );
+    } else {
+      // Non-image URL
+      return (
+        <a 
+          href={value} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-600 hover:underline"
+          title={value}
+        >
+          {truncateUrl(value)}
+        </a>
+      );
+    }
+  }
+
+  return String(value);
+};
+
+  const renderFieldGroup = (title: string, fields: string[]) => {
+    const groupFields = fields.filter(field => user[field] !== undefined && user[field] !== null && user[field] !== '');
+    
+    if (groupFields.length === 0) return null;
+
+    return (
+      <div className="mb-4">
+        <h3 className="font-semibold text-gray-700 mb-2 text-base">{title}</h3>
+        <div className="space-y-2">
+          {groupFields.map(field => (
+            <div key={field} className="grid grid-cols-3 gap-2 py-1">
+              <span className="font-medium text-gray-600 col-span-1 text-sm">
+                {field.replace(/([A-Z])/g, " $1").replace(/^\w/, c => c.toUpperCase())}
               </span>
-              <span className="text-gray-800 col-span-2 break-words">
-                {typeof value === "object" && value !== null
-                  ? JSON.stringify(value, null, 2)
-                  : String(value)}
+              <span className="text-gray-800 col-span-2 break-words text-sm">
+                {renderFieldValue(field, user[field])}
               </span>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Get any other fields not in the predefined groups
+  const otherFields = Object.keys(user).filter(
+    key => !basicFields.includes(key) && 
+           !businessFields.includes(key) && 
+           !contactFields.includes(key) && 
+           !imageFields.includes(key) &&
+           !systemFields.includes(key) &&
+           user[key] !== undefined && 
+           user[key] !== null && 
+           user[key] !== ''
+  );
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl bg-white rounded-lg">
+        <DialogHeader>
+          <DialogTitle className="text-lg">User Details: {user.name}</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4 max-h-[70vh] overflow-y-auto pr-2">
+          {renderFieldGroup("Basic Information", basicFields)}
+          {renderFieldGroup("Contact Information", contactFields)}
+          {(user.role === 'manager' || user.role === 'landlord') && renderFieldGroup("Business Information", businessFields)}
+          {renderFieldGroup("Documents & Images", imageFields)}
+          
+          {/* System fields - collapsed by default */}
+          {systemFields.some(field => user[field] !== undefined) && (
+            <details className="mb-4">
+              <summary className="font-semibold text-gray-700 cursor-pointer text-base mb-2">
+                System Information
+              </summary>
+              <div className="space-y-2 ml-4">
+                {systemFields.filter(field => user[field] !== undefined).map(field => (
+                  <div key={field} className="grid grid-cols-3 gap-2 py-1">
+                    <span className="font-medium text-gray-600 col-span-1 text-sm">
+                      {field.replace(/([A-Z])/g, " $1").replace(/^\w/, c => c.toUpperCase())}
+                    </span>
+                    <span className="text-gray-800 col-span-2 break-words text-sm font-mono">
+                      {String(user[field])}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+
+          {/* Any other fields */}
+          {otherFields.length > 0 && renderFieldGroup("Other Information", otherFields)}
         </div>
       </DialogContent>
     </Dialog>

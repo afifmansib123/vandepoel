@@ -177,7 +177,13 @@ const ApplicationCard = ({ application, onViewDetails, onWithdraw }: {
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-5 flex flex-col md:flex-row gap-5 items-start">
-                <Image src={propertyId?.photoUrls?.[0] ?? "/placeholder-property.jpg"} alt={propertyId?.name ?? "Property Image"} width={160} height={120} className="w-full md:w-40 h-32 object-cover rounded-md border" />
+                <Image 
+    src={propertyId?.photoUrls?.[0] || "/placeholder-property.jpg"} 
+    alt={propertyId?.name || "Property"} 
+    width={160} 
+    height={120} 
+    className="w-full md:w-40 h-32 object-cover rounded-md border" 
+/>
                 <div className="flex-grow">
                     <div className="flex justify-between items-start">
                         <div>

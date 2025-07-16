@@ -201,12 +201,18 @@ const ApplicationCard = ({ application, onViewDetails, onUpdateStatus }: {
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden transition hover:shadow-lg">
             <div className="p-5 flex flex-col md:flex-row gap-5 items-start">
-                <Image src={propertyId.photoUrls?.[0] || "/placeholder-property.jpg"} alt={propertyId.name} width={160} height={120} className="w-full md:w-40 h-32 object-cover rounded-md border" />
+                <Image 
+                    src={propertyId?.photoUrls?.[0] || "/placeholder-property.jpg"} 
+                    alt={propertyId?.name || "Property"} 
+                    width={160} 
+                    height={120} 
+                    className="w-full md:w-40 h-32 object-cover rounded-md border" 
+                />
                 <div className="flex-grow">
                     <div className="flex justify-between items-start">
                         <div>
                             <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded-full inline-block mb-1">{formatApplicationType(applicationType)}</span>
-                            <h3 className="text-lg font-bold text-gray-900">{propertyId.name}</h3>
+                            <h3 className="text-lg font-bold text-gray-900">{propertyId?.name || "Unknown Property"}</h3>
                         </div>
                         <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5 ${statusInfo.color}`}>{statusInfo.icon}{statusInfo.text}</span>
                     </div>
