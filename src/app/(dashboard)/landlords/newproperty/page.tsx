@@ -465,7 +465,7 @@ Object.entries(submittedData).forEach(([key, value]) => {
 
   // DEBUG: Log what we're sending
   console.log("=== FORM DATA DEBUG ===");
-  for (let [key, value] of formDataToSubmit.entries()) {
+  for (const [key, value] of formDataToSubmit.entries()) {
     console.log(`${key}:`, value instanceof File ? `File: ${value.name}` : value);
   }
 

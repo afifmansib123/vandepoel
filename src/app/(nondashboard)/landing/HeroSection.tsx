@@ -82,7 +82,7 @@ const HeroSection = () => {
         });
 
         // Find the location with the highest count
-        let bestMatch = { count: 0, country: null, state: null, city: null };
+        let bestMatch = { count: 0, country: null as string | null, state: null as string | null, city: null as string | null };
         
         Object.values(locationCounts).forEach((location) => {
           if (location.count > bestMatch.count) {

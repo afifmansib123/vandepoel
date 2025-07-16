@@ -227,10 +227,10 @@ SellerPropertySchema.index({ locationId: 1 });
 SellerPropertySchema.pre('save', function(next) {
   // Ensure features individual rooms have valid structure
   if (this.features) {
-    for (let [featureKey, featureValue] of this.features) {
+    for (const [featureKey, featureValue] of this.features) {
       if (featureValue.individual) {
         // Validate that individual room indices are reasonable
-        for (let [roomIndex, roomData] of featureValue.individual) {
+        for (const [roomIndex, roomData] of featureValue.individual) {
           if (isNaN(parseInt(roomIndex))) {
             return next(new Error(`Invalid room index: ${roomIndex} for feature: ${featureKey}`));
           }

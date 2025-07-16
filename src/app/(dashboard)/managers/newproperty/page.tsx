@@ -159,34 +159,69 @@ interface FeatureDetail {
 
 // --- ZOD VALIDATION SCHEMA ---
 const formSchema = z.object({
-  name: z.string().min(5, { message: "Property title must be at least 5 characters." }),
-  description: z.string().min(20, { message: "Description must be at least 20 characters." }),
-  salePrice: z.coerce.number({ required_error: "Asking price is required." }).positive("Price must be a positive number."),
-  propertyType: z.string({ required_error: "Please select a property type." }).min(1, "Property type is required."),
-  propertyStatus: z.string({ required_error: "Please select a property status." }).min(1, "Property status is required."),
-  squareFeet: z.coerce.number({ required_error: "Square meters is required." }).positive("Square meters must be a positive number."),
-  country: z.string({ required_error: "Country is required." }).min(1, "Country is required."),
-  state: z.string({ required_error: "State/Province is required." }).min(1, "State/Province is required."),
-  city: z.string({ required_error: "City is required." }).min(1, "City is required."),
-  address: z.string().min(5, { message: "A valid street address is required." }),
-  postalCode: z.string().min(3, { message: "A valid postal code is required." }),
-  photos: z.array(z.instanceof(File)).min(1, { message: "At least one property photo is required." }),
-  termsAgreed: z.boolean().refine((val) => val === true, { message: "You must agree to the terms to proceed." }),
-  yearBuilt: z.preprocess((val) => (val === "" ? undefined : val), z.coerce.number().optional().nullable()),
-  HOAFees: z.preprocess((val) => (val === "" ? undefined : val), z.coerce.number().optional().nullable()),
+  name: z
+    .string()
+    .min(5, { message: "Property title must be at least 5 characters." }),
+  description: z
+    .string()
+    .min(20, { message: "Description must be at least 20 characters." }),
+  salePrice: z.coerce
+    .number({ required_error: "Asking price is required." })
+    .positive("Price must be a positive number."),
+  propertyType: z
+    .string({ required_error: "Please select a property type." })
+    .min(1, "Property type is required."),
+  propertyStatus: z
+    .string({ required_error: "Please select a property status." })
+    .min(1, "Property status is required."),
+  squareFeet: z.coerce
+    .number({ required_error: "Square meters is required." })
+    .positive("Square meters must be a positive number."),
+  country: z
+    .string({ required_error: "Country is required." })
+    .min(1, "Country is required."),
+  state: z
+    .string({ required_error: "State/Province is required." })
+    .min(1, "State/Province is required."),
+  city: z
+    .string({ required_error: "City is required." })
+    .min(1, "City is required."),
+  address: z
+    .string()
+    .min(5, { message: "A valid street address is required." }),
+  postalCode: z
+    .string()
+    .min(3, { message: "A valid postal code is required." }),
+  photos: z
+    .array(z.instanceof(File))
+    .min(1, { message: "At least one property photo is required." }),
+  termsAgreed: z
+    .boolean()
+    .refine((val) => val === true, {
+      message: "You must agree to the terms to proceed.",
+    }),
+  yearBuilt: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.number().optional().nullable()
+  ),
+  HOAFees: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.number().optional().nullable()
+  ),
   amenities: z.array(z.string()).optional(),
   highlights: z.array(z.string()).optional(),
   agreementDocument: z.any().optional(),
-  openHouseDates: z.string().optional(),
+  openHouseDates: z
+    .union([z.string().optional(), z.array(z.string()).optional()])
+    .optional(),
   sellerNotes: z.string().optional(),
   allowBuyerApplications: z.boolean().default(true),
   preferredFinancingInfo: z.string().optional(),
   insuranceRecommendation: z.string().optional(),
   managedBy: z.string().optional(),
   // FIXED: More flexible features schema
- features: z.any().optional(),
+  features: z.any().optional(),
 });
-
 
 type SellerPropertyFormData = z.infer<typeof formSchema> & {
   features?: { [key: string]: FeatureDetail };
@@ -208,7 +243,7 @@ const createSellerPropertyAPI = async (
         success: false,
         message: data.message || `Error: ${response.status}`,
       };
-    alert("Seller property created!");
+    alert("property created!");
     window.location.href = "/";
     return {
       success: true,
@@ -282,7 +317,7 @@ const NewSellerPropertyPage = () => {
       photos: [],
       agreementDocument: undefined,
       features: {},
-      managedBy: authUser?.cognitoInfo?.userId,
+      managedBy: "",
     },
   });
 
@@ -299,6 +334,12 @@ const NewSellerPropertyPage = () => {
   const watchedCountry = watch("country");
   const watchedState = watch("state");
   const currentCurrency = watchedCountry === "Belgium" ? "EUR" : "THB";
+
+  useEffect(() => {
+    if (authUser?.cognitoInfo?.userId) {
+      setValue("managedBy", authUser.cognitoInfo.userId);
+    }
+  }, [authUser, setValue]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -345,105 +386,160 @@ const NewSellerPropertyPage = () => {
     );
   };
 
-const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) => {
-  setIsSubmitting(true);
-  setSubmitMessage(null);
+  const onSubmit: SubmitHandler<SellerPropertyFormData> = async (
+    submittedData
+  ) => {
+    setIsSubmitting(true);
+    setSubmitMessage(null);
 
-  if (!authUser?.cognitoInfo?.userId) {
-    setSubmitMessage({ type: "error", text: "Authentication error. Please log in." });
-    setIsSubmitting(false);
-    return;
-  }
-
-  // Ensure managedBy is set
-  if (!submittedData.managedBy) {
-    submittedData.managedBy = authUser.cognitoInfo.userId;
-  }
-
-  const formDataToSubmit = new FormData();
-
-  // Handle regular fields
-  Object.entries(submittedData).forEach(([key, value]) => {
-    const K = key as keyof SellerPropertyFormData;
-    if (K === "photos" || K === "agreementDocument" || K === "features") return;
-    if (Array.isArray(value)) {
-      formDataToSubmit.append(K, JSON.stringify(value || []));
-    } else if (value !== undefined && value !== null && value !== "") {
-      formDataToSubmit.append(K, String(value));
+    if (!authUser?.cognitoInfo?.userId) {
+      setSubmitMessage({
+        type: "error",
+        text: "Authentication error. Please log in.",
+      });
+      setIsSubmitting(false);
+      return;
     }
-  });
 
-  // Handle features with individual room data - FIXED VERSION
-  const featuresForJson: { [key: string]: any } = {};
-  
-  if (submittedData.features) {
-    Object.entries(submittedData.features).forEach(([featureKey, featureDetail]) => {
-      // Type assertion to ensure we have the right structure
-      const detail = featureDetail as FeatureDetail;
-      
-      // Prepare the basic feature data
-      featuresForJson[featureKey] = {
-        count: Number(detail.count),
-        description: detail.description,
-      };
+    // Ensure managedBy is set
+    if (!submittedData.managedBy) {
+      submittedData.managedBy = authUser.cognitoInfo.userId;
+    }
 
-      // Handle individual room data
-      if (detail.individual) {
-        const individualData: { [key: string]: any } = {};
-        
-        Object.entries(detail.individual).forEach(([roomIndex, roomData]) => {
-          // Type assertion for roomData
-          const room = roomData as { description?: string; images?: File[] };
-          
-          individualData[roomIndex] = {
-            description: room.description,
-          };
-          
-          // Handle individual room images
-          if (room.images && room.images.length > 0) {
-            room.images.forEach((file, fileIndex) => 
-              formDataToSubmit.append(`features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`, file)
-            );
-          }
-        });
-        
-        featuresForJson[featureKey].individual = individualData;
+    const formDataToSubmit = new FormData();
+
+    // Handle regular fields
+    Object.entries(submittedData).forEach(([key, value]) => {
+      const K = key as keyof SellerPropertyFormData;
+      if (K === "photos" || K === "agreementDocument" || K === "features")
+        return;
+
+      // SPECIAL HANDLING FOR openHouseDates:
+      if (K === "openHouseDates") {
+        // Convert single string to array, or keep array as is
+        let processedDates: string[] = [];
+        if (typeof value === "string" && value.trim()) {
+          // Split by comma if it contains commas, otherwise treat as single date
+          processedDates = value.includes(",")
+            ? value
+                .split(",")
+                .map((date) => date.trim())
+                .filter((date) => date.length > 0)
+            : [value.trim()];
+        } else if (Array.isArray(value)) {
+          processedDates = value.filter(
+            (date) => typeof date === "string" && date.trim().length > 0
+          );
+        }
+        formDataToSubmit.append(K, JSON.stringify(processedDates));
+        return;
       }
 
-      // Handle general feature images
-      if (detail.images && detail.images.length > 0) {
-        detail.images.forEach((file) =>
-          formDataToSubmit.append(`features[${featureKey}][images]`, file)
-        );
+      if (Array.isArray(value)) {
+        formDataToSubmit.append(K, JSON.stringify(value || []));
+      } else if (value !== undefined && value !== null && value !== "") {
+        formDataToSubmit.append(K, String(value));
       }
     });
-  }
-  
-  formDataToSubmit.append("features", JSON.stringify(featuresForJson));
 
-  // Handle main property photos
-  if (submittedData.photos && submittedData.photos.length > 0) {
-    submittedData.photos.forEach((file) => formDataToSubmit.append("photos", file));
-  }
+    // Handle features with individual room data - FIXED VERSION
+    // ENHANCED: Handle features with individual room data
+    const featuresForJson: { [key: string]: any } = {};
 
-  // Handle agreement document
-  const agreementFile = submittedData.agreementDocument?.[0];
-  if (agreementFile) {
-    formDataToSubmit.append("agreementDocument", agreementFile);
-  }
+    if (submittedData.features) {
+      Object.entries(submittedData.features).forEach(
+        ([featureKey, featureDetail]) => {
+          const detail = featureDetail as FeatureDetail;
 
-  formDataToSubmit.append("sellerCognitoId", authUser.cognitoInfo.userId);
+          // Prepare the basic feature data (no images yet)
+          featuresForJson[featureKey] = {
+            count: Number(detail.count),
+            description: detail.description,
+          };
 
-  const response = await createSellerPropertyAPI(formDataToSubmit);
-  if (response.success) {
-    setSubmitMessage({ type: "success", text: response.message || "Property listed successfully!" });
-    reset();
-    setSelectedFeatures([]);
-  } else {
-    setSubmitMessage({ type: "error", text: response.message || "Failed to list property." });
-  }
-  setIsSubmitting(false);
-};
+          // Handle individual room data (descriptions only, images handled separately)
+          if (detail.individual) {
+            const individualData: { [key: string]: any } = {};
+
+            Object.entries(detail.individual).forEach(
+              ([roomIndex, roomData]) => {
+                const room = roomData as {
+                  description?: string;
+                  images?: File[];
+                };
+
+                // Store only description in JSON, images handled as files
+                individualData[roomIndex] = {
+                  description: room.description,
+                };
+
+                // CRITICAL: Handle individual room images as separate FormData entries
+                if (room.images && room.images.length > 0) {
+                  room.images.forEach((file, fileIndex) => {
+                    console.log(
+                      `Adding individual room image: features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`
+                    );
+                    formDataToSubmit.append(
+                      `features[${featureKey}][individual][${roomIndex}][images][${fileIndex}]`,
+                      file
+                    );
+                  });
+                }
+              }
+            );
+
+            featuresForJson[featureKey].individual = individualData;
+          }
+
+          // Handle general feature images
+          if (detail.images && detail.images.length > 0) {
+            detail.images.forEach((file, fileIndex) => {
+              console.log(
+                `Adding general feature image: features[${featureKey}][images][${fileIndex}]`
+              );
+              formDataToSubmit.append(
+                `features[${featureKey}][images][${fileIndex}]`,
+                file
+              );
+            });
+          }
+        }
+      );
+    }
+
+    formDataToSubmit.append("features", JSON.stringify(featuresForJson));
+
+    // Handle main property photos
+    if (submittedData.photos && submittedData.photos.length > 0) {
+      submittedData.photos.forEach((file) =>
+        formDataToSubmit.append("photos", file)
+      );
+    }
+
+    // Handle agreement document
+    const agreementFile = submittedData.agreementDocument?.[0];
+    if (agreementFile) {
+      formDataToSubmit.append("agreementDocument", agreementFile);
+    }
+
+    formDataToSubmit.append("sellerCognitoId", authUser.cognitoInfo.userId);
+
+    const response = await createSellerPropertyAPI(formDataToSubmit);
+    if (response.success) {
+      setSubmitMessage({
+        type: "success",
+        text: response.message || "Property listed successfully!",
+      });
+      reset();
+      setSelectedFeatures([]);
+    } else {
+      setSubmitMessage({
+        type: "error",
+        text: response.message || "Failed to list property.",
+      });
+    }
+    setIsSubmitting(false);
+  };
 
   const sectionCardClassName = "bg-white shadow-md rounded-xl p-6";
   const sectionTitleClassName = "text-xl font-semibold text-gray-900 mb-1";
@@ -507,7 +603,6 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
             You will need to create the property first and if desired you can
             assign an agent later on.
           </p>
-
           <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
             <p className="text-sm text-blue-800">
               <span className="font-medium">For Agents:</span> In case you are
@@ -807,111 +902,203 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
               </div>
             </div>
 
-{selectedFeatures.map((feature) => (
-  <div key={feature} className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
-    <h3 className="text-lg font-medium text-gray-900 mb-4 capitalize">{feature.replace("_", " ")} Details</h3>
-    
-    {/* Count and General Description */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <FormField control={control} name={`features.${feature}.count`} render={({ field }) => (
-        <FormItem>
-          <FormLabel>Number of {feature.replace("_", " ")}s</FormLabel>
-          <FormControl><Input type="number" min="1" {...field} /></FormControl>
-          <FormMessage />
-        </FormItem>
-      )}/>
-      <FormField control={control} name={`features.${feature}.description`} render={({ field }) => (
-        <FormItem>
-          <FormLabel>General Description (Optional)</FormLabel>
-          <FormControl><Input placeholder={`General notes about ${feature.replace("_", " ")}s...`} {...field} /></FormControl>
-          <FormMessage />
-        </FormItem>
-      )}/>
-    </div>
+            {selectedFeatures.map((feature) => (
+              <div
+                key={feature}
+                className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50"
+              >
+                <h3 className="text-lg font-medium text-gray-900 mb-4 capitalize">
+                  {feature.replace("_", " ")} Details
+                </h3>
 
-    {/* General Feature Photos */}
-    <div className="mb-6">
-      <FormField control={control} name={`features.${feature}.images`} render={({ field }) => (
-        <FormItem>
-          <FormLabel>General {feature.replace("_", " ").charAt(0).toUpperCase() + feature.replace("_", " ").slice(1)} Photos</FormLabel>
-          <FormControl>
-            <FilePond
-              files={(field.value as File[]) || []}
-              onupdatefiles={(fileItems) => field.onChange(fileItems.map(item => item.file as File))}
-              allowMultiple={true} maxFiles={5} name={`${feature}-images`} 
-              labelIdle={`Drag & Drop or <span class="filepond--label-action">Browse</span>`}
-              acceptedFileTypes={["image/png", "image/jpeg", "image/webp"]} maxFileSize="5MB" credits={false}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}/>
-    </div>
+                {/* Count and General Description */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <FormField
+                    control={control}
+                    name={`features.${feature}.count`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Number of {feature.replace("_", " ")}s
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={control}
+                    name={`features.${feature}.description`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>General Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={`General notes about ${feature.replace(
+                              "_",
+                              " "
+                            )}s...`}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-    {/* Individual Room Details - NOW WORKS FOR ALL ROOM TYPES */}
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-md font-medium text-gray-800">Individual {feature.replace("_", " ").charAt(0).toUpperCase() + feature.replace("_", " ").slice(1)} Details</h4>
-        <p className="text-sm text-gray-600">Describe each {feature.replace("_", " ")} separately</p>
-      </div>
-      
-      {/* Generate individual sections based on count for ANY feature type */}
-      {Array.from({ length: parseInt(String(getValues(`features.${feature}.count`) || '1'), 10) }, (_, index) => (
-        <div key={index} className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
-          <h5 className="text-sm font-medium text-gray-700 mb-3 capitalize">
-            {feature.replace("_", " ")} {index + 1}
-          </h5>
-          
-          <div className="space-y-4">
-            {/* Individual description */}
-            <FormField 
-              control={control} 
-              name={`features.${feature}.individual.${index}.description`} 
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder={`Describe ${feature.replace("_", " ")} ${index + 1} (size, layout, special features, etc.)`} 
-                      rows={2} 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Individual photos */}
-            <FormField 
-              control={control} 
-              name={`features.${feature}.individual.${index}.images`} 
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Photos for {feature.replace("_", " ").charAt(0).toUpperCase() + feature.replace("_", " ").slice(1)} {index + 1}</FormLabel>
-                  <FormControl>
-                    <FilePond
-                      files={(field.value as File[]) || []}
-                      onupdatefiles={(fileItems) => field.onChange(fileItems.map(item => item.file as File))}
-                      allowMultiple={true} 
-                      maxFiles={3} 
-                      name={`${feature}-${index}-images`}
-                      labelIdle={`<span class="filepond--label-action">Browse</span> or drag photos for ${feature.replace("_", " ")} ${index + 1}`}
-                      acceptedFileTypes={["image/png", "image/jpeg", "image/webp"]} 
-                      maxFileSize="5MB" 
-                      credits={false}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-))}
+                {/* General Feature Photos */}
+                <div className="mb-6">
+                  <FormField
+                    control={control}
+                    name={`features.${feature}.images`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          General{" "}
+                          {feature.replace("_", " ").charAt(0).toUpperCase() +
+                            feature.replace("_", " ").slice(1)}{" "}
+                          Photos
+                        </FormLabel>
+                        <FormControl>
+                          <FilePond
+                            files={(field.value as File[]) || []}
+                            onupdatefiles={(fileItems) =>
+                              field.onChange(
+                                fileItems.map((item) => item.file as File)
+                              )
+                            }
+                            allowMultiple={true}
+                            maxFiles={5}
+                            name={`${feature}-images`}
+                            labelIdle={`Drag & Drop or <span class="filepond--label-action">Browse</span>`}
+                            acceptedFileTypes={[
+                              "image/png",
+                              "image/jpeg",
+                              "image/webp",
+                            ]}
+                            maxFileSize="5MB"
+                            credits={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Individual Room Details - NOW WORKS FOR ALL ROOM TYPES */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-medium text-gray-800">
+                      Individual{" "}
+                      {feature.replace("_", " ").charAt(0).toUpperCase() +
+                        feature.replace("_", " ").slice(1)}{" "}
+                      Details
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Describe each {feature.replace("_", " ")} separately
+                    </p>
+                  </div>
+
+                  {/* Generate individual sections based on count for ANY feature type */}
+                  {Array.from(
+                    {
+                      length: parseInt(
+                        String(getValues(`features.${feature}.count`) || "1"),
+                        10
+                      ),
+                    },
+                    (_, index) => (
+                      <div
+                        key={index}
+                        className="mb-6 p-4 bg-white border border-gray-200 rounded-lg"
+                      >
+                        <h5 className="text-sm font-medium text-gray-700 mb-3 capitalize">
+                          {feature.replace("_", " ")} {index + 1}
+                        </h5>
+
+                        <div className="space-y-4">
+                          {/* Individual description */}
+                          <FormField
+                            control={control}
+                            name={`features.${feature}.individual.${index}.description`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm">
+                                  Description
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder={`Describe ${feature.replace(
+                                      "_",
+                                      " "
+                                    )} ${
+                                      index + 1
+                                    } (size, layout, special features, etc.)`}
+                                    rows={2}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {/* Individual photos */}
+                          <FormField
+                            control={control}
+                            name={`features.${feature}.individual.${index}.images`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm">
+                                  Photos for{" "}
+                                  {feature
+                                    .replace("_", " ")
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    feature.replace("_", " ").slice(1)}{" "}
+                                  {index + 1}
+                                </FormLabel>
+                                <FormControl>
+                                  <FilePond
+                                    files={(field.value as File[]) || []}
+                                    onupdatefiles={(fileItems) =>
+                                      field.onChange(
+                                        fileItems.map(
+                                          (item) => item.file as File
+                                        )
+                                      )
+                                    }
+                                    allowMultiple={true}
+                                    maxFiles={3}
+                                    name={`${feature}-${index}-images`}
+                                    labelIdle={`<span class="filepond--label-action">Browse</span> or drag photos for ${feature.replace(
+                                      "_",
+                                      " "
+                                    )} ${index + 1}`}
+                                    acceptedFileTypes={[
+                                      "image/png",
+                                      "image/jpeg",
+                                      "image/webp",
+                                    ]}
+                                    maxFileSize="5MB"
+                                    credits={false}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            ))}
 
             <FormField
               control={control}
@@ -979,9 +1166,7 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
                 name="agreementDocument"
                 render={({ field: { onChange, value, ...rest } }) => (
                   <FormItem>
-                    <FormLabel>
-                      Agreement Template / Info (Optional)
-                    </FormLabel>
+                    <FormLabel>Agreement Template / Info (Optional)</FormLabel>
                     <FormControl>
                       <Input
                         type="file"
@@ -998,9 +1183,7 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
           </div>
 
           <div className={sectionCardClassName}>
-            <h2 className={sectionTitleClassName}>
-              Additional Information
-            </h2>
+            <h2 className={sectionTitleClassName}>Additional Information</h2>
             <div className="space-y-4">
               <FormField
                 control={control}
