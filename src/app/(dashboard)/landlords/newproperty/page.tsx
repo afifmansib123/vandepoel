@@ -177,7 +177,10 @@ const formSchema = z.object({
   amenities: z.array(z.string()).optional(),
   highlights: z.array(z.string()).optional(),
   agreementDocument: z.any().optional(),
-  openHouseDates: z.string().optional(),
+  openHouseDates: z.union([
+    z.string().optional(),
+    z.array(z.string()).optional()
+  ]).optional(),
   sellerNotes: z.string().optional(),
   allowBuyerApplications: z.boolean().default(true),
   preferredFinancingInfo: z.string().optional(),
@@ -370,9 +373,27 @@ const onSubmit: SubmitHandler<SellerPropertyFormData> = async (submittedData) =>
   const formDataToSubmit = new FormData();
 
   // Handle regular fields
-  Object.entries(submittedData).forEach(([key, value]) => {
+Object.entries(submittedData).forEach(([key, value]) => {
     const K = key as keyof SellerPropertyFormData;
     if (K === "photos" || K === "agreementDocument" || K === "features") return;
+    
+    // SPECIAL HANDLING FOR openHouseDates:
+    if (K === "openHouseDates") {
+      // Convert single string to array, or keep array as is
+      let processedDates: string[] = [];
+      if (typeof value === 'string' && value.trim()) {
+        // Split by comma if it contains commas, otherwise treat as single date
+        processedDates = value.includes(',') 
+          ? value.split(',').map(date => date.trim()).filter(date => date.length > 0)
+          : [value.trim()];
+      } else if (Array.isArray(value)) {
+        processedDates = value.filter(date => typeof date === 'string' && date.trim().length > 0);
+      }
+      formDataToSubmit.append(K, JSON.stringify(processedDates));
+      return;
+    }
+    
+    // Handle other array fields
     if (Array.isArray(value)) {
       formDataToSubmit.append(K, JSON.stringify(value || []));
     } else if (value !== undefined && value !== null && value !== "") {

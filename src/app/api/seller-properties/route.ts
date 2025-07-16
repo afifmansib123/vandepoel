@@ -1,5 +1,5 @@
 // FILE: /app/api/seller-properties/route.ts
-// STATUS: UPDATE EXISTING FILE
+// STATUS: UPDATED WITH INDIVIDUAL ROOM SUPPORT AND JSON PARSING FIXES
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
@@ -27,18 +27,17 @@ interface FormattedLocationForResponse {
   coordinates: { longitude: number; latitude: number } | null;
 }
 
-// NEW: Individual room detail interface
+// UPDATED: Individual room detail interface
 interface IndividualRoomDetail {
   description?: string;
   images?: string[];
 }
 
-// UPDATED: Enhanced FeatureDetail interface
+// UPDATED: Enhanced FeatureDetail interface with proper individual room support
 interface FeatureDetail {
   count?: number;
   description?: string;
   images?: string[];
-  // ADD THIS: Individual room support (optional)
   individual?: { [key: string]: IndividualRoomDetail };
 }
 
@@ -54,7 +53,7 @@ interface SellerPropertyDataFromFrontend {
   features?: { [key: string]: FeatureDetail };
   amenities?: string[]; 
   highlights?: string[];
-  openHouseDates?: string[];
+  openHouseDates?: string | string[]; // FIXED: Can be string or array
   sellerNotes?: string; 
   allowBuyerApplications?: boolean;
   preferredFinancingInfo?: string; 
@@ -64,10 +63,9 @@ interface SellerPropertyDataFromFrontend {
   state: string; 
   country: string; 
   postalCode: string;
-  managedBy? : string;
+  managedBy?: string;
 }
 
-// Keep all other existing interfaces the same...
 interface SavedSellerPropertyDocument extends SellerPropertyDataFromFrontend {
   _id: Types.ObjectId | string;
   id: number;
@@ -120,6 +118,36 @@ const getNumericFormValue = (formData: FormData, key: string, isFloat: boolean =
     return isNaN(num) ? undefined : num;
 };
 
+// NEW: Helper function to safely parse JSON with fallback
+const safeJsonParse = (value: string | null, fallback: any = []): any => {
+  if (!value || value.trim() === '') return fallback;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed;
+  } catch (error) {
+    console.warn(`Failed to parse JSON: ${value}`, error);
+    return fallback;
+  }
+};
+
+// NEW: Helper function to normalize openHouseDates
+const normalizeOpenHouseDates = (value: string | null): string[] => {
+  if (!value || value.trim() === '') return [];
+  
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(date => typeof date === 'string' && date.trim() !== '');
+    } else if (typeof parsed === 'string') {
+      return parsed.trim() ? [parsed.trim()] : [];
+    }
+    return [];
+  } catch (error) {
+    // If JSON parsing fails, treat as a single string
+    return value.trim() ? [value.trim()] : [];
+  }
+};
+
 export async function POST(request: NextRequest) {
   await dbConnect();
   console.log("POST /api/seller-properties called (enhanced with individual rooms)");
@@ -134,8 +162,12 @@ export async function POST(request: NextRequest) {
     
     // Parse features from form data
     const featuresString = formData.get('features') as string || '{}';
-    const features = JSON.parse(featuresString) as { [key: string]: FeatureDetail };
+    const features = safeJsonParse(featuresString, {}) as { [key: string]: FeatureDetail };
     
+    // FIXED: Properly handle openHouseDates parsing
+    const openHouseDatesRaw = formData.get('openHouseDates') as string;
+    const openHouseDates = normalizeOpenHouseDates(openHouseDatesRaw);
+
     const dataForDb: Omit<SavedSellerPropertyDocument, '_id' | 'id' | 'locationId' | 'photoUrls' | 'agreementDocumentUrl' | 'postedDate' | 'createdAt' | 'updatedAt' | 'buyerInquiries' | 'sellerCognitoId'> & { sellerCognitoId: string } = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
@@ -146,9 +178,9 @@ export async function POST(request: NextRequest) {
       squareFeet: getNumericFormValue(formData, 'squareFeet')!,
       yearBuilt: getNumericFormValue(formData, 'yearBuilt'),
       HOAFees: getNumericFormValue(formData, 'HOAFees', true),
-      amenities: JSON.parse(formData.get('amenities') as string || '[]'),
-      highlights: JSON.parse(formData.get('highlights') as string || '[]'),
-      openHouseDates: JSON.parse(formData.get('openHouseDates') as string || '[]'),
+      amenities: safeJsonParse(formData.get('amenities') as string, []),
+      highlights: safeJsonParse(formData.get('highlights') as string, []),
+      openHouseDates: openHouseDates, // FIXED: Now properly parsed
       sellerNotes: formData.get('sellerNotes') as string | undefined,
       allowBuyerApplications: getBooleanFormValue(formData, 'allowBuyerApplications', true),
       preferredFinancingInfo: formData.get('preferredFinancingInfo') as string | undefined,
@@ -159,7 +191,7 @@ export async function POST(request: NextRequest) {
       country: formData.get('country') as string,
       postalCode: formData.get('postalCode') as string,
       sellerCognitoId: formData.get('sellerCognitoId') as string,
-      managedBy : formData.get('managedBy') as string,
+      managedBy: formData.get('managedBy') as string,
     };
 
     if (!dataForDb.sellerCognitoId) {
@@ -190,80 +222,88 @@ export async function POST(request: NextRequest) {
     }
 
     // ENHANCED: Upload feature-specific images (supports individual rooms)
-for (const featureKey of Object.keys(features)) {
-    console.log(`Processing feature: ${featureKey}`);
-    
-    // Handle general feature images (existing functionality)
-    const featureImageFiles = formData.getAll(`features[${featureKey}][images]`) as File[];
-    console.log(`Found ${featureImageFiles.length} general images for ${featureKey}`);
-    
-    if (featureImageFiles.length > 0) {
-        const uploadedFeatureImageUrls: string[] = [];
-        for (const file of featureImageFiles) {
-            if (file.size > 0) {
-                const uploadParams = {
-                    Bucket: S3_BUCKET_NAME,
-                    Key: `seller-properties/features/${featureKey}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
-                    Body: Buffer.from(await file.arrayBuffer()),
-                    ContentType: file.type,
-                };
-                const upload = new Upload({ client: s3Client, params: uploadParams });
-                const result = await upload.done();
-                if ((result as { Location?: string }).Location) {
-                    uploadedFeatureImageUrls.push((result as { Location: string }).Location);
+    for (const featureKey of Object.keys(features)) {
+        console.log(`Processing feature: ${featureKey}`);
+        
+        // Handle general feature images (existing functionality)
+        const featureImageFiles = formData.getAll(`features[${featureKey}][images]`) as File[];
+        console.log(`Found ${featureImageFiles.length} general images for ${featureKey}`);
+        
+        if (featureImageFiles.length > 0) {
+            const uploadedFeatureImageUrls: string[] = [];
+            for (const file of featureImageFiles) {
+                if (file.size > 0) {
+                    const uploadParams = {
+                        Bucket: S3_BUCKET_NAME,
+                        Key: `seller-properties/features/${featureKey}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
+                        Body: Buffer.from(await file.arrayBuffer()),
+                        ContentType: file.type,
+                    };
+                    const upload = new Upload({ client: s3Client, params: uploadParams });
+                    const result = await upload.done();
+                    if ((result as { Location?: string }).Location) {
+                        uploadedFeatureImageUrls.push((result as { Location: string }).Location);
+                    }
                 }
             }
-        }
-        if (!features[featureKey].images) {
-            features[featureKey].images = [];
-        }
-        features[featureKey].images = [...(features[featureKey].images || []), ...uploadedFeatureImageUrls];
-    }
-
-    // ENHANCED: Handle individual room images with better file detection
-    if (features[featureKey].individual) {
-        console.log(`Processing individual rooms for ${featureKey}`);
-        
-        // Initialize individual rooms object if it doesn't exist
-        if (!features[featureKey].individual) {
-            features[featureKey].individual = {};
-        }
-        
-        const individualRooms = features[featureKey].individual!;
-        
-        // Check for individual room images using multiple patterns
-        const roomIndices = Object.keys(individualRooms);
-        
-        for (const roomIndex of roomIndices) {
-            console.log(`Processing room ${roomIndex} for ${featureKey}`);
-            
-            // Try multiple FormData key patterns to find images
-            const patterns = [
-                `features[${featureKey}][individual][${roomIndex}][images]`,
-                `features[${featureKey}][individual][${roomIndex}][images][0]`,
-                `features[${featureKey}][individual][${roomIndex}][images][1]`,
-                `features[${featureKey}][individual][${roomIndex}][images][2]`
-            ];
-            
-            let individualImageFiles: File[] = [];
-            
-            // Collect all individual room images
-            for (const pattern of patterns) {
-                const files = formData.getAll(pattern) as File[];
-                individualImageFiles = [...individualImageFiles, ...files.filter(f => f.size > 0)];
+            if (!features[featureKey].images) {
+                features[featureKey].images = [];
             }
+            features[featureKey].images = [...(features[featureKey].images || []), ...uploadedFeatureImageUrls];
+        }
+
+        // ENHANCED: Handle individual room images with better detection
+        if (features[featureKey].individual) {
+            console.log(`Processing individual rooms for ${featureKey}`);
             
-            console.log(`Found ${individualImageFiles.length} individual images for ${featureKey} room ${roomIndex}`);
+            const individualRooms = features[featureKey].individual!;
+            const roomIndices = Object.keys(individualRooms);
             
-            if (individualImageFiles.length > 0) {
-                const uploadedIndividualImageUrls: string[] = [];
+            for (const roomIndex of roomIndices) {
+                console.log(`Processing room ${roomIndex} for ${featureKey}`);
                 
-                for (const file of individualImageFiles) {
-                    if (file.size > 0) {
-                        console.log(`Uploading individual room image: ${file.name}`);
+                // Try multiple FormData key patterns to find images
+                const patterns = [
+                    `features[${featureKey}][individual][${roomIndex}][images]`,
+                    `features[${featureKey}][individual][${roomIndex}][images][0]`,
+                    `features[${featureKey}][individual][${roomIndex}][images][1]`,
+                    `features[${featureKey}][individual][${roomIndex}][images][2]`,
+                    `features[${featureKey}][individual][${roomIndex}][images][3]`,
+                    `features[${featureKey}][individual][${roomIndex}][images][4]`
+                ];
+                
+                let individualImageFiles: File[] = [];
+                
+                // Collect all individual room images using different patterns
+                for (const pattern of patterns) {
+                    const files = formData.getAll(pattern) as File[];
+                    const validFiles = files.filter(f => f && f.size > 0);
+                    individualImageFiles = [...individualImageFiles, ...validFiles];
+                }
+                
+                // Also check for numbered file patterns (e.g., [0], [1], [2])
+                for (let i = 0; i < 10; i++) {
+                    const numberedPattern = `features[${featureKey}][individual][${roomIndex}][images][${i}]`;
+                    const numberedFiles = formData.getAll(numberedPattern) as File[];
+                    const validFiles = numberedFiles.filter(f => f && f.size > 0);
+                    individualImageFiles = [...individualImageFiles, ...validFiles];
+                }
+                
+                // Remove duplicates based on file name and size
+                individualImageFiles = individualImageFiles.filter((file, index, self) => 
+                    index === self.findIndex(f => f.name === file.name && f.size === file.size)
+                );
+                
+                console.log(`Found ${individualImageFiles.length} unique individual images for ${featureKey} room ${roomIndex}`);
+                
+                if (individualImageFiles.length > 0) {
+                    const uploadedIndividualImageUrls: string[] = [];
+                    
+                    for (const file of individualImageFiles) {
+                        console.log(`Uploading individual room image: ${file.name} (${file.size} bytes)`);
                         const uploadParams = {
                             Bucket: S3_BUCKET_NAME,
-                            Key: `seller-properties/features/${featureKey}/individual/${roomIndex}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`,
+                            Key: `seller-properties/features/${featureKey}/individual/${roomIndex}/${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name.replace(/\s+/g, '_')}`,
                             Body: Buffer.from(await file.arrayBuffer()),
                             ContentType: file.type,
                         };
@@ -274,22 +314,21 @@ for (const featureKey of Object.keys(features)) {
                             console.log(`Successfully uploaded: ${(result as { Location: string }).Location}`);
                         }
                     }
+                    
+                    // Ensure the room object exists and add images
+                    if (!individualRooms[roomIndex]) {
+                        individualRooms[roomIndex] = {};
+                    }
+                    if (!individualRooms[roomIndex].images) {
+                        individualRooms[roomIndex].images = [];
+                    }
+                    individualRooms[roomIndex].images = [...(individualRooms[roomIndex].images || []), ...uploadedIndividualImageUrls];
+                    
+                    console.log(`Room ${roomIndex} now has ${individualRooms[roomIndex].images?.length} images`);
                 }
-                
-                // Ensure the room object exists and add images
-                if (!individualRooms[roomIndex]) {
-                    individualRooms[roomIndex] = {};
-                }
-                if (!individualRooms[roomIndex].images) {
-                    individualRooms[roomIndex].images = [];
-                }
-                individualRooms[roomIndex].images = [...(individualRooms[roomIndex].images || []), ...uploadedIndividualImageUrls];
-                
-                console.log(`Room ${roomIndex} now has ${individualRooms[roomIndex].images?.length} images`);
             }
         }
     }
-}
 
     // Upload agreement document
     if (agreementFile && agreementFile.size > 0) {
@@ -347,7 +386,7 @@ for (const featureKey of Object.keys(features)) {
     });
     await newLocation.save();
 
-    // Create SellerProperty Document (unchanged)
+    // Create SellerProperty Document
     const lastSellerProperty = await SellerProperty.findOne().sort({ id: -1 }).select('id').lean().exec() as { id?: number } | null;
     const nextSellerPropertyId = (lastSellerProperty?.id ?? 0) + 1;
 
@@ -355,14 +394,14 @@ for (const featureKey of Object.keys(features)) {
       ...dataForDb,
       id: nextSellerPropertyId,
       locationId: newLocation.id,
-      features: features, // Now includes individual room data
+      features: features, // Now includes individual room data with uploaded images
       photoUrls: uploadedPhotoUrls,
       agreementDocumentUrl: agreementDocumentUrl,
     });
 
     const savedSellerProperty = await sellerPropertyToSave.save();
 
-    // Prepare Response (unchanged)
+    // Prepare Response
     const propertyDocObject = savedSellerProperty.toObject({ virtuals: true }) as SavedSellerPropertyDocument;
     const { _id: propMongoId, locationId: propLocId, ...restOfSavedProp } = propertyDocObject;
 
