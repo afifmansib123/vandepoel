@@ -50,6 +50,39 @@ const LandlordSchema : Schema = new mongoose.Schema({
     enum: ['approved', 'pending', 'rejected'],
     default: 'pending', // Default value
   },
+  businessAddress: {
+    type: String,
+    required: [false, 'Business address is not required.'],
+  },
+  postalCode: {
+    type: String,
+    required: [false, 'Postal code is not required.'],
+  },
+  cityName: {
+    type: String,
+    required: [false, 'City name is not required.'],
+  },
+  country: {
+    type: String,
+    required: [false, 'Country is not required.'],
+  },
+  vatId: {
+    type: String,
+    required: [false, 'VAT ID is not required.'],
+  },
+  website: {
+    type: String,
+    required: [false, 'Website is not required.'],
+    validate: {
+      validator: function(v : any) {
+        if (!v) return true; // Allow empty/null values
+        // Basic URL validation
+        const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+        return urlPattern.test(v);
+      },
+      message: 'Please enter a valid website URL'
+    }
+  },
 }, {
   timestamps: true, // Adds createdAt and updatedAt
 });

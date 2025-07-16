@@ -68,6 +68,12 @@ const ManagerProfile = () => {
         description: managerData.description || "",
         profileImage: managerData.profileImage || "",
         businessLicense: managerData.businessLicense || "",
+        businessAddress: managerData.businessAddress || "",
+        postalCode: managerData.postalCode || "",
+        cityName: managerData.cityName || "",
+        country: managerData.country || "",
+        vatId: managerData.vatId || "",
+        website: managerData.website || "",
       });
     }
   }, [managerData]);
@@ -105,7 +111,6 @@ const ManagerProfile = () => {
       const updatePayload = {
         ...finalFormData,
         cognitoId: authUser.cognitoInfo.userId,
-        status: "pending" as const,
       };
 
       await updateProfile(updatePayload).unwrap();
@@ -113,9 +118,7 @@ const ManagerProfile = () => {
       setProfileImageFile(null);
       setBusinessLicenseFile(null);
       setIsEditing(false);
-      alert(
-        "Profile updated successfully! Your account is now pending re-approval."
-      );
+      alert("Profile updated successfully!");
     } catch (error) {
       console.error("Failed to update profile:", error);
       alert("An error occurred while updating your profile.");
@@ -132,6 +135,12 @@ const ManagerProfile = () => {
         description: managerData.description || "",
         profileImage: managerData.profileImage || "",
         businessLicense: managerData.businessLicense || "",
+        businessAddress: managerData.businessAddress || "",
+        postalCode: managerData.postalCode || "",
+        cityName: managerData.cityName || "",
+        country: managerData.country || "",
+        vatId: managerData.vatId || "",
+        website: managerData.website || "",
       });
     }
     setProfileImageFile(null);
@@ -292,24 +301,156 @@ const ManagerProfile = () => {
             <h2 className="text-xl font-semibold text-gray-900">
               Business Information
             </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  Company Name
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md"
+                  />
+                ) : (
+                  <p className="text-gray-900">
+                    {managerData.companyName || "Not provided"}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  Website
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com"
+                    className="w-full p-2 border rounded-md"
+                  />
+                ) : (
+                  <p className="text-gray-900">
+                    {managerData.website ? (
+                      <a
+                        href={managerData.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {managerData.website}
+                      </a>
+                    ) : (
+                      "Not provided"
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Company Name
+                Business Address
               </label>
               {isEditing ? (
                 <input
                   type="text"
-                  name="companyName"
-                  value={formData.companyName}
+                  name="businessAddress"
+                  value={formData.businessAddress}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-md"
                 />
               ) : (
                 <p className="text-gray-900">
-                  {managerData.companyName || "Not provided"}
+                  {managerData.businessAddress || "Not provided"}
                 </p>
               )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  City
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="cityName"
+                    value={formData.cityName}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md"
+                  />
+                ) : (
+                  <p className="text-gray-900">
+                    {managerData.cityName || "Not provided"}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  Postal Code
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="postalCode"
+                    value={formData.postalCode}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md"
+                  />
+                ) : (
+                  <p className="text-gray-900">
+                    {managerData.postalCode || "Not provided"}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">
+                  Country
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md"
+                  />
+                ) : (
+                  <p className="text-gray-900">
+                    {managerData.country || "Not provided"}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                VAT ID
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="vatId"
+                  value={formData.vatId}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md"
+                />
+              ) : (
+                <p className="text-gray-900">
+                  {managerData.vatId || "Not provided"}
+                </p>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
                 Member Since
@@ -318,6 +459,7 @@ const ManagerProfile = () => {
                 {formatDate(managerData.createdAt)}
               </p>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
                 Last Updated
@@ -445,7 +587,7 @@ const ManagerProfile = () => {
                 disabled={isUpdating}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition disabled:bg-gray-400"
               >
-                {isUpdating ? "Saving..." : "Save & Submit for Review"}
+                {isUpdating ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"

@@ -11,6 +11,12 @@ interface ManagerDocument {
   name?: string;
   email?: string;
   [key: string]: any;
+    businessAddress?: string;
+  postalCode?: string;
+  cityName?: string;
+  country?: string;
+  vatId?: string;
+  website?: string;
 }
 interface ManagerResponse {
   _id: string;
@@ -18,12 +24,24 @@ interface ManagerResponse {
   name?: string;
   email?: string;
   [key: string]: any;
+    businessAddress?: string;
+  postalCode?: string;
+  cityName?: string;
+  country?: string;
+  vatId?: string;
+  website?: string;
 }
 interface ManagerPutRequestBody {
   cognitoId?: string;
   name?: string;
   email?: string;
   [key: string]: any;
+    businessAddress?: string;
+  postalCode?: string;
+  cityName?: string;
+  country?: string;
+  vatId?: string;
+  website?: string;
 }
 interface MongooseValidationError {
   name: 'ValidationError';
@@ -64,11 +82,8 @@ export async function GET(
     console.log(`[API /managers/:id GET] MongoDB Query Result: Found manager "${manager.name || '(name not set)'}" for Cognito ID "${cognitoIdFromPath}".`);
 
     const responseManager: ManagerResponse = {
-      ...manager,
-      _id: typeof manager._id === 'string' ? manager._id : manager._id.toString(),
-      name: manager.name,
-      email: manager.email,
-      cognitoId: manager.cognitoId,
+  ...manager,
+  _id: typeof manager._id === 'string' ? manager._id : manager._id.toString(),
     };
     return NextResponse.json(responseManager, { status: 200 });
 
@@ -109,7 +124,8 @@ export async function PUT(
     // A list of all fields that can be updated via this endpoint.
     const allowedUpdateFields = [
       'name', 'email', 'phoneNumber', 'companyName', 'address',
-      'description', 'businessLicense', 'profileImage', 'status'
+      'description', 'businessLicense', 'profileImage', 'status',
+      'businessAddress', 'postalCode', 'cityName', 'country', 'vatId', 'website'
     ];
     
     // Iterate over the allowed fields and add them to `updateData` if they exist in the request body.
@@ -139,10 +155,7 @@ export async function PUT(
 
     const responseManager: ManagerResponse = {
       ...updatedManager,
-      _id: typeof updatedManager._id === 'string' ? updatedManager._id : updatedManager._id.toString(),
-      name: updatedManager.name,
-      email: updatedManager.email,
-      cognitoId: updatedManager.cognitoId,
+ _id: typeof updatedManager._id === 'string' ? updatedManager._id : updatedManager._id.toString(),
     };
     return NextResponse.json(responseManager, { status: 200 });
 
