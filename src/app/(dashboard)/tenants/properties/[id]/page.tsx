@@ -674,7 +674,7 @@ const TenantPropertyDetailPage: React.FC = () => {
           tenantId={tenantId}
           onSuccess={() => {
             alert('Your maintenance request has been submitted successfully!');
-            router.push('/tenants/maintenance');
+            router.push('/tenants/profile');
           }}
         />
       )}

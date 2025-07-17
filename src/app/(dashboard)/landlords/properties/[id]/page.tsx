@@ -1214,7 +1214,7 @@ const formatPriceEUR = (price: number) => {
       <div className="flex flex-col items-center justify-center min-h-screen p-6">
         <h2 className="text-2xl font-semibold mb-2">Not Found</h2>
         <p className="text-gray-600 mb-6">Property not found.</p>
-        <Button onClick={() => router.push("/dashboard/landlords/properties")}>
+        <Button onClick={() => router.push("/landlords/properties")}>
           My Properties
         </Button>
       </div>
@@ -1310,7 +1310,7 @@ const formatPriceEUR = (price: number) => {
         {" "}
         {/* Added pb-8 */}
         <Link
-          href="/dashboard/landlords/properties"
+          href="/landlords/properties"
           className="inline-flex items-center mb-6 text-gray-500 hover:text-gray-700 transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
@@ -1523,21 +1523,51 @@ const formatPriceEUR = (price: number) => {
           <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit">
             <div className="bg-white border border-primary-200 rounded-2xl p-7 h-fit min-w-[300px]">
               <div className="w-full lg:w-1/3 lg:sticky top-8 h-fit">
-                <div className="bg-white border border-primary-200 rounded-2xl p-7 h-fit min-w-[300px] space-y-4">
+  <div className="bg-white border border-primary-200 rounded-2xl p-7 h-fit min-w-[300px] space-y-4">
+    <Button
+      className="w-full bg-primary-700 text-white hover:bg-primary-600"
+      onClick={() => router.push(`/landlords/properties/${property._id}/edit`)}
+    >
+      Edit Property
+    </Button>
 
+    <Button
+      onClick={() => setIsMaintenanceModalOpen(true)}
+      variant="outline"
+      className="w-full border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600"
+    >
+      <Wrench className="w-5 h-5 mr-2" />
+      Report Maintenance
+    </Button>
 
-                  {/* ======================= PASTE THIS BUTTON HERE ======================= */}
-                  <Button
-                    onClick={() => setIsMaintenanceModalOpen(true)}
-                    variant="outline"
-                    className="w-full border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600"
-                  >
-                    <Wrench className="w-5 h-5 mr-2" />
-                    Report Maintenance
-                  </Button>
-                  {/* ====================================================================== */}
-                </div>
-              </div>
+    <Button
+      onClick={async () => {
+        if (confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
+          try {
+            const response = await fetch(`/api/seller-properties/${property._id}`, {
+              method: 'DELETE',
+            });
+            
+            if (response.ok) {
+              alert("Property deleted successfully!");
+              router.push("/landlords/properties");
+            } else {
+              const error = await response.json();
+              alert(`Failed to delete property: ${error.message}`);
+            }
+          } catch (error) {
+            console.error("Error deleting property:", error);
+            alert("An error occurred while deleting the property.");
+          }
+        }
+      }}
+      variant="outline"
+      className="w-full border-red-500 text-red-600 hover:bg-red-50 hover:border-red-600"
+    >
+      Delete Property
+    </Button>
+  </div>
+</div>
 
             </div>
           </div>
