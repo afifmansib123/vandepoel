@@ -658,7 +658,7 @@ const NewSellerPropertyPage = () => {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your property in detail..."
+                        placeholder="At least 20 Charecters..."
                         rows={5}
                         {...field}
                       />
@@ -795,7 +795,7 @@ const NewSellerPropertyPage = () => {
           </div>
 
           <div className={sectionCardClassName}>
-            <h2 className={sectionTitleClassName}>Sale Information</h2>
+            <h2 className={sectionTitleClassName}>Property Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FormField
                 control={control}

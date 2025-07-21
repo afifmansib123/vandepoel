@@ -95,9 +95,12 @@ const SellerMarketplacePage = () => {
     return allProperties.filter(property => {
         let match = true;
 
-                if (memoizedFilters.listingType && property.propertyStatus !== memoizedFilters.listingType) {
-            match = false;
-        }
+if (memoizedFilters.listingType) {
+  const expectedStatus = memoizedFilters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
+  if (property.propertyStatus !== expectedStatus) {
+    match = false;
+  }
+}
 
         // Location filtering
         if (memoizedFilters.country && property.location.country !== memoizedFilters.country) {

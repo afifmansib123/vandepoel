@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import { useGetAuthUserQuery, useGetmanagerPropertiesQuery } from "@/state/api";
 import React from "react";
 import { useState , useEffect } from "react";
+import Link from "next/link";
 
 const ManagerProperties = () => {
   const {
@@ -76,9 +77,9 @@ const ManagerProperties = () => {
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
             No Properties Yet
           </h3>
-          <p className="text-gray-500 mb-6">
-            You haven’t listed any properties. Get started by adding your first one!
-          </p>
+                    <p className="text-gray-500 mb-6">
+                      You haven’t listed any properties. Get started by adding <Link href="/managers/newproperty" className="text-blue-500 underline">here</Link>
+                    </p>
           
         </div>
       )}

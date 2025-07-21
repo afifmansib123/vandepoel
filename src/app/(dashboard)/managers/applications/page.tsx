@@ -582,7 +582,7 @@ const ApplicationDetailsModal = ({
                 onClick={() => onOpenCreateContract(application)}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition"
               >
-                Create Contract
+                Create Contract 
               </button>
             )}
         </div>

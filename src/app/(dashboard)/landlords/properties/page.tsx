@@ -8,6 +8,7 @@ import Loading from "@/components/Loading";
 import { useGetAuthUserQuery, useGetLandlordPropertiesQuery } from "@/state/api";
 import React from "react";
 import { useState , useEffect } from "react";
+import Link from "next/link";
 
 const LandlordProperties = () => {
   const {
@@ -77,7 +78,7 @@ const LandlordProperties = () => {
             No Properties Yet
           </h3>
           <p className="text-gray-500 mb-6">
-            You haven’t listed any properties. Get started by adding your first one!
+            You haven’t listed any properties. Get started by adding <Link href="/landlords/newproperty" className="text-blue-500 underline">here</Link>
           </p>
           
         </div>

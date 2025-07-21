@@ -155,9 +155,15 @@ const formatPrice = (price: number, country?: string) => {
             objectFit="cover"
             className="rounded-t-xl"
           />
-          <div className="absolute top-3 right-3 bg-primary-700 text-white text-xs px-2 py-1 rounded-md shadow">
-            FOR SALE
-          </div>
+          {property.propertyStatus && (
+  <div className={`absolute top-3 right-3 text-white text-xs font-semibold uppercase px-3 py-1.5 rounded-md shadow-lg ${
+    property.propertyStatus === 'For Rent' 
+      ? 'bg-blue-600'  // A distinct blue for rentals
+      : 'bg-primary-700' // The original color for sales
+  }`}>
+    {property.propertyStatus}
+  </div>
+)}
           <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
             <h3
               className="text-xl font-semibold text-white truncate"

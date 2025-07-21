@@ -17,9 +17,14 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
     if (!allProperties) return []; // Handle case where allProperties might be initially undefined/null
 
     return allProperties.filter(property => {
-            if (filters.listingType && filters.listingType !== "any" && property.propertyStatus !== filters.listingType) {
-        return false;
-      }
+
+      if (filters.listingType && filters.listingType !== "any") {
+  // Map the concise filter value ("Rent") to the descriptive data value ("For Rent")
+  const expectedStatus = filters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
+  if (property.propertyStatus !== expectedStatus) {
+    return false;
+  }
+}
 
       // Location filtering
       // Ensure property.location exists and has the country, state, city fields
