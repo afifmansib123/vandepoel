@@ -210,12 +210,12 @@ const createSellerPropertyAPI = async (
         success: false,
         message: data.message || `Error: ${response.status}`,
       };
-    alert("Seller property created!");
+    alert("property created!");
     window.location.href = "/";
     return {
       success: true,
       property: data,
-      message: "Seller property created!",
+      message: "property created!",
     };
   } catch (error) {
     console.error("createSellerPropertyAPI error:", error);

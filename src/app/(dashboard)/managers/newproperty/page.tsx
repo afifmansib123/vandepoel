@@ -248,7 +248,7 @@ const createSellerPropertyAPI = async (
     return {
       success: true,
       property: data,
-      message: "Seller property created!",
+      message: "property created!",
     };
   } catch (error) {
     console.error("createSellerPropertyAPI error:", error);
