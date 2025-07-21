@@ -89,7 +89,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Buyer View";
       navLinks = [
         { icon: User, label: "Profile", href: "/buyers/profile" },
-        { icon: Search, label: "Search Properties", href: "/buyers/search" },
+        { icon: Search, label: "Search Properties", href: "/marketplace" },
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
         {
           icon: FileText,
