@@ -48,7 +48,22 @@ const FeatureDetailSchema = new mongoose.Schema({
     of: IndividualRoomSchema,
     default: new Map(),
     required: false  // Optional for backwards compatibility
-  }
+  },
+  isTokenized: {
+    type: Boolean,
+    default: false,
+  },
+  tokenOffering: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PropertyToken',
+    default: null,
+  },
+  investmentType: {
+    type: String,
+    enum: ['traditional', 'tokenized', 'both'],
+    default: 'traditional',
+  },
+
 }, { _id: false });
 
 // MAIN: SellerPropertySchema with enhanced features support
@@ -193,7 +208,21 @@ const SellerPropertySchema = new mongoose.Schema({
     type: String,
     default: 'Sale',
     enum: ['Sale', 'Rent', 'Both'],
-  }
+  },
+  isTokenized: {
+    type: Boolean,
+    default: false,
+  },
+  tokenOffering: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PropertyToken',
+    default: null,
+  },
+  investmentType: {
+    type: String,
+    enum: ['traditional', 'tokenized', 'both'],
+    default: 'traditional',
+  },
 }, {
   timestamps: true,
   // This helps with JSON serialization of Maps
