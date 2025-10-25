@@ -39,6 +39,7 @@ import {
   Baby,
   ChevronDown,
   ChevronUp,
+  Coins,
 } from "lucide-react";
 
 import Loading from "@/components/Loading";
@@ -54,6 +55,7 @@ import {
 } from "@/components/ui/carousel"; // For the top image carousel
 
 import ApplicationModal from "@/app/(nondashboard)/search/[id]/ApplicationModal";
+import TokenizePropertyModal from "@/components/TokenizePropertyModal";
 import { useGetAuthUserQuery } from "@/state/api";
 import {
   Wrench,
@@ -1098,6 +1100,7 @@ const SellerPropertyDetailsPage = () => {
   // Add this state for the image preview logic
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
+  const [isTokenizeModalOpen, setIsTokenizeModalOpen] = useState(false);
 
   // Handlers for the custom image preview
   const handlePrevImage = () => {
@@ -1532,6 +1535,15 @@ const formatPriceEUR = (price: number) => {
     </Button>
 
     <Button
+      onClick={() => setIsTokenizeModalOpen(true)}
+      variant="outline"
+      className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 hover:border-blue-600"
+    >
+      <Coins className="w-5 h-5 mr-2" />
+      Tokenize Property
+    </Button>
+
+    <Button
       onClick={() => setIsMaintenanceModalOpen(true)}
       variant="outline"
       className="w-full border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600"
@@ -1598,6 +1610,24 @@ const formatPriceEUR = (price: number) => {
             alert("Maintenance request has been submitted successfully!");
             // Optionally redirect to a maintenance tracking page
             // router.push('/dashboard/landlords/maintenance');
+          }}
+        />
+      )}
+
+      {property && (
+        <TokenizePropertyModal
+          isOpen={isTokenizeModalOpen}
+          onClose={() => setIsTokenizeModalOpen(false)}
+          property={{
+            _id: property._id,
+            name: property.name,
+            salePrice: property.salePrice,
+            propertyType: property.propertyType,
+            location: property.location?.city || property.location?.state || "",
+          }}
+          onSuccess={() => {
+            alert("Property tokenization created successfully!");
+            // Optionally refresh property data or redirect
           }}
         />
       )}
