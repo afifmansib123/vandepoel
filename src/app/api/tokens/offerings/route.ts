@@ -3,7 +3,7 @@ import dbConnect from '../../../../utils/dbConnect';
 import PropertyToken from '@/app/models/PropertyToken';
 import SellerProperty from '@/app/models/SellerProperty';
 
-// GET /api/tokens/offerings - Get all active token offerings
+// GET /api/tokens/offerings - Get all active token offerings (or all if includeAll=true)
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
@@ -13,9 +13,15 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const propertyType = searchParams.get('propertyType');
     const riskLevel = searchParams.get('riskLevel');
+    const includeAll = searchParams.get('includeAll') === 'true'; // New parameter to include all statuses
 
-    const filter: any = { status: 'active' };
-    
+    const filter: any = {};
+
+    // Only filter by active status if includeAll is not true
+    if (!includeAll) {
+      filter.status = 'active';
+    }
+
     if (propertyType) filter.propertyType = propertyType;
     if (riskLevel) filter.riskLevel = riskLevel;
 

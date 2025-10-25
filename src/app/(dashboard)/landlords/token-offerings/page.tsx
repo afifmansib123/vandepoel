@@ -34,8 +34,8 @@ const LandlordTokenOfferings = () => {
       if (!landlordId) return;
 
       try {
-        // Fetch all offerings and filter by landlord
-        const response = await fetch(`/api/tokens/offerings?limit=100`);
+        // Fetch ALL offerings (including drafts) by using includeAll parameter
+        const response = await fetch(`/api/tokens/offerings?limit=100&includeAll=true`);
         const data = await response.json();
 
         if (data.success) {
