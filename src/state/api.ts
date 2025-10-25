@@ -96,6 +96,67 @@ interface BankingService {
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
+
+// --- START Token Types ---
+interface PropertyToken {
+  _id: string;
+  propertyId: string;
+  tokenName: string;
+  tokenSymbol: string;
+  totalTokens: number;
+  tokenPrice: number;
+  tokensSold: number;
+  tokensAvailable: number;
+  minPurchase: number;
+  maxPurchase?: number;
+  propertyValue: number;
+  expectedReturn: string;
+  dividendFrequency: 'Monthly' | 'Quarterly' | 'Bi-annually' | 'Annually';
+  offeringStartDate: string | Date;
+  offeringEndDate: string | Date;
+  status: 'draft' | 'active' | 'funded' | 'closed' | 'cancelled';
+  description: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  propertyType: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+interface TokenInvestment {
+  _id: string;
+  investorId: string;
+  propertyId: string;
+  tokenId: string;
+  tokensOwned: number;
+  purchasePrice: number;
+  totalInvestment: number;
+  ownershipPercentage: number;
+  transactionId: string;
+  paymentMethod: string;
+  paymentStatus: 'pending' | 'success' | 'failed';
+  totalDividendsEarned: number;
+  lastDividendDate?: Date;
+  status: 'active' | 'sold' | 'transferred';
+  purchaseDate: Date;
+  investorEmail?: string;
+  investorPhone?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface InvestorPortfolio {
+  investments: TokenInvestment[];
+  investmentsByProperty: any[];
+  statistics: {
+    totalInvested: number;
+    totalDividends: number;
+    currentValue: number;
+    totalProperties: number;
+    totalTokens: number;
+    averageReturn: string;
+  };
+}
+// --- END Token Types ---
 // --- END Admin Panel Types ---
 // --- END Hardcoded Types ---
 
@@ -111,7 +172,9 @@ export type AppTag =
   | "Applications"
   | "AdminUsers"
   | "MaintenanceProviders"
-  | "BankingServices";
+  | "BankingServices"
+  | "TokenOfferings"
+  | "TokenInvestments";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -140,7 +203,8 @@ export const api = createApi({
     "AdminUsers",
     "MaintenanceProviders",
     "BankingServices",
-
+    "TokenOfferings",
+    "TokenInvestments",
   ] as AppTag[],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -734,6 +798,116 @@ export const api = createApi({
     }),
 
     // --- END Admin Endpoints ---
+
+    // --- START Token Endpoints ---
+
+    // Get all token offerings (marketplace)
+    getTokenOfferings: build.query<{ success: boolean; data: PropertyToken[]; pagination: any }, { page?: number; limit?: number; propertyType?: string; riskLevel?: string }>({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.propertyType) queryParams.append('propertyType', params.propertyType);
+        if (params.riskLevel) queryParams.append('riskLevel', params.riskLevel);
+        return `tokens/offerings?${queryParams.toString()}`;
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: "TokenOfferings" as AppTag, id: _id })),
+              { type: "TokenOfferings" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "TokenOfferings" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch token offerings.",
+        });
+      },
+    }),
+
+    // Get specific token offering
+    getTokenOffering: build.query<{ success: boolean; data: PropertyToken }, string>({
+      query: (tokenId) => `tokens/offerings/${tokenId}`,
+      providesTags: (result, error, tokenId) => [
+        { type: "TokenOfferings" as AppTag, id: tokenId },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load token offering details.",
+        });
+      },
+    }),
+
+    // Create token offering (landlords only)
+    createTokenOffering: build.mutation<{ success: boolean; data: PropertyToken }, any>({
+      query: (body) => ({
+        url: 'tokens/offerings',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        { type: "TokenOfferings" as AppTag, id: "LIST" },
+        { type: "Properties" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Token offering created successfully!",
+          error: "Failed to create token offering.",
+        });
+      },
+    }),
+
+    // Update token offering status (draft -> active, etc.)
+    updateTokenOffering: build.mutation<{ success: boolean; data: PropertyToken }, { tokenId: string; status: string }>({
+      query: ({ tokenId, status }) => ({
+        url: `tokens/offerings/${tokenId}`,
+        method: 'PUT',
+        body: { status },
+      }),
+      invalidatesTags: (result, error, { tokenId }) => [
+        { type: "TokenOfferings" as AppTag, id: tokenId },
+        { type: "TokenOfferings" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Token offering updated!",
+          error: "Failed to update token offering.",
+        });
+      },
+    }),
+
+    // Purchase tokens (buyers only)
+    purchaseTokens: build.mutation<{ success: boolean; data: TokenInvestment }, any>({
+      query: (body) => ({
+        url: 'tokens/purchase',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, error, { tokenId }) => [
+        { type: "TokenOfferings" as AppTag, id: tokenId },
+        { type: "TokenOfferings" as AppTag, id: "LIST" },
+        { type: "TokenInvestments" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Tokens purchased successfully!",
+          error: "Failed to purchase tokens.",
+        });
+      },
+    }),
+
+    // Get investor's portfolio
+    getInvestorPortfolio: build.query<{ success: boolean; data: InvestorPortfolio }, string>({
+      query: (investorId) => `tokens/my-portfolio?investorId=${investorId}`,
+      providesTags: [{ type: "TokenInvestments" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load portfolio.",
+        });
+      },
+    }),
+
+    // --- END Token Endpoints ---
   }),
 });
 
@@ -773,5 +947,11 @@ export const {
   useCreateBankingServiceMutation,
   useUpdateBankingServiceMutation,
   useDeleteBankingServiceMutation,
-
+  // Token hooks
+  useGetTokenOfferingsQuery,
+  useGetTokenOfferingQuery,
+  useCreateTokenOfferingMutation,
+  useUpdateTokenOfferingMutation,
+  usePurchaseTokensMutation,
+  useGetInvestorPortfolioQuery,
 } = api;

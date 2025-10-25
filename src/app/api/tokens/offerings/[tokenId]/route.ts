@@ -58,7 +58,7 @@ export async function PATCH(
 ) {
   try {
     await dbConnect();
-    
+
     const { tokenId } = await params;
     const { status } = await req.json();
 
@@ -100,4 +100,12 @@ export async function PATCH(
       error: error.message
     }, { status: 500 });
   }
+}
+
+// PUT /api/tokens/offerings/[tokenId] - Update token offering status (alias for PATCH)
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ tokenId: string }> }
+) {
+  return PATCH(req, { params });
 }
