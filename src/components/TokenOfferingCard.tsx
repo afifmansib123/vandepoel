@@ -68,7 +68,7 @@ const TokenOfferingCard: React.FC<TokenOfferingCardProps> = ({ offering, onInves
 
   const formatOfferingCurrency = (amount: number) => {
     const currency = getCurrencyFromCountry(offering?.propertyId?.location?.country);
-    return formatOfferingCurrency(amount, currency);
+    return formatCurrency(amount, currency);
   };
 
   const propertyImage = offering.propertyId?.photoUrls?.[0] || '/placeholder-property.jpg';
