@@ -1,11 +1,12 @@
 "use client";
+import TokenPurchaseRequestForm from "@/components/TokenPurchaseRequestForm";
 import { formatCurrency, getCurrencyFromCountry } from "@/lib/utils";
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
-import TokenPurchaseModal from "@/components/TokenPurchaseModal";
+// import TokenPurchaseModal from "@/components/TokenPurchaseModal";
 import { useGetTokenOfferingQuery } from "@/state/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -376,10 +377,12 @@ const TokenDetailsPage = () => {
       </div>
 
       {/* Purchase Modal */}
-      <TokenPurchaseModal
+      <TokenPurchaseRequestForm
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
         offering={offering}
+        userEmail={authUser?.userInfo?.email || ""}
+        userName={authUser?.userInfo?.name || ""}
         onSuccess={() => {
           refetch();
         }}
