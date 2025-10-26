@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/utils";
 
 const BuyerPortfolio = () => {
   const { data: authUser } = useGetAuthUserQuery();
@@ -34,13 +35,9 @@ const BuyerPortfolio = () => {
 
   const portfolio = portfolioResponse?.data;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  // Helper to format currency - using EUR as default for portfolio stats
+  const formatPortfolioCurrency = (amount: number) => {
+    return formatPortfolioCurrency(amount, 'EUR');
   };
 
   if (isLoading) return <Loading />;
@@ -106,7 +103,7 @@ const BuyerPortfolio = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {formatCurrency(stats.totalInvested)}
+              {formatPortfolioCurrency(stats.totalInvested)}
             </div>
             <p className="text-xs text-gray-500 mt-1">Principal investment amount</p>
           </CardContent>
@@ -123,7 +120,7 @@ const BuyerPortfolio = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(stats.totalDividends)}
+              {formatPortfolioCurrency(stats.totalDividends)}
             </div>
             <p className="text-xs text-gray-500 mt-1">Earnings to date</p>
           </CardContent>
@@ -140,7 +137,7 @@ const BuyerPortfolio = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(stats.currentValue)}
+              {formatPortfolioCurrency(stats.currentValue)}
             </div>
             <p className="text-xs text-gray-500 mt-1">Investment + dividends</p>
           </CardContent>
@@ -230,7 +227,7 @@ const BuyerPortfolio = () => {
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Total Invested</p>
                     <p className="font-bold text-lg text-blue-600">
-                      {formatCurrency(investment.totalInvested)}
+                      {formatPortfolioCurrency(investment.totalInvested)}
                     </p>
                   </div>
                 </div>
@@ -239,7 +236,7 @@ const BuyerPortfolio = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Dividends Earned</span>
                     <span className="font-semibold text-green-600">
-                      {formatCurrency(investment.totalDividends)}
+                      {formatPortfolioCurrency(investment.totalDividends)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -312,7 +309,7 @@ const BuyerPortfolio = () => {
                         {investment.tokensOwned.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {formatCurrency(investment.totalInvestment)}
+                        {formatPortfolioCurrency(investment.totalInvestment)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge

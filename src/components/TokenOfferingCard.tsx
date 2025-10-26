@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency, getCurrencyFromCountry } from "@/lib/utils";
 
 import React from "react";
 import Link from "next/link";
@@ -65,13 +66,9 @@ const TokenOfferingCard: React.FC<TokenOfferingCardProps> = ({ offering, onInves
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatOfferingCurrency = (amount: number) => {
+    const currency = getCurrencyFromCountry(offering?.propertyId?.location?.country);
+    return formatOfferingCurrency(amount, currency);
   };
 
   const propertyImage = offering.propertyId?.photoUrls?.[0] || '/placeholder-property.jpg';
@@ -117,12 +114,12 @@ const TokenOfferingCard: React.FC<TokenOfferingCardProps> = ({ offering, onInves
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <p className="text-xs text-gray-500">Token Price</p>
-            <p className="font-bold text-lg">{formatCurrency(offering.tokenPrice)}</p>
+            <p className="font-bold text-lg">{formatOfferingCurrency(offering.tokenPrice)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs text-gray-500">Min. Investment</p>
             <p className="font-bold text-lg">
-              {formatCurrency(offering.minPurchase * offering.tokenPrice)}
+              {formatOfferingCurrency(offering.minPurchase * offering.tokenPrice)}
             </p>
           </div>
         </div>
@@ -176,7 +173,7 @@ const TokenOfferingCard: React.FC<TokenOfferingCardProps> = ({ offering, onInves
         <div className="text-center pt-2 border-t">
           <p className="text-xs text-gray-500 mb-1">Total Property Value</p>
           <p className="text-xl font-bold text-gray-900">
-            {formatCurrency(offering.propertyValue)}
+            {formatOfferingCurrency(offering.propertyValue)}
           </p>
         </div>
       </CardContent>

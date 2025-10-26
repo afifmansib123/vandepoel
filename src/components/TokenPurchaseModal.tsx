@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency } from "@/lib/utils";
 
 import React, { useState, useEffect } from "react";
 import { X, Coins, AlertTriangle, CheckCircle } from "lucide-react";
@@ -99,13 +100,8 @@ const TokenPurchaseModal: React.FC<TokenPurchaseModalProps> = ({
 
   if (!isOpen) return null;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatOfferingCurrency = (amount: number, currency: "EUR" | "THB" = "EUR") => {
+    return formatCurrency(amount, currency);
   };
 
   return (

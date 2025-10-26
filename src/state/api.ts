@@ -156,6 +156,57 @@ interface InvestorPortfolio {
     averageReturn: string;
   };
 }
+
+interface TokenPurchaseRequest {
+  _id: string;
+  requestId: number;
+  tokenOfferingId: string | PropertyToken;
+  propertyId: string | Property;
+  // Buyer info
+  buyerId: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone?: string;
+  buyerAddress?: string;
+  // Seller info
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  // Token details
+  tokensRequested: number;
+  pricePerToken: number;
+  totalAmount: number;
+  currency: 'EUR' | 'THB';
+  // Request details
+  message?: string;
+  proposedPaymentMethod: string;
+  investmentPurpose?: string;
+  // Status
+  status: 'pending' | 'approved' | 'rejected' | 'payment_pending' | 'payment_confirmed' | 'tokens_assigned' | 'completed' | 'cancelled';
+  // Tracking
+  approvedAt?: Date;
+  approvedBy?: string;
+  rejectedAt?: Date;
+  rejectedBy?: string;
+  rejectionReason?: string;
+  paymentProof?: string;
+  paymentSubmittedAt?: Date;
+  paymentConfirmedAt?: Date;
+  paymentConfirmedBy?: string;
+  sellerPaymentInstructions?: string;
+  tokensAssigned: number;
+  tokensAssignedAt?: Date;
+  completedAt?: Date;
+  cancelledAt?: Date;
+  cancelledBy?: string;
+  // Agreement
+  agreementDocumentUrl?: string;
+  agreementSignedByBuyer: boolean;
+  agreementSignedBySeller: boolean;
+  agreementSignedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 // --- END Token Types ---
 // --- END Admin Panel Types ---
 // --- END Hardcoded Types ---
@@ -174,7 +225,8 @@ export type AppTag =
   | "MaintenanceProviders"
   | "BankingServices"
   | "TokenOfferings"
-  | "TokenInvestments";
+  | "TokenInvestments"
+  | "TokenPurchaseRequests";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -205,6 +257,7 @@ export const api = createApi({
     "BankingServices",
     "TokenOfferings",
     "TokenInvestments",
+    "TokenPurchaseRequests",
   ] as AppTag[],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -907,6 +960,97 @@ export const api = createApi({
       },
     }),
 
+    // --- START Token Purchase Request Endpoints ---
+
+    // Get purchase requests (buyer or seller view)
+    getTokenPurchaseRequests: build.query<{ success: boolean; data: TokenPurchaseRequest[]; pagination: any }, { page?: number; limit?: number; status?: string; role?: 'buyer' | 'seller' }>({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.status) queryParams.append('status', params.status);
+        if (params.role) queryParams.append('role', params.role);
+        return `tokens/purchase-requests?${queryParams.toString()}`;
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: "TokenPurchaseRequests" as AppTag, id: _id })),
+              { type: "TokenPurchaseRequests" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "TokenPurchaseRequests" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch purchase requests.",
+        });
+      },
+    }),
+
+    // Get specific purchase request
+    getTokenPurchaseRequest: build.query<{ success: boolean; data: TokenPurchaseRequest }, string>({
+      query: (requestId) => `tokens/purchase-requests/${requestId}`,
+      providesTags: (result, error, requestId) => [
+        { type: "TokenPurchaseRequests" as AppTag, id: requestId },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load purchase request details.",
+        });
+      },
+    }),
+
+    // Submit purchase request
+    submitTokenPurchaseRequest: build.mutation<{ success: boolean; data: TokenPurchaseRequest }, any>({
+      query: (body) => ({
+        url: 'tokens/purchase-requests',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        { type: "TokenPurchaseRequests" as AppTag, id: "LIST" },
+        { type: "TokenOfferings" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Purchase request submitted successfully!",
+          error: "Failed to submit purchase request.",
+        });
+      },
+    }),
+
+    // Update purchase request (approve, reject, confirm payment, etc.)
+    updateTokenPurchaseRequest: build.mutation<{ success: boolean; data: TokenPurchaseRequest }, { requestId: string; action: string; [key: string]: any }>({
+      query: ({ requestId, ...body }) => ({
+        url: `tokens/purchase-requests/${requestId}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { requestId }) => [
+        { type: "TokenPurchaseRequests" as AppTag, id: requestId },
+        { type: "TokenPurchaseRequests" as AppTag, id: "LIST" },
+        { type: "TokenOfferings" as AppTag, id: "LIST" },
+        { type: "TokenInvestments" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted({ action }, { queryFulfilled }) {
+        const successMessages: { [key: string]: string } = {
+          approve: "Purchase request approved!",
+          reject: "Purchase request rejected.",
+          uploadPaymentProof: "Payment proof uploaded successfully!",
+          confirmPayment: "Payment confirmed!",
+          assignTokens: "Tokens assigned successfully!",
+          complete: "Purchase request completed!",
+          cancel: "Purchase request cancelled.",
+        };
+
+        await withToast(queryFulfilled, {
+          success: successMessages[action] || "Request updated successfully!",
+          error: "Failed to update purchase request.",
+        });
+      },
+    }),
+
+    // --- END Token Purchase Request Endpoints ---
+
     // --- END Token Endpoints ---
   }),
 });
@@ -954,4 +1098,9 @@ export const {
   useUpdateTokenOfferingMutation,
   usePurchaseTokensMutation,
   useGetInvestorPortfolioQuery,
+  // Token purchase request hooks
+  useGetTokenPurchaseRequestsQuery,
+  useGetTokenPurchaseRequestQuery,
+  useSubmitTokenPurchaseRequestMutation,
+  useUpdateTokenPurchaseRequestMutation,
 } = api;

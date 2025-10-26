@@ -24,6 +24,35 @@ export function formatPriceValue(value: number | null, isMin: boolean) {
   return isMin ? `$${value}+` : `<$${value}`;
 }
 
+/**
+ * Format currency based on type (EUR or THB)
+ * @param amount - The amount to format
+ * @param currency - The currency type ('EUR' or 'THB')
+ * @returns Formatted currency string
+ */
+export function formatCurrency(amount: number, currency: 'EUR' | 'THB' = 'EUR'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/**
+ * Get currency symbol based on property location
+ * @param country - The country name or code
+ * @returns Currency type ('EUR' or 'THB')
+ */
+export function getCurrencyFromCountry(country?: string): 'EUR' | 'THB' {
+  if (!country) return 'EUR';
+  const countryLower = country.toLowerCase();
+  if (countryLower.includes('thailand') || countryLower === 'th') {
+    return 'THB';
+  }
+  return 'EUR';
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function cleanParams(params: Record<string, any>): Record<string, any> {
   return Object.fromEntries(
