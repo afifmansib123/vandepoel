@@ -34,16 +34,20 @@ export interface ITokenPurchaseRequest extends Document {
   status: 'pending' | 'approved' | 'rejected' | 'payment_pending' | 'payment_confirmed' | 'tokens_assigned' | 'completed' | 'cancelled';
 
   // Approval/Rejection
-  reviewedAt?: Date;
-  reviewedBy?: string; // Who reviewed it
+  approvedAt?: Date;
+  approvedBy?: string;
+  rejectedAt?: Date;
+  rejectedBy?: string;
   rejectionReason?: string;
 
   // Payment Tracking
   paymentMethod?: string; // Actual payment method used
   paymentProof?: string; // URL to payment proof document
+  paymentSubmittedAt?: Date; // When buyer submitted payment proof
   paymentConfirmedAt?: Date;
   paymentConfirmedBy?: string; // Seller who confirmed payment
   paymentTransactionId?: string;
+  sellerPaymentInstructions?: string; // Instructions from seller
 
   // Token Assignment
   tokensAssigned: number; // Actual tokens assigned (might differ from requested)
@@ -58,6 +62,11 @@ export interface ITokenPurchaseRequest extends Document {
   // Notifications
   buyerNotified: boolean;
   sellerNotified: boolean;
+
+  // Completion/Cancellation
+  completedAt?: Date;
+  cancelledAt?: Date;
+  cancelledBy?: string;
 
   // Timestamps
   createdAt: Date;
@@ -162,16 +171,20 @@ const TokenPurchaseRequestSchema = new Schema<ITokenPurchaseRequest>(
     },
 
     // Approval/Rejection
-    reviewedAt: Date,
-    reviewedBy: String,
+    approvedAt: Date,
+    approvedBy: String,
+    rejectedAt: Date,
+    rejectedBy: String,
     rejectionReason: String,
 
     // Payment Tracking
     paymentMethod: String,
     paymentProof: String,
+    paymentSubmittedAt: Date,
     paymentConfirmedAt: Date,
     paymentConfirmedBy: String,
     paymentTransactionId: String,
+    sellerPaymentInstructions: String,
 
     // Token Assignment
     tokensAssigned: {
@@ -201,6 +214,11 @@ const TokenPurchaseRequestSchema = new Schema<ITokenPurchaseRequest>(
       type: Boolean,
       default: false,
     },
+
+    // Completion/Cancellation
+    completedAt: Date,
+    cancelledAt: Date,
+    cancelledBy: String,
   },
   {
     timestamps: true,

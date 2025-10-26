@@ -21,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { formatCurrency, getCurrencyFromCountry } from "@/lib/utils";
 
 const LandlordTokenOfferings = () => {
   const { data: authUser } = useGetAuthUserQuery();
@@ -80,13 +81,10 @@ const LandlordTokenOfferings = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  // Helper to format currency based on property location
+  const formatOfferingCurrency = (amount: number, offering: any) => {
+    const currency = getCurrencyFromCountry(offering.propertyId?.location?.country);
+    return formatCurrency(amount, currency);
   };
 
   const getStatusColor = (status: string) => {
@@ -173,7 +171,8 @@ const LandlordTokenOfferings = () => {
                       offerings.reduce(
                         (sum, o) => sum + o.tokensSold * o.tokenPrice,
                         0
-                      )
+                      ),
+                      'EUR' // Default to EUR for aggregated stats
                     )}
                   </p>
                 </div>
@@ -290,7 +289,7 @@ const LandlordTokenOfferings = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Token Price</p>
                       <p className="text-xl font-bold">
-                        {formatCurrency(offering.tokenPrice)}
+                        {formatOfferingCurrency(offering.tokenPrice, offering)}
                       </p>
                     </div>
                     <div>
@@ -308,7 +307,7 @@ const LandlordTokenOfferings = () => {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Funds Raised</p>
                       <p className="text-xl font-bold text-purple-600">
-                        {formatCurrency(offering.tokensSold * offering.tokenPrice)}
+                        {formatOfferingCurrency(offering.tokensSold * offering.tokenPrice, offering)}
                       </p>
                     </div>
                   </div>
@@ -359,7 +358,7 @@ const LandlordTokenOfferings = () => {
                       <div>
                         <p className="text-xs text-gray-500">Property Value</p>
                         <p className="font-semibold text-sm">
-                          {formatCurrency(offering.propertyValue)}
+                          {formatOfferingCurrency(offering.propertyValue, offering)}
                         </p>
                       </div>
                     </div>
