@@ -1,4 +1,5 @@
 "use client";
+import { formatCurrency, getCurrencyFromCountry } from "@/lib/utils";
 
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -98,13 +99,9 @@ const TokenDetailsPage = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const formatOfferingCurrency = (amount: number) => {
+    const currency = getCurrencyFromCountry(offering?.propertyId?.location?.country);
+    return formatCurrency(amount, currency);
   };
 
   const propertyImages = offering.propertyId?.photoUrls || [];
@@ -289,12 +286,12 @@ const TokenDetailsPage = () => {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Token Price</p>
-                <p className="text-2xl font-bold">{formatCurrency(offering.tokenPrice)}</p>
+                <p className="text-2xl font-bold">{formatOfferingCurrency(offering.tokenPrice)}</p>
               </div>
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-1">Minimum Investment</p>
                 <p className="text-xl font-bold text-blue-600">
-                  {formatCurrency(offering.minPurchase * offering.tokenPrice)}
+                  {formatOfferingCurrency(offering.minPurchase * offering.tokenPrice)}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   ({offering.minPurchase} tokens minimum)
@@ -302,7 +299,7 @@ const TokenDetailsPage = () => {
               </div>
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-1">Total Property Value</p>
-                <p className="text-xl font-bold">{formatCurrency(offering.propertyValue)}</p>
+                <p className="text-xl font-bold">{formatOfferingCurrency(offering.propertyValue)}</p>
               </div>
             </div>
           </div>
