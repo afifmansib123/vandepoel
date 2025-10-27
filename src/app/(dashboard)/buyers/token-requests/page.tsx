@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 const BuyerTokenRequests = () => {
   const { data: authUser } = useGetAuthUserQuery();
@@ -111,12 +112,23 @@ const BuyerTokenRequests = () => {
     setUploadProgress("Uploading payment proof...");
 
     try {
+      // Get auth token
+      const session = await fetchAuthSession();
+      const accessToken = session.tokens?.accessToken?.toString();
+
+      if (!accessToken) {
+        throw new Error("Not authenticated. Please log in again.");
+      }
+
       // First, upload file to S3
       const formData = new FormData();
       formData.append('paymentProof', file);
 
       const uploadResponse = await fetch(`/api/tokens/purchase-requests/${requestId}/upload-payment-proof`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: formData,
       });
 
