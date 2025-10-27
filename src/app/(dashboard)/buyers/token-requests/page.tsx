@@ -32,6 +32,8 @@ const BuyerTokenRequests = () => {
 
   const [updateRequest] = useUpdateTokenPurchaseRequestMutation();
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
 
   const requests = requestsResponse?.data || [];
 
@@ -81,24 +83,70 @@ const BuyerTokenRequests = () => {
     return status.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
   };
 
-  const handleUploadPaymentProof = async (requestId: string) => {
-    // In real implementation, this would open a file upload dialog
-    // For now, we'll use a placeholder
-    const proofUrl = prompt("Enter payment proof URL (or upload file):");
-    if (!proofUrl) return;
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, requestId: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Please upload an image (JPG, PNG, WEBP) or PDF file");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+    handleUploadPaymentProof(requestId, file);
+  };
+
+  const handleUploadPaymentProof = async (requestId: string, file: File) => {
+    if (!file) return;
 
     setUploadingFor(requestId);
+    setUploadProgress("Uploading payment proof...");
+
     try {
+      // First, upload file to S3
+      const formData = new FormData();
+      formData.append('paymentProof', file);
+
+      const uploadResponse = await fetch(`/api/tokens/purchase-requests/${requestId}/upload-payment-proof`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const error = await uploadResponse.json();
+        throw new Error(error.message || "Failed to upload file");
+      }
+
+      const uploadResult = await uploadResponse.json();
+      const paymentProofUrl = uploadResult.data.url;
+
+      setUploadProgress("Saving payment proof...");
+
+      // Then, update the request with the URL
       await updateRequest({
         requestId,
         action: "uploadPaymentProof",
-        paymentProof: proofUrl,
+        paymentProof: paymentProofUrl,
       }).unwrap();
+
+      setUploadProgress("");
+      setSelectedFile(null);
       refetch();
-    } catch (error) {
+      alert("Payment proof uploaded successfully!");
+    } catch (error: any) {
       console.error("Failed to upload payment proof:", error);
+      alert(error.message || "Failed to upload payment proof. Please try again.");
     } finally {
       setUploadingFor(null);
+      setUploadProgress("");
     }
   };
 
@@ -281,14 +329,29 @@ const BuyerTokenRequests = () => {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <Button
-                          onClick={() => handleUploadPaymentProof(request._id)}
+                        <input
+                          type="file"
+                          id={`paymentProof-${request._id}`}
+                          accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                          onChange={(e) => handleFileSelect(e, request._id)}
+                          className="hidden"
                           disabled={uploadingFor === request._id}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {uploadingFor === request._id ? "Uploading..." : "Upload Payment Proof"}
-                        </Button>
+                        />
+                        <label htmlFor={`paymentProof-${request._id}`}>
+                          <Button
+                            as="span"
+                            disabled={uploadingFor === request._id}
+                            className="bg-green-600 hover:bg-green-700 cursor-pointer"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {uploadingFor === request._id
+                              ? (uploadProgress || "Uploading...")
+                              : "Upload Payment Proof (Image/PDF)"}
+                          </Button>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Supported formats: JPG, PNG, WEBP, PDF (Max 10MB)
+                        </p>
                       </div>
                     </div>
                   )}
