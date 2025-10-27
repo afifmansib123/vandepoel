@@ -1,7 +1,7 @@
 "use client";
 import TokenPurchaseRequestForm from "@/components/TokenPurchaseRequestForm";
 import { formatCurrency, getCurrencyFromCountry } from "@/lib/utils";
-
+import { useGetAuthUserQuery } from "@/state/api";
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Header from "@/components/Header";
@@ -40,6 +40,8 @@ const TokenDetailsPage = () => {
     isError,
     refetch,
   } = useGetTokenOfferingQuery(tokenId);
+
+    const { data: authUser, refetch: refetchAuthUser } = useGetAuthUserQuery();
 
   const offering = offeringResponse?.data;
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectToDB } from "@/lib/mongodb";
+import dbConnect from "@/utils/dbConnect";
 import TokenPurchaseRequest from "@/app/models/TokenPurchaseRequest";
 import PropertyToken from "@/app/models/PropertyToken";
 import Property from "@/app/models/Property";
@@ -13,7 +13,7 @@ import { getUserFromToken } from "@/lib/auth";
  */
 export async function GET(request: NextRequest) {
   try {
-    await connectToDB();
+    await dbConnect();
 
     const user = await getUserFromToken(request);
     if (!user) {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await connectToDB();
+    await dbConnect();
 
     const user = await getUserFromToken(request);
     if (!user) {
