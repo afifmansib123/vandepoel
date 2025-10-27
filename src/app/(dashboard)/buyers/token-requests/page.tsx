@@ -337,18 +337,16 @@ const BuyerTokenRequests = () => {
                           className="hidden"
                           disabled={uploadingFor === request._id}
                         />
-                        <label htmlFor={`paymentProof-${request._id}`}>
-                          <Button
-                            as="span"
-                            disabled={uploadingFor === request._id}
-                            className="bg-green-600 hover:bg-green-700 cursor-pointer"
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            {uploadingFor === request._id
-                              ? (uploadProgress || "Uploading...")
-                              : "Upload Payment Proof (Image/PDF)"}
-                          </Button>
-                        </label>
+                        <Button
+                          onClick={() => document.getElementById(`paymentProof-${request._id}`)?.click()}
+                          disabled={uploadingFor === request._id}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploadingFor === request._id
+                            ? (uploadProgress || "Uploading...")
+                            : "Upload Payment Proof (Image/PDF)"}
+                        </Button>
                         <p className="text-xs text-gray-500 mt-2">
                           Supported formats: JPG, PNG, WEBP, PDF (Max 10MB)
                         </p>
