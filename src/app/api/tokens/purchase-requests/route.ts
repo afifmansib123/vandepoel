@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDB } from "@/lib/mongodb";
 import TokenPurchaseRequest from "@/app/models/TokenPurchaseRequest";
 import PropertyToken from "@/app/models/PropertyToken";
-import Property from "@/app/models/Property";
+import SellerProperty from "@/app/models/SellerProperty";
+import Location from "@/app/models/Location";
+import Buyer from "@/app/models/Buyer";
+import Landlord from "@/app/models/Landlord";
 import { getUserFromToken } from "@/lib/auth";
 
 /**
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
     } else if (role === "seller") {
       // Sellers see requests for their properties
       // We need to find properties owned by this seller
-      const sellerProperties = await Property.find({
+      const sellerProperties = await SellerProperty.find({
         sellerCognitoId: user.userId,
       }).select("_id");
 
@@ -135,7 +138,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch token offering
+    // Fetch token offering with property populated
     const tokenOffering = await PropertyToken.findById(tokenOfferingId).populate("propertyId");
     if (!tokenOffering) {
       return NextResponse.json(
@@ -185,7 +188,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get property and seller info
+    // Get property
     const property = tokenOffering.propertyId;
     if (!property) {
       return NextResponse.json(
@@ -194,13 +197,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine currency based on property location
-    let currency: "EUR" | "THB" = "EUR"; // Default to EUR
+    // Fetch buyer information from Buyer model
+    const buyer = await Buyer.findOne({ cognitoId: user.userId });
+    if (!buyer) {
+      return NextResponse.json(
+        { success: false, message: "Buyer profile not found" },
+        { status: 404 }
+      );
+    }
 
-    if (property?.location?.country) {
-      const country = property.location.country.toLowerCase();
-      if (country.includes("thailand") || country === "th") {
-        currency = "THB";
+    // Fetch seller information from Landlord model
+    const seller = await Landlord.findOne({ cognitoId: property.sellerCognitoId });
+    if (!seller) {
+      return NextResponse.json(
+        { success: false, message: "Seller profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Fetch location to determine currency
+    let currency: "EUR" | "THB" = "EUR"; // Default to EUR
+    if (property.locationId) {
+      const location = await Location.findOne({ id: property.locationId });
+      if (location?.country) {
+        const country = location.country.toLowerCase();
+        if (country.includes("thailand") || country === "th") {
+          currency = "THB";
+        }
       }
     }
 
@@ -216,16 +239,16 @@ export async function POST(request: NextRequest) {
       requestId,
       tokenOfferingId,
       propertyId: property._id,
-      // Buyer info
-      buyerId: user.userId,
-      buyerName: user.name || user.email,
-      buyerEmail: user.email,
-      buyerPhone,
+      // Buyer info from Buyer model
+      buyerId: buyer.cognitoId,
+      buyerName: buyer.name,
+      buyerEmail: buyer.email,
+      buyerPhone: buyerPhone || buyer.phoneNumber,
       buyerAddress,
-      // Seller info
-      sellerId: property.sellerCognitoId,
-      sellerName: property.sellerName || "Property Owner",
-      sellerEmail: property.sellerEmail || "",
+      // Seller info from Landlord model
+      sellerId: seller.cognitoId,
+      sellerName: seller.name,
+      sellerEmail: seller.email,
       // Token details
       tokensRequested,
       pricePerToken: tokenOffering.tokenPrice,

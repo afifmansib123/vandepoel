@@ -16,8 +16,8 @@ export interface ITokenPurchaseRequest extends Document {
 
   // Seller Info
   sellerId: string; // Property owner's cognitoId
-  sellerName: string;
-  sellerEmail: string;
+  sellerName?: string;
+  sellerEmail?: string;
 
   // Token Purchase Details
   tokensRequested: number;
@@ -116,11 +116,11 @@ const TokenPurchaseRequestSchema = new Schema<ITokenPurchaseRequest>(
     },
     sellerName: {
       type: String,
-      required: true,
+      required: false, // Optional - fetched from Landlord model
     },
     sellerEmail: {
       type: String,
-      required: true,
+      required: false, // Optional - fetched from Landlord model
     },
 
     // Token Purchase Details
