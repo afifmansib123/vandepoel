@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../utils/dbConnect';
 import TokenPurchaseRequest from '@/app/models/TokenPurchaseRequest';
+// Import models to ensure they're registered before populate
+import PropertyToken from '@/app/models/PropertyToken';
+import SellerProperty from '@/app/models/SellerProperty';
 
 // GET /api/tokens/my-portfolio - Get investor's portfolio (Buyers only)
 export async function GET(req: NextRequest) {
   try {
     await dbConnect();
+
+    // Ensure models are registered
+    if (!PropertyToken || !SellerProperty) {
+      throw new Error('Required models not loaded');
+    }
 
     // Get investorId from query params (in production, get from auth session)
     const searchParams = req.nextUrl.searchParams;
