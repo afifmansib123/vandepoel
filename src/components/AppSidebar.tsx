@@ -24,6 +24,8 @@ import {
   UserCircle,
   ShieldCheck,
   User,
+  Coins,
+  Wallet,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
@@ -78,9 +80,19 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
           href: "/landlords/properties",
         },
         {
+          icon: Coins,
+          label: "Token Offerings",
+          href: "/landlords/token-offerings",
+        },
+        {
           icon: FileText,
           label: "Applications",
           href: "/landlords/applications",
+        },
+        {
+          icon: FileText,
+          label: "Token Requests",
+          href: "/landlords/token-requests",
         },
         { icon: Settings, label: "Settings", href: "/landlords/settings" },
       ];
@@ -92,9 +104,24 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         { icon: Search, label: "Search Properties", href: "/marketplace" },
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
         {
+          icon: Coins,
+          label: "Token Marketplace",
+          href: "/buyers/tokens",
+        },
+        {
+          icon: Wallet,
+          label: "My Portfolio",
+          href: "/buyers/portfolio",
+        },
+        {
           icon: FileText,
           label: "Applications",
           href: "/buyers/applications",
+        },
+        {
+          icon: FileText,
+          label: "Token Requests",
+          href: "/buyers/token-requests",
         },
         { icon: Settings, label: "Settings", href: "/buyers/settings" },
       ];

@@ -64,7 +64,7 @@ const LandlordProfile = () => {
   useEffect(() => {
     if (authUser?.userRole === "landlord") {
       try {
-        const tutorialSeen = localStorage.getItem(`tutorial_seen_buyer`);
+        const tutorialSeen = localStorage.getItem(`tutorial_seen_landlord`);
         if (!tutorialSeen) {
           setIsTutorialModalOpen(true);
         }
