@@ -7,6 +7,7 @@ import { useGetAuthUserQuery, useGetTokenPurchaseRequestsQuery, useUpdateTokenPu
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Clock,
   CheckCircle,
@@ -91,13 +92,13 @@ const BuyerTokenRequests = () => {
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      alert("Please upload an image (JPG, PNG, WEBP) or PDF file");
+      toast.error("Please upload an image (JPG, PNG, WEBP) or PDF file");
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
+      toast.error("File size must be less than 10MB");
       return;
     }
 
@@ -152,10 +153,10 @@ const BuyerTokenRequests = () => {
       setUploadProgress("");
       setSelectedFile(null);
       refetch();
-      alert("Payment proof uploaded successfully!");
+      toast.success("Payment proof uploaded successfully!");
     } catch (error: any) {
       console.error("Failed to upload payment proof:", error);
-      alert(error.message || "Failed to upload payment proof. Please try again.");
+      toast.error(error.message || "Failed to upload payment proof. Please try again.");
     } finally {
       setUploadingFor(null);
       setUploadProgress("");

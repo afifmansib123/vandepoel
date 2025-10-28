@@ -7,6 +7,7 @@ import { useGetAuthUserQuery } from "@/state/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Coins,
   TrendingUp,
@@ -71,13 +72,13 @@ const LandlordTokenOfferings = () => {
             off._id === tokenId ? { ...off, status: newStatus } : off
           )
         );
-        alert(`Token offering ${newStatus === "active" ? "activated" : "updated"} successfully!`);
+        toast.success(`Token offering ${newStatus === "active" ? "activated" : "updated"} successfully!`);
       } else {
-        alert("Failed to update token offering status");
+        toast.error("Failed to update token offering status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("An error occurred while updating the status");
+      toast.error("An error occurred while updating the status");
     }
   };
 
