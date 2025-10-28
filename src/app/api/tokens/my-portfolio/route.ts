@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '../../../../utils/dbConnect';
-import TokenInvestment from '@/app/models/TokenInvestment';
+import TokenPurchaseRequest from '@/app/models/TokenPurchaseRequest';
 
 // GET /api/tokens/my-portfolio - Get investor's portfolio (Buyers only)
 export async function GET(req: NextRequest) {
@@ -18,20 +18,20 @@ export async function GET(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get all active investments for this investor
-    const investments = await TokenInvestment.find({
-      investorId,
-      status: 'active'
+    // Get all completed purchase requests where tokens have been assigned
+    const investments = await TokenPurchaseRequest.find({
+      buyerId: investorId,
+      status: { $in: ['tokens_assigned', 'completed'] }
     })
     .populate('propertyId') // Populate property details
-    .populate('tokenId')    // Populate token offering details
-    .sort({ purchaseDate: -1 });
+    .populate('tokenOfferingId')    // Populate token offering details
+    .sort({ tokensAssignedAt: -1 });
 
     // Calculate portfolio statistics
-    const totalInvested = investments.reduce((sum, inv) => sum + inv.totalInvestment, 0);
-    const totalDividends = investments.reduce((sum, inv) => sum + inv.totalDividendsEarned, 0);
+    const totalInvested = investments.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalDividends = 0; // Dividends not implemented yet in new system
     const totalProperties = investments.length;
-    const totalTokens = investments.reduce((sum, inv) => sum + inv.tokensOwned, 0);
+    const totalTokens = investments.reduce((sum, inv) => sum + inv.tokensRequested, 0);
 
     // Calculate current value (investment + dividends)
     const currentValue = totalInvested + totalDividends;
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       if (!acc[propertyId]) {
         acc[propertyId] = {
           property: inv.propertyId,
-          tokenOffering: inv.tokenId,
+          tokenOffering: inv.tokenOfferingId,
           totalTokens: 0,
           totalInvested: 0,
           totalDividends: 0,
@@ -50,10 +50,16 @@ export async function GET(req: NextRequest) {
           investments: []
         };
       }
-      acc[propertyId].totalTokens += inv.tokensOwned;
-      acc[propertyId].totalInvested += inv.totalInvestment;
-      acc[propertyId].totalDividends += inv.totalDividendsEarned;
-      acc[propertyId].ownershipPercentage += inv.ownershipPercentage;
+
+      const tokenOffering = inv.tokenOfferingId;
+      const ownershipPerc = tokenOffering?.totalTokens
+        ? (inv.tokensRequested / tokenOffering.totalTokens) * 100
+        : 0;
+
+      acc[propertyId].totalTokens += inv.tokensRequested;
+      acc[propertyId].totalInvested += inv.totalAmount;
+      acc[propertyId].totalDividends += 0; // No dividends yet
+      acc[propertyId].ownershipPercentage += ownershipPerc;
       acc[propertyId].investments.push(inv);
       return acc;
     }, {});

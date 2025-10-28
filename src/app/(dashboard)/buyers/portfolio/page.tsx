@@ -37,7 +37,7 @@ const BuyerPortfolio = () => {
 
   // Helper to format currency - using EUR as default for portfolio stats
   const formatPortfolioCurrency = (amount: number) => {
-    return formatPortfolioCurrency(amount, 'EUR');
+    return formatCurrency(amount, 'EUR');
   };
 
   if (isLoading) return <Loading />;
@@ -294,7 +294,7 @@ const BuyerPortfolio = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
-                          {new Date(investment.purchaseDate).toLocaleDateString()}
+                          {new Date(investment.tokensAssignedAt || investment.createdAt).toLocaleDateString()}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -302,19 +302,19 @@ const BuyerPortfolio = () => {
                           {investment.propertyId?.name || 'Property'}
                         </div>
                         <div className="text-xs text-gray-500 font-mono">
-                          {investment.tokenId?.tokenSymbol}
+                          {investment.tokenOfferingId?.tokenSymbol}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {investment.tokensOwned.toLocaleString()}
+                        {investment.tokensRequested?.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {formatPortfolioCurrency(investment.totalInvestment)}
+                        {formatPortfolioCurrency(investment.totalAmount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge
                           className={
-                            investment.status === 'active'
+                            investment.status === 'tokens_assigned' || investment.status === 'completed'
                               ? 'bg-green-100 text-green-700'
                               : 'bg-gray-100 text-gray-700'
                           }
