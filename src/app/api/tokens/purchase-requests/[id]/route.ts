@@ -4,6 +4,8 @@ import TokenPurchaseRequest from "@/app/models/TokenPurchaseRequest";
 import PropertyToken from "@/app/models/PropertyToken";
 import Property from "@/app/models/Property";
 import { getUserFromToken } from "@/lib/auth";
+import { createNotification, TokenNotificationMessages } from "@/lib/notifications";
+import SellerProperty from "@/app/models/SellerProperty";
 
 /**
  * GET /api/tokens/purchase-requests/[id]
@@ -136,8 +138,17 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to buyer
-        // Notify buyer that their request was approved and provide payment instructions
+        // Send notification to buyer
+        const approveMsg = TokenNotificationMessages.REQUEST_APPROVED(property.name || 'the property');
+        await createNotification({
+          userId: purchaseRequest.buyerId,
+          type: 'token_request',
+          title: approveMsg.title,
+          message: approveMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: `/buyers/token-requests`,
+          priority: 'high',
+        });
 
         return NextResponse.json({
           success: true,
@@ -168,8 +179,17 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to buyer
-        // Notify buyer that their request was rejected
+        // Send notification to buyer
+        const rejectMsg = TokenNotificationMessages.REQUEST_REJECTED(property.name || 'the property', rejectionReason);
+        await createNotification({
+          userId: purchaseRequest.buyerId,
+          type: 'token_request',
+          title: rejectMsg.title,
+          message: rejectMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: `/buyers/token-requests`,
+          priority: 'medium',
+        });
 
         return NextResponse.json({
           success: true,
@@ -206,8 +226,20 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to seller
-        // Notify seller that buyer uploaded payment proof
+        // Send notification to seller
+        const paymentProofMsg = TokenNotificationMessages.PAYMENT_PROOF_SUBMITTED(
+          purchaseRequest.buyerName,
+          property.name || 'the property'
+        );
+        await createNotification({
+          userId: purchaseRequest.sellerId,
+          type: 'payment',
+          title: paymentProofMsg.title,
+          message: paymentProofMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: `/landlords/token-requests`,
+          priority: 'high',
+        });
 
         return NextResponse.json({
           success: true,
@@ -237,8 +269,17 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to buyer
-        // Notify buyer that payment was confirmed
+        // Send notification to buyer
+        const paymentConfirmedMsg = TokenNotificationMessages.PAYMENT_CONFIRMED(property.name || 'the property');
+        await createNotification({
+          userId: purchaseRequest.buyerId,
+          type: 'payment',
+          title: paymentConfirmedMsg.title,
+          message: paymentConfirmedMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: `/buyers/token-requests`,
+          priority: 'high',
+        });
 
         return NextResponse.json({
           success: true,
@@ -297,8 +338,20 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to buyer
-        // Notify buyer that tokens have been assigned
+        // Send notification to buyer
+        const tokensAssignedMsg = TokenNotificationMessages.TOKENS_ASSIGNED(
+          purchaseRequest.tokensRequested,
+          property.name || 'the property'
+        );
+        await createNotification({
+          userId: purchaseRequest.buyerId,
+          type: 'token_request',
+          title: tokensAssignedMsg.title,
+          message: tokensAssignedMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: `/buyers/portfolio`,
+          priority: 'high',
+        });
 
         return NextResponse.json({
           success: true,
@@ -356,7 +409,18 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // TODO: Send notification to other party
+        // Send notification to other party (buyer or seller)
+        const otherPartyId = isBuyer ? purchaseRequest.sellerId : purchaseRequest.buyerId;
+        const cancelMsg = TokenNotificationMessages.REQUEST_CANCELLED(property.name || 'the property');
+        await createNotification({
+          userId: otherPartyId,
+          type: 'token_request',
+          title: cancelMsg.title,
+          message: cancelMsg.message,
+          relatedId: purchaseRequest._id.toString(),
+          relatedUrl: isBuyer ? `/landlords/token-requests` : `/buyers/token-requests`,
+          priority: 'medium',
+        });
 
         return NextResponse.json({
           success: true,

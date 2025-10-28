@@ -7,6 +7,7 @@ import Location from "@/app/models/Location";
 import Buyer from "@/app/models/Buyer";
 import Landlord from "@/app/models/Landlord";
 import { getUserFromToken } from "@/lib/auth";
+import { createNotification, TokenNotificationMessages } from "@/lib/notifications";
 
 /**
  * GET /api/tokens/purchase-requests
@@ -274,13 +275,21 @@ export async function POST(request: NextRequest) {
         select: "tokenName tokenSymbol tokenPrice totalTokens tokensSold",
       });
 
-    // TODO: Send notification to seller
-    // await createNotification({
-    //   userId: property.sellerCognitoId,
-    //   type: 'token_purchase_request',
-    //   message: `New token purchase request for ${tokenOffering.tokenName}`,
-    //   ...
-    // });
+    // Send notification to seller
+    const notificationMessage = TokenNotificationMessages.REQUEST_SUBMITTED(
+      buyer.name,
+      tokensRequested,
+      property.name
+    );
+    await createNotification({
+      userId: seller.cognitoId,
+      type: 'token_request',
+      title: notificationMessage.title,
+      message: notificationMessage.message,
+      relatedId: purchaseRequest._id.toString(),
+      relatedUrl: `/landlords/token-requests`,
+      priority: 'high',
+    });
 
     return NextResponse.json({
       success: true,

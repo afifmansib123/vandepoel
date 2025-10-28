@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Clock,
   CheckCircle,
@@ -112,13 +113,13 @@ const LandlordTokenRequests = () => {
       refetch();
     } catch (error) {
       console.error("Failed to approve request:", error);
-      alert("Failed to approve request. Please try again.");
+      toast.error("Failed to approve request. Please try again.");
     }
   };
 
   const handleReject = async () => {
     if (!rejectDialog.requestId || !rejectionReason.trim()) {
-      alert("Please provide a reason for rejection");
+      toast.error("Please provide a reason for rejection");
       return;
     }
 
@@ -133,7 +134,7 @@ const LandlordTokenRequests = () => {
       refetch();
     } catch (error) {
       console.error("Failed to reject request:", error);
-      alert("Failed to reject request. Please try again.");
+      toast.error("Failed to reject request. Please try again.");
     }
   };
 
@@ -148,7 +149,7 @@ const LandlordTokenRequests = () => {
       refetch();
     } catch (error) {
       console.error("Failed to confirm payment:", error);
-      alert("Failed to confirm payment. Please try again.");
+      toast.error("Failed to confirm payment. Please try again.");
     }
   };
 
@@ -163,7 +164,7 @@ const LandlordTokenRequests = () => {
       refetch();
     } catch (error) {
       console.error("Failed to assign tokens:", error);
-      alert("Failed to assign tokens. Please try again.");
+      toast.error("Failed to assign tokens. Please try again.");
     }
   };
 
@@ -178,7 +179,7 @@ const LandlordTokenRequests = () => {
       refetch();
     } catch (error) {
       console.error("Failed to complete request:", error);
-      alert("Failed to complete request. Please try again.");
+      toast.error("Failed to complete request. Please try again.");
     }
   };
 
