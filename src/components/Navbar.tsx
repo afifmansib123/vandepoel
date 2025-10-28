@@ -21,7 +21,7 @@ import { SidebarTrigger } from "./ui/sidebar";
 import TutorialModal from "./TutorialModal";
 
 const Navbar = () => {
-  const { data: authUser } = useGetAuthUserQuery();
+  const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
   const router = useRouter();
   const pathname = usePathname();
   const [notificationCount, setNotificationCount] = useState(0);
@@ -158,10 +158,15 @@ const Navbar = () => {
           </p>
         )}
         <div className="flex items-center gap-5">
-          {authUser ? (
+          {authLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-pulse bg-primary-600 rounded-full h-10 w-10"></div>
+              <div className="animate-pulse bg-primary-600 rounded h-4 w-24 hidden md:block"></div>
+            </div>
+          ) : authUser ? (
             <>
               <div className="relative hidden md:block">
-                <div 
+                <div
                   className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400 transition-colors"
                   onClick={() => setIsTutorialModalOpen(!isTutorialModalOpen)}
                   title={isTutorialModalOpen ? "Close Tutorial" : "Open Tutorial"}
@@ -174,7 +179,7 @@ const Navbar = () => {
                 </div>
               </div>
               <div className="relative hidden md:block">
-                <Bell 
+                <Bell
                   className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400"
                   onClick={() => {
                     // Navigate to applications page based on user role
