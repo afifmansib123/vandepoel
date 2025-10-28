@@ -258,6 +258,7 @@ export const api = createApi({
     "TokenOfferings",
     "TokenInvestments",
     "TokenPurchaseRequests",
+    "Notifications",
   ] as AppTag[],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
@@ -1052,6 +1053,77 @@ export const api = createApi({
     // --- END Token Purchase Request Endpoints ---
 
     // --- END Token Endpoints ---
+
+    // --- Notification Endpoints ---
+
+    getNotifications: build.query<
+      {
+        success: boolean;
+        data: {
+          notifications: Array<{
+            _id: string;
+            userId: string;
+            type: string;
+            title: string;
+            message: string;
+            relatedId?: string;
+            relatedUrl?: string;
+            isRead: boolean;
+            priority: string;
+            createdAt: string;
+            updatedAt: string;
+          }>;
+          unreadCount: number;
+          hasMore: boolean;
+        };
+      },
+      { type?: string; isRead?: boolean; limit?: number; skip?: number } | void
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.type) queryParams.append('type', params.type);
+        if (params?.isRead !== undefined) queryParams.append('isRead', String(params.isRead));
+        if (params?.limit) queryParams.append('limit', String(params.limit));
+        if (params?.skip) queryParams.append('skip', String(params.skip));
+        return `notifications?${queryParams.toString()}`;
+      },
+      providesTags: ['Notifications'],
+    }),
+
+    markNotificationAsRead: build.mutation<
+      { success: boolean; data: any },
+      string
+    >({
+      query: (notificationId) => ({
+        url: `notifications/${notificationId}`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Notifications'],
+    }),
+
+    deleteNotification: build.mutation<
+      { success: boolean; message: string },
+      string
+    >({
+      query: (notificationId) => ({
+        url: `notifications/${notificationId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Notifications'],
+    }),
+
+    deleteAllReadNotifications: build.mutation<
+      { success: boolean; data: { deletedCount: number } },
+      void
+    >({
+      query: () => ({
+        url: 'notifications',
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Notifications'],
+    }),
+
+    // --- END Notification Endpoints ---
   }),
 });
 
@@ -1103,4 +1175,9 @@ export const {
   useGetTokenPurchaseRequestQuery,
   useSubmitTokenPurchaseRequestMutation,
   useUpdateTokenPurchaseRequestMutation,
+  // Notification hooks
+  useGetNotificationsQuery,
+  useMarkNotificationAsReadMutation,
+  useDeleteNotificationMutation,
+  useDeleteAllReadNotificationsMutation,
 } = api;
