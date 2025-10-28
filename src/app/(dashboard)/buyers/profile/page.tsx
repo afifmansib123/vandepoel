@@ -8,6 +8,7 @@ import {
 } from "@/state/api";
 import React, { useState, useEffect } from "react";
 import TutorialModal from "@/components/TutorialModal";
+import { toast } from "sonner";
 
 // Interface for Buyer data structure
 interface BuyerProfile {
@@ -109,7 +110,7 @@ useEffect(() => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!authUser?.cognitoInfo.userId || !buyerData) {
-      alert("Error: Cannot update profile. User or profile data is missing.");
+      toast.error("Error: Cannot update profile. User or profile data is missing.");
       return;
     }
     try {
@@ -129,13 +130,13 @@ useEffect(() => {
 
       setBuyerData(newProfileState);
 
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
       const message =
         error instanceof Error ? error.message : "An unknown error occurred.";
-      alert(message);
+      toast.error(message);
     }
   };
 

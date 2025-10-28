@@ -9,6 +9,7 @@ import {
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import TutorialModal from '@/components/TutorialModal';
+import { toast } from "sonner";
 
 // Interface for Tenant data structure
 interface TenantProfile {
@@ -111,7 +112,7 @@ useEffect(() => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!authUser?.cognitoInfo.userId || !TenantData) {
-      alert("Error: Cannot update profile. User or profile data is missing.");
+      toast.error("Error: Cannot update profile. User or profile data is missing.");
       return;
     }
 
@@ -132,13 +133,13 @@ useEffect(() => {
 
       setTenantData(newProfileState);
 
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
       const message =
         error instanceof Error ? error.message : "An unknown error occurred.";
-      alert(message);
+      toast.error(message);
     }
   };
 

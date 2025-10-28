@@ -9,6 +9,7 @@ import {
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import TutorialModal from "@/components/TutorialModal";
+import { toast } from "sonner";
 
 // Interface for Landlord data structure
 interface LandlordProfile {
@@ -144,12 +145,10 @@ const LandlordProfile = () => {
       setProfileImageFile(null);
       setBusinessLicenseFile(null);
       setIsEditing(false);
-      alert(
-        "Profile updated successfully!"
-      );
+      toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Failed to update profile:", error);
-      alert("An error occurred while updating your profile.");
+      toast.error("An error occurred while updating your profile.");
     }
   };
 

@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -319,10 +320,10 @@ const SuperadminUserManagement = () => {
 
     try {
       await updateUserStatus({ cognitoId, role, status }).unwrap();
-      alert("User status updated successfully.");
+      toast.success("User status updated successfully!");
       refetch();
     } catch (err: any) {
-      alert(`Error: ${err.data?.message || err.message}`);
+      toast.error(`Error: ${err.data?.message || err.message}`);
     }
   };
 
