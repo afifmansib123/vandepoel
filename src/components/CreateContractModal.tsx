@@ -37,28 +37,52 @@ interface CreateContractModalProps {
 }
 
 const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, managerId, onClose, onSuccess }) => {
-  const [duration, setDuration] = useState<'6_months' | '1_year'>('1_year');
+  const [duration, setDuration] = useState<'6_months' | '1_year' | 'custom'>('1_year');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [monthlyRent, setMonthlyRent] = useState('');
+  const [securityDeposit, setSecurityDeposit] = useState('');
+  const [currency, setCurrency] = useState<'EUR' | 'THB' | 'USD'>('EUR');
+  const [paymentDay, setPaymentDay] = useState('1');
+  const [terms, setTerms] = useState('Standard rental agreement terms and conditions apply.');
+  const [specialConditions, setSpecialConditions] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-calculate end date based on duration
+  React.useEffect(() => {
+    if (startDate && duration !== 'custom') {
+      const start = new Date(startDate);
+      const end = new Date(start);
+      if (duration === '6_months') {
+        end.setMonth(end.getMonth() + 6);
+      } else if (duration === '1_year') {
+        end.setFullYear(end.getFullYear() + 1);
+      }
+      setEndDate(end.toISOString().split('T')[0]);
+    }
+  }, [startDate, duration]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    // --- MODIFICATION START ---
-    // Instead of sending just the property's ID, we now send the entire property object.
-    // The key is changed from 'propertyId' to 'property' to be more descriptive.
-    // Your backend API at `POST /api/contracts` should be updated to expect this
-    // 'property' object. From there, it can extract the `_id` for database references
-    // and/or store the other details as a snapshot within the contract document.
     const contractData = {
-      property: application.propertyId, // This now sends the full property object
+      property: application.propertyId,
       tenantId: application.senderId,
       managerId: managerId,
       duration: duration,
+      startDate,
+      endDate,
+      monthlyRent: parseFloat(monthlyRent),
+      securityDeposit: parseFloat(securityDeposit),
+      currency,
+      paymentDay: parseInt(paymentDay),
+      terms,
+      specialConditions: specialConditions || undefined,
+      status: 'draft',
     };
-    // --- MODIFICATION END ---
 
     try {
       const response = await fetch('/api/contracts', {
@@ -84,7 +108,7 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
         </div>
         <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
             <div className="p-4 bg-gray-50 rounded-lg border space-y-1">
                 <p className="text-xs font-semibold text-gray-500 flex items-center gap-2"><Home size={14} /> Property</p>
                 <p className="text-lg text-gray-900 font-medium">{application.propertyId.name}</p>
@@ -93,17 +117,79 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
                 <p className="text-xs font-semibold text-gray-500 flex items-center gap-2"><User size={14} /> Tenant</p>
                 <p className="text-lg text-gray-900 font-medium">{application.formData.name}</p>
             </div>
-            
+
             <div>
               <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                 <Calendar size={16} /> Contract Duration
               </label>
-              <select id="duration" value={duration} onChange={(e) => setDuration(e.target.value as '6_months' | '1_year')}
+              <select id="duration" value={duration} onChange={(e) => setDuration(e.target.value as '6_months' | '1_year' | 'custom')}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
                 <option value="6_months">6 Months</option>
                 <option value="1_year">1 Year</option>
+                <option value="custom">Custom</option>
               </select>
             </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  disabled={duration !== 'custom'} required />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="monthlyRent" className="block text-sm font-medium text-gray-700 mb-1">Monthly Rent</label>
+                <input type="number" id="monthlyRent" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
+                  placeholder="1000" min="0" step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+              <div>
+                <label htmlFor="securityDeposit" className="block text-sm font-medium text-gray-700 mb-1">Security Deposit</label>
+                <input type="number" id="securityDeposit" value={securityDeposit} onChange={(e) => setSecurityDeposit(e.target.value)}
+                  placeholder="2000" min="0" step="0.01"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value as 'EUR' | 'THB' | 'USD')}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="THB">THB (฿)</option>
+                  <option value="USD">USD ($)</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="paymentDay" className="block text-sm font-medium text-gray-700 mb-1">Payment Day</label>
+                <input type="number" id="paymentDay" value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)}
+                  min="1" max="31" placeholder="1"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="terms" className="block text-sm font-medium text-gray-700 mb-1">Contract Terms</label>
+              <textarea id="terms" value={terms} onChange={(e) => setTerms(e.target.value)} rows={3}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+            </div>
+
+            <div>
+              <label htmlFor="specialConditions" className="block text-sm font-medium text-gray-700 mb-1">Special Conditions (Optional)</label>
+              <textarea id="specialConditions" value={specialConditions} onChange={(e) => setSpecialConditions(e.target.value)} rows={2}
+                placeholder="Any special conditions or clauses..."
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+
             {error && <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm">{error}</div>}
           </div>
           <div className="p-5 bg-gray-50 border-t flex justify-end gap-3">
