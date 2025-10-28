@@ -156,11 +156,8 @@ if (memoizedFilters.listingType) {
 
         {/* Map Section Placeholder */}
         <div className="hidden md:block md:w-[55%] lg:w-3/5 xl:w-2/3 h-full p-1 md:p-2">
-           {/* If you re-add SellerMap, pass `propertiesForMap` or `allProperties` + `filters`
-           <SellerMap properties={propertiesForMap} isLoading={isLoading} />
-           */}
            <div className="bg-gray-200 h-full flex items-center justify-center text-gray-500 rounded-md">
-            <SellerMap properties={allProperties} isLoading={isLoading} />
+            <SellerMap properties={propertiesForMap} isLoading={isLoading} />
           </div>
         </div>
       </div>

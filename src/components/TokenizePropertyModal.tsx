@@ -5,6 +5,7 @@ import { X, Coins, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -129,11 +130,13 @@ const TokenizePropertyModal: React.FC<TokenizePropertyModalProps> = ({
         throw new Error(result.message || "Failed to create token offering");
       }
 
+      toast.success("Token offering created successfully! It's now in draft status.");
       onSuccess();
       onClose();
-      alert("Token offering created successfully! It's now in draft status.");
     } catch (err: any) {
-      setError(err.message || "An error occurred");
+      const errorMessage = err.message || "An error occurred";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

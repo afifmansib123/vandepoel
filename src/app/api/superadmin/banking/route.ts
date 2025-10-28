@@ -4,6 +4,11 @@ import { authenticateAndAuthorize } from '@/lib/authUtils';
 import BankingService from '@/app/models/BankingService';
 
 export async function POST(request: NextRequest) {
+  // Authenticate and authorize - only superadmin can create banking services
+  const authResult = await authenticateAndAuthorize(request, ['superadmin']);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
 
   await dbConnect();
 

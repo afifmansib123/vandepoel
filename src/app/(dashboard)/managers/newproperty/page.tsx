@@ -5,6 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGetAuthUserQuery } from "@/state/api";
+import { toast } from "sonner";
 
 // --- SHADCN/UI & OTHER COMPONENT IMPORTS ---
 import { Input } from "@/components/ui/input";
@@ -238,13 +239,18 @@ const createSellerPropertyAPI = async (
       body: formData,
     });
     const data = await response.json();
-    if (!response.ok)
+    if (!response.ok) {
+      const errorMsg = data.message || `Error: ${response.status}`;
+      toast.error(errorMsg);
       return {
         success: false,
-        message: data.message || `Error: ${response.status}`,
+        message: errorMsg,
       };
-    alert("property created!");
-    window.location.href = "/";
+    }
+    toast.success("Property created successfully!");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1000);
     return {
       success: true,
       property: data,
@@ -252,9 +258,11 @@ const createSellerPropertyAPI = async (
     };
   } catch (error) {
     console.error("createSellerPropertyAPI error:", error);
+    const errorMsg = error instanceof Error ? error.message : "Network error";
+    toast.error(errorMsg);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Network error",
+      message: errorMsg,
     };
   }
 };
@@ -381,9 +389,7 @@ const NewSellerPropertyPage = () => {
     const errorFields = Object.keys(errors)
       .map((key) => key.charAt(0).toUpperCase() + key.slice(1))
       .join(", ");
-    alert(
-      `Please fix the errors before submitting.\n\nCheck the following fields: ${errorFields}`
-    );
+    toast.error(`Please fix the errors in the following fields: ${errorFields}`);
   };
 
   const onSubmit: SubmitHandler<SellerPropertyFormData> = async (

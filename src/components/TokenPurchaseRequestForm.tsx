@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -60,9 +61,11 @@ const TokenPurchaseRequestForm: React.FC<TokenPurchaseRequestFormProps> = ({
         buyerAddress: formData.buyerAddress,
       }).unwrap();
 
+      toast.success("Purchase request submitted successfully!");
       setStep(3); // Success step
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit purchase request:", error);
+      toast.error(error?.data?.message || "Failed to submit purchase request. Please try again.");
     }
   };
 

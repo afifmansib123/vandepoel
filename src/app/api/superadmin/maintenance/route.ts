@@ -4,7 +4,11 @@ import { authenticateAndAuthorize } from '@/lib/authUtils';
 import MaintenanceProvider from '@/app/models/MaintenanceProvider';
 
 export async function POST(request: NextRequest) {
-
+  // Authenticate and authorize - only superadmin can create maintenance providers
+  const authResult = await authenticateAndAuthorize(request, ['superadmin']);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
 
   await dbConnect();
 

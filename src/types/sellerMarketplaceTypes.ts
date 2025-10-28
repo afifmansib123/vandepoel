@@ -67,6 +67,7 @@ export const cleanSellerFiltersForURL = (filters: SellerMarketplaceFilters): Rec
   }
   if (filters.propertyType && filters.propertyType !== "any") cleaned.propertyType = filters.propertyType;
   if (filters.beds && filters.beds !== "any") cleaned.beds = filters.beds;
+  if (filters.listingType && filters.listingType !== "any") cleaned.listingType = filters.listingType;
 
   return cleaned;
 };
