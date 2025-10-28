@@ -6,6 +6,7 @@ import { Types } from 'mongoose';
 import dbConnect from '../../../utils/dbConnect';
 import SellerProperty from '@/app/models/SellerProperty';
 import Location from '@/app/models/Location';
+import PropertyToken from '@/app/models/PropertyToken';
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import axios, { AxiosResponse } from 'axios';
@@ -437,10 +438,23 @@ export async function GET() {
   try {
     const properties = await SellerProperty.find().lean();
     const locationIds = properties.map(p => p.locationId);
-    const locations = await Location.find({ id: { $in: locationIds } }).lean();
+    const propertyIds = properties.map(p => p._id);
+
+    // Fetch locations and token offerings in parallel
+    const [locations, tokenOfferings] = await Promise.all([
+      Location.find({ id: { $in: locationIds } }).lean(),
+      PropertyToken.find({ propertyId: { $in: propertyIds } }).lean()
+    ]);
+
+    // Create a map of propertyId -> tokenOffering for quick lookup
+    const tokenOfferingMap = new Map();
+    tokenOfferings.forEach(offering => {
+      tokenOfferingMap.set(offering.propertyId.toString(), offering);
+    });
 
     const response = properties.map(property => {
       const location = locations.find(loc => loc.id === property.locationId);
+      const tokenOffering = tokenOfferingMap.get(property._id?.toString());
 
       const formattedLocation: FormattedLocationForResponse = {
         id: location?.id ?? -1,
@@ -461,6 +475,14 @@ export async function GET() {
         ...property,
         _id: property?._id?.toString(),
         location: formattedLocation,
+        isTokenized: !!tokenOffering,
+        tokenOffering: tokenOffering ? {
+          _id: tokenOffering._id.toString(),
+          tokenSymbol: tokenOffering.tokenSymbol,
+          totalTokens: tokenOffering.totalTokens,
+          tokensSold: tokenOffering.tokensSold,
+          status: tokenOffering.status,
+        } : undefined,
       };
     });
 
