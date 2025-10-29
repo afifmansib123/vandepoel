@@ -30,17 +30,19 @@ export interface SellerProperty {
 
 // Updated filters interface
 export interface SellerMarketplaceFilters {
+  search?: string | null;
   country?: string | null;
   state?: string | null;
   city?: string | null;
   salePriceRange: [number | null, number | null];
   propertyType?: string | null;
   beds?: string | null;
-  listingType?: 'Sell' | 'Rent' | any; 
+  listingType?: 'Sell' | 'Rent' | any;
 }
 
 // Updated initial filters
 export const initialSellerMarketplaceFilters: SellerMarketplaceFilters = {
+  search: null,
   country: null,
   state: null,
   city: null,
@@ -54,6 +56,7 @@ export const initialSellerMarketplaceFilters: SellerMarketplaceFilters = {
 export const cleanSellerFiltersForURL = (filters: SellerMarketplaceFilters): Record<string, string> => {
   const cleaned: Record<string, string> = {};
 
+  if (filters.search) cleaned.search = filters.search;
   if (filters.country) cleaned.country = filters.country;
   if (filters.state) cleaned.state = filters.state;
   if (filters.city) cleaned.city = filters.city;
