@@ -6,6 +6,7 @@ import { Types } from 'mongoose';
 import dbConnect from '../../../utils/dbConnect';
 import SellerProperty from '@/app/models/SellerProperty';
 import Location from '@/app/models/Location';
+import PropertyToken from '@/app/models/PropertyToken';
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import axios, { AxiosResponse } from 'axios';
@@ -431,16 +432,94 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Keep your existing GET function exactly the same
-export async function GET() {
+export async function GET(request: NextRequest) {
   await dbConnect();
   try {
-    const properties = await SellerProperty.find().lean();
-    const locationIds = properties.map(p => p.locationId);
-    const locations = await Location.find({ id: { $in: locationIds } }).lean();
+    // Parse query parameters for filtering
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const propertyType = searchParams.get('propertyType');
+    const propertyStatus = searchParams.get('propertyStatus');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const beds = searchParams.get('beds');
+    const country = searchParams.get('country');
+    const state = searchParams.get('state');
+    const city = searchParams.get('city');
 
-    const response = properties.map(property => {
+    // Build property filter query
+    const propertyFilter: any = {};
+
+    // Text search across name and description
+    if (search) {
+      propertyFilter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Property type filter
+    if (propertyType && propertyType !== 'any') {
+      propertyFilter.propertyType = propertyType;
+    }
+
+    // Property status filter (For Rent/For Sale)
+    if (propertyStatus && propertyStatus !== 'any') {
+      propertyFilter.propertyStatus = propertyStatus;
+    }
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      propertyFilter.salePrice = {};
+      if (minPrice) propertyFilter.salePrice.$gte = parseFloat(minPrice);
+      if (maxPrice) propertyFilter.salePrice.$lte = parseFloat(maxPrice);
+    }
+
+    // Bedroom filter (beds is minimum count)
+    if (beds && beds !== 'any') {
+      propertyFilter['features.bedrooms.count'] = { $gte: parseInt(beds) };
+    }
+
+    const properties = await SellerProperty.find(propertyFilter).lean();
+
+    // Get location IDs for fetching locations
+    const locationIds = properties.map(p => p.locationId);
+    const propertyIds = properties.map(p => p._id);
+
+    // Fetch locations and token offerings in parallel
+    const [allLocations, tokenOfferings] = await Promise.all([
+      Location.find({ id: { $in: locationIds } }).lean(),
+      PropertyToken.find({ propertyId: { $in: propertyIds } }).lean()
+    ]);
+
+    // Filter locations by country, state, city if specified
+    let locations = allLocations;
+    if (country || state || city) {
+      locations = allLocations.filter(loc => {
+        if (country && loc.country !== country) return false;
+        if (state && loc.state !== state) return false;
+        if (city && loc.city !== city) return false;
+        return true;
+      });
+    }
+
+    // Get location IDs that match the filter
+    const matchedLocationIds = locations.map(loc => loc.id);
+
+    // Filter properties to only include those with matching locations
+    const filteredProperties = properties.filter(p =>
+      matchedLocationIds.includes(p.locationId)
+    );
+
+    // Create a map of propertyId -> tokenOffering for quick lookup
+    const tokenOfferingMap = new Map();
+    tokenOfferings.forEach(offering => {
+      tokenOfferingMap.set(offering.propertyId.toString(), offering);
+    });
+
+    const response = filteredProperties.map(property => {
       const location = locations.find(loc => loc.id === property.locationId);
+      const tokenOffering = tokenOfferingMap.get(property._id?.toString());
 
       const formattedLocation: FormattedLocationForResponse = {
         id: location?.id ?? -1,
@@ -461,6 +540,14 @@ export async function GET() {
         ...property,
         _id: property?._id?.toString(),
         location: formattedLocation,
+        isTokenized: !!tokenOffering,
+        tokenOffering: tokenOffering ? {
+          _id: tokenOffering._id.toString(),
+          tokenSymbol: tokenOffering.tokenSymbol,
+          totalTokens: tokenOffering.totalTokens,
+          tokensSold: tokenOffering.tokensSold,
+          status: tokenOffering.status,
+        } : undefined,
       };
     });
 

@@ -6,10 +6,18 @@ import { Form } from "./ui/form";
 import { CustomFormField } from "./FormField";
 import { Button } from "./ui/button";
 
+interface SettingsFormProps {
+  initialData: any;
+  onSubmit: (data: any) => Promise<void>;
+  userType: string;
+  isSubmitting?: boolean;
+}
+
 const SettingsForm = ({
   initialData,
   onSubmit,
   userType,
+  isSubmitting = false,
 }: SettingsFormProps) => {
   const [editMode, setEditMode] = useState(false);
   const form = useForm<SettingsFormData>({
@@ -26,7 +34,9 @@ const SettingsForm = ({
 
   const handleSubmit = async (data: SettingsFormData) => {
     await onSubmit(data);
-    setEditMode(false);
+    if (!isSubmitting) {
+      setEditMode(false);
+    }
   };
 
   return (
@@ -64,6 +74,7 @@ const SettingsForm = ({
                 type="button"
                 onClick={toggleEditMode}
                 className="bg-secondary-500 text-white hover:bg-secondary-600"
+                disabled={isSubmitting}
               >
                 {editMode ? "Cancel" : "Edit"}
               </Button>
@@ -71,8 +82,9 @@ const SettingsForm = ({
                 <Button
                   type="submit"
                   className="bg-primary-700 text-white hover:bg-primary-800"
+                  disabled={isSubmitting}
                 >
-                  Save Changes
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </Button>
               )}
             </div>

@@ -59,6 +59,11 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
   onFiltersChange,
   initialFilters,
 }) => {
+  // Search state
+  const [searchInput, setSearchInput] = useState<string>(
+    initialFilters.search || ""
+  );
+
   // Location state
   const [allCountriesData, setAllCountriesData] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>(
@@ -221,6 +226,7 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
     ];
 
     const filtersToApply: SellerMarketplaceFilters = {
+      search: searchInput || null,
       country: selectedCountry || null,
       state: selectedProvince || null,
       city: selectedCity || null,
@@ -231,6 +237,7 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
     };
     triggerFilterChange(filtersToApply);
   }, [
+    searchInput,
     selectedCountry,
     selectedProvince,
     selectedCity,
@@ -252,6 +259,16 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
 
   return (
     <div className="flex flex-col sm:flex-row flex-wrap justify-start items-center w-full py-3 px-2 md:px-4 bg-white border-b border-gray-200 gap-2 md:gap-3 sticky top-0 z-20 shadow-sm">
+      {/* Search Input */}
+      <Input
+        type="text"
+        placeholder="Search properties..."
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        className="w-full sm:w-auto min-w-[200px] md:min-w-[250px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500"
+        aria-label="Search properties"
+      />
+
       {/* Country Select */}
       <Select
         value={selectedCountry}

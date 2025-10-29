@@ -144,14 +144,14 @@ const LandlordApplicationsPage = () => {
           );
         }
 
-        alert(
+        toast.error(
           `Successfully approved application and assigned ${application.formData.name} as the new agent.`
         );
       }
       // --- END NEW LOGIC ---
     } catch (err) {
       console.error(err);
-      alert(
+      toast.error(
         `Error: ${
           err instanceof Error
             ? err.message
@@ -173,7 +173,7 @@ const LandlordApplicationsPage = () => {
   };
 
   const handleContractCreated = () => {
-    alert("Contract created successfully!");
+    toast.success("Contract created successfully!");
     setCreateContractModalOpen(false);
     setContractInitialData(null);
   };

@@ -131,6 +131,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       navLinks = [
         { href: "/superadmins/profile", label: "User Management", icon: User },
         { href: "/superadmins/properties", label: "All Properties", icon: Home },
+        { href: "/superadmins/token-approvals", label: "Token Approvals", icon: Coins },
         {
           href: "/superadmins/allmaintenence",
           label: "All Applications",

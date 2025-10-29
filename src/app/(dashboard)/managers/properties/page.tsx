@@ -29,7 +29,7 @@ const ManagerProperties = () => {
       );
       setuserproperties(seelrsproperties || []);
     } else {
-      alert('You are not authorized to view this page. Please log in as a manager.');
+      toast.error('You are not authorized to view this page. Please log in as a manager.');
     }
   },[authUser, managerProperties]);
   

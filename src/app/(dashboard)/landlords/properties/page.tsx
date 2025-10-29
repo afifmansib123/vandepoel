@@ -29,7 +29,7 @@ const LandlordProperties = () => {
       );
       setuserproperties(seelrsproperties || []);
     } else {
-      alert('You are not authorized to view this page. Please log in as a landlord.');
+      toast.error('You are not authorized to view this page. Please log in as a landlord.');
     }
   },[authUser, landlordProperties]);
   
