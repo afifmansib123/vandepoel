@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/utils/dbConnect';
 import Contract from '@/app/models/Contract';
+import { createNotification } from '@/lib/notifications';
+import SellerProperty from '@/app/models/SellerProperty';
 
 // POST /api/contracts - Create a new contract
 export async function POST(req: NextRequest) {
@@ -110,6 +112,35 @@ export async function POST(req: NextRequest) {
     }
 
     const newContract = await Contract.create(contractData);
+
+    // Get property details for notification
+    const property = await SellerProperty.findById(propertyId);
+    const propertyName = property?.name || 'the property';
+
+    // Send notification to tenant
+    await createNotification({
+      userId: tenantId,
+      type: 'contract',
+      title: 'New Rental Contract Available',
+      message: `A rental contract has been created for ${propertyName}. Please review and sign the contract.`,
+      relatedId: newContract._id.toString(),
+      relatedUrl: '/tenants/contracts',
+      priority: 'high',
+    });
+
+    // Send notification to landlord if present
+    if (landlordId) {
+      await createNotification({
+        userId: landlordId,
+        type: 'contract',
+        title: 'Contract Created for Your Property',
+        message: `A rental contract has been created for ${propertyName}.`,
+        relatedId: newContract._id.toString(),
+        relatedUrl: '/landlords/properties',
+        priority: 'medium',
+      });
+    }
+
     return NextResponse.json({ message: 'Contract created successfully', data: newContract }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating contract:", error);

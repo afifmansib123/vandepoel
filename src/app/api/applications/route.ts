@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/utils/dbConnect"; // Corrected your import path
 import Application from "@/app/models/Application";
 import SellerProperty from "@/app/models/SellerProperty";
+import { createNotification } from "@/lib/notifications";
+import Buyer from "@/app/models/Buyer";
+import Tenant from "@/app/models/Tenant";
+import Manager from "@/app/models/Manager";
+import Landlord from "@/app/models/Landlord";
 
-// Your POST function remains the same
+// Your POST function with notifications
 export async function POST(req: NextRequest) {
   await dbConnect();
 
@@ -22,15 +27,87 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing required fields." }, { status: 400 });
     }
 
+    // Get property details for notification
+    const property = await SellerProperty.findById(propertyId);
+    if (!property) {
+      return NextResponse.json({ success: false, message: "Property not found." }, { status: 404 });
+    }
+
+    // Check if property is tokenized and application is for agent role
+    if (property.isTokenized && applicationType === 'AgentApplication') {
+      return NextResponse.json({
+        success: false,
+        message: "Tokenized properties do not accept agent applications."
+      }, { status: 400 });
+    }
+
+    // Fetch sender and receiver contact details for CRM tracking
+    let senderDetails: any = null;
+    let receiverDetails: any = null;
+
+    // Try to find sender in different user models
+    senderDetails = await Buyer.findOne({ cognitoId: senderId }).select('name email phoneNumber') ||
+                    await Tenant.findOne({ cognitoId: senderId }).select('name email phoneNumber') ||
+                    await Manager.findOne({ cognitoId: senderId }).select('name email phoneNumber');
+
+    // Try to find receiver in different user models
+    receiverDetails = await Landlord.findOne({ cognitoId: receiverId }).select('name email phoneNumber') ||
+                      await Manager.findOne({ cognitoId: receiverId }).select('name email phoneNumber');
+
     const newApplication = new Application({
       propertyId,
       senderId,
       receiverId,
       applicationType,
-      formData
+      formData,
+      // Populate contact details for CRM
+      senderName: senderDetails?.name,
+      senderEmail: senderDetails?.email,
+      senderPhone: senderDetails?.phoneNumber || formData.phone || formData.phoneNumber,
+      receiverName: receiverDetails?.name,
+      receiverEmail: receiverDetails?.email,
+      receiverPhone: receiverDetails?.phoneNumber,
     });
 
     await newApplication.save();
+
+    // Send notification to receiver (property owner/manager)
+    const propertyName = property.name || 'a property';
+    let notificationTitle = '';
+    let notificationMessage = '';
+    let notificationUrl = '';
+
+    if (applicationType === 'ScheduleVisit') {
+      notificationTitle = 'New Property Visit Request';
+      notificationMessage = `Someone has requested to visit ${propertyName}.`;
+      notificationUrl = '/landlords/applications';
+    } else if (applicationType === 'AgentApplication') {
+      notificationTitle = 'New Agent Application';
+      notificationMessage = `A manager has applied to be an agent for ${propertyName}.`;
+      notificationUrl = '/landlords/applications';
+    } else if (applicationType === 'RentRequest') {
+      notificationTitle = 'New Rental Application';
+      notificationMessage = `Someone has applied to rent ${propertyName}.`;
+      notificationUrl = '/landlords/applications';
+    } else if (applicationType === 'FinancialInquiry') {
+      notificationTitle = 'New Financial Inquiry';
+      notificationMessage = `Someone has submitted a financial inquiry for ${propertyName}.`;
+      notificationUrl = '/landlords/applications';
+    } else {
+      notificationTitle = 'New Application';
+      notificationMessage = `You have a new application for ${propertyName}.`;
+      notificationUrl = '/landlords/applications';
+    }
+
+    await createNotification({
+      userId: receiverId,
+      type: 'application',
+      title: notificationTitle,
+      message: notificationMessage,
+      relatedId: newApplication._id.toString(),
+      relatedUrl: notificationUrl,
+      priority: 'high',
+    });
 
     return NextResponse.json({
       success: true,

@@ -13,6 +13,13 @@ export interface IApplication extends Document {
   applicationType: 'ScheduleVisit' | 'AgentApplication' | 'FinancialInquiry' | 'RentRequest';
   formData: IFormData;   // Holds the unique data from each form
   status: 'pending' | 'approved' | 'rejected' | 'contacted';
+  // Contact details for CRM and tracking
+  senderName?: string;
+  senderEmail?: string;
+  senderPhone?: string;
+  receiverName?: string;
+  receiverEmail?: string;
+  receiverPhone?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,7 +50,26 @@ const ApplicationSchema: Schema = new Schema({
     type: String,
     enum: ['pending', 'approved', 'rejected', 'contacted'],
     default: 'pending',
-  }
+  },
+  // Contact details for CRM and tracking
+  senderName: {
+    type: String,
+  },
+  senderEmail: {
+    type: String,
+  },
+  senderPhone: {
+    type: String,
+  },
+  receiverName: {
+    type: String,
+  },
+  receiverEmail: {
+    type: String,
+  },
+  receiverPhone: {
+    type: String,
+  },
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt
 });
