@@ -24,11 +24,14 @@ const ManagerProperties = () => {
 
   useEffect(() => {
     if (authUser && authUser?.userRole === 'manager') {
-      const seelrsproperties = managerProperties?.filter(
-        (property) => property.sellerCognitoId === authUser?.cognitoInfo.userId
+      // Show properties where manager is the creator OR where they are assigned as the manager
+      const managedProperties = managerProperties?.filter(
+        (property) =>
+          property.sellerCognitoId === authUser?.cognitoInfo.userId ||
+          property.managedBy === authUser?.cognitoInfo.userId
       );
-      setuserproperties(seelrsproperties || []);
-    } else {
+      setuserproperties(managedProperties || []);
+    } else if (authUser && authUser?.userRole !== 'manager') {
       toast.error('You are not authorized to view this page. Please log in as a manager.');
     }
   },[authUser, managerProperties]);

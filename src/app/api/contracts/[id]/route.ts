@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/utils/dbConnect';
 import Contract from '@/app/models/Contract';
 import mongoose from 'mongoose';
+import { createNotification } from '@/lib/notifications';
+import SellerProperty from '@/app/models/SellerProperty';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -188,6 +190,118 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     const updatedContract = await Contract.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+
+    // Get property details for notification
+    const property = await SellerProperty.findById(contract.propertyId);
+    const propertyName = property?.name || 'the property';
+
+    // Send notifications about signature
+    if (role === 'tenant') {
+      // Notify manager that tenant signed
+      await createNotification({
+        userId: contract.managerId,
+        type: 'contract',
+        title: 'Tenant Signed Contract',
+        message: `The tenant has signed the rental contract for ${propertyName}.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/managers/contracts',
+        priority: 'medium',
+      });
+
+      // Notify landlord if present
+      if (contract.landlordId) {
+        await createNotification({
+          userId: contract.landlordId,
+          type: 'contract',
+          title: 'Tenant Signed Contract',
+          message: `The tenant has signed the rental contract for ${propertyName}.`,
+          relatedId: updatedContract._id.toString(),
+          relatedUrl: '/landlords/properties',
+          priority: 'medium',
+        });
+      }
+    } else if (role === 'manager') {
+      // Notify tenant that manager signed
+      await createNotification({
+        userId: contract.tenantId,
+        type: 'contract',
+        title: 'Manager Signed Contract',
+        message: `The property manager has signed your rental contract for ${propertyName}.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/tenants/contracts',
+        priority: 'medium',
+      });
+
+      // Notify landlord if present
+      if (contract.landlordId) {
+        await createNotification({
+          userId: contract.landlordId,
+          type: 'contract',
+          title: 'Manager Signed Contract',
+          message: `The property manager has signed the rental contract for ${propertyName}.`,
+          relatedId: updatedContract._id.toString(),
+          relatedUrl: '/landlords/properties',
+          priority: 'medium',
+        });
+      }
+    } else if (role === 'landlord') {
+      // Notify tenant that landlord signed
+      await createNotification({
+        userId: contract.tenantId,
+        type: 'contract',
+        title: 'Landlord Signed Contract',
+        message: `The landlord has signed your rental contract for ${propertyName}.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/tenants/contracts',
+        priority: 'medium',
+      });
+
+      // Notify manager that landlord signed
+      await createNotification({
+        userId: contract.managerId,
+        type: 'contract',
+        title: 'Landlord Signed Contract',
+        message: `The landlord has signed the rental contract for ${propertyName}.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/managers/contracts',
+        priority: 'medium',
+      });
+    }
+
+    // If all parties have signed, notify everyone that contract is active
+    if (allSigned && updatedContract.status === 'active') {
+      await createNotification({
+        userId: contract.tenantId,
+        type: 'contract',
+        title: 'Contract Fully Executed',
+        message: `Your rental contract for ${propertyName} is now active! All parties have signed.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/tenants/contracts',
+        priority: 'high',
+      });
+
+      await createNotification({
+        userId: contract.managerId,
+        type: 'contract',
+        title: 'Contract Fully Executed',
+        message: `The rental contract for ${propertyName} is now active! All parties have signed.`,
+        relatedId: updatedContract._id.toString(),
+        relatedUrl: '/managers/contracts',
+        priority: 'high',
+      });
+
+      if (contract.landlordId) {
+        await createNotification({
+          userId: contract.landlordId,
+          type: 'contract',
+          title: 'Contract Fully Executed',
+          message: `The rental contract for ${propertyName} is now active! All parties have signed.`,
+          relatedId: updatedContract._id.toString(),
+          relatedUrl: '/landlords/properties',
+          priority: 'high',
+        });
+      }
+    }
 
     return NextResponse.json({
       message: `Contract signed by ${role} successfully`,
