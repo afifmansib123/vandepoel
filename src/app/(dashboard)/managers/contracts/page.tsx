@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useGetAuthUserQuery } from "@/state/api";
 import Image from "next/image";
+import Link from "next/link";
 import { FileSignature, FileText, CheckCircle, Clock, XCircle, User, Calendar, Shield } from "lucide-react";
 
 // --- Type Definitions ---
@@ -130,7 +131,15 @@ const ManagerContractsPage = () => {
 
   return (
     <div className="dashboard-container bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-      <Header title="Managed Contracts" subtitle="Oversee all rental agreements you have created." />
+      <div className="flex justify-between items-center mb-4">
+        <Header title="Managed Contracts" subtitle="Oversee all rental agreements you have created." />
+        <Link href="/managers/contracts/create">
+          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold flex items-center gap-2">
+            <FileSignature size={20} />
+            Create New Contract
+          </button>
+        </Link>
+      </div>
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-wrap gap-2">
             <FilterButton status="all" current={filterStatus} setCount={contracts.length} onClick={setFilterStatus} />
