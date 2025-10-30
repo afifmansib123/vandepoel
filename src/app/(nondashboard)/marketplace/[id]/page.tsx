@@ -543,16 +543,29 @@ const submitApplication = async ({
   setIsSubmitting,
   onClose,
 }: SubmitApplicationParams): Promise<void> => {
-  // Guard clause: Ensure we have the necessary IDs to proceed.
-  // We need to add `managedBy` to your SellerPropertyDetail interface.
+  // Determine who should receive the application based on type and property management status
+  let receiverId: string;
 
+  if (applicationType === 'AgentApplication') {
+    // Agent applications always go to the property owner (landlord)
+    // because only the owner can approve a manager/agent
+    receiverId = property.sellerCognitoId;
+  } else {
+    // For RentRequest, ScheduleVisit, and other applications:
+    // If property has a manager assigned (and it's not the owner themselves), send to manager
+    // Otherwise, send to the property owner
+    const managedBy = property.managedBy || property.sellerCognitoId;
+    receiverId = (managedBy && managedBy !== property.sellerCognitoId)
+      ? managedBy
+      : property.sellerCognitoId;
+  }
 
   setIsSubmitting(true);
 
   const payload = {
     propertyId: property._id, // Use the MongoDB _id
     senderId: currentUser?.cognitoInfo?.userId,
-    receiverId: (property as any).managedBy,
+    receiverId,
     applicationType,
     formData,
   };
