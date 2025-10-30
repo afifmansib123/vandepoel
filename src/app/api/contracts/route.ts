@@ -92,6 +92,20 @@ export async function POST(req: NextRequest) {
       contractDocumentUrl: body.contractDocumentUrl,
     };
 
+    // Add commission data if provided
+    if (body.managerCommissionRate !== undefined) {
+      contractData.managerCommissionRate = parseFloat(body.managerCommissionRate);
+    }
+    if (body.managerCommissionAmount !== undefined) {
+      contractData.managerCommissionAmount = parseFloat(body.managerCommissionAmount);
+    }
+    if (body.managerCommissionType) {
+      contractData.managerCommissionType = body.managerCommissionType;
+    }
+    if (body.managerCommissionNotes) {
+      contractData.managerCommissionNotes = body.managerCommissionNotes;
+    }
+
     // Handle signature data if provided
     if (body.tenantSigned) {
       contractData.tenantSigned = true;

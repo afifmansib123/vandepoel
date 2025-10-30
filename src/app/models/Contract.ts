@@ -17,6 +17,14 @@ export interface IContract extends Document {
   currency: 'EUR' | 'THB' | 'USD';
   paymentDay: number; // Day of month rent is due (1-31)
 
+  // Commission Terms (for managers)
+  managerCommissionRate?: number; // Percentage (e.g., 5.5 for 5.5%)
+  managerCommissionAmount?: number; // Fixed amount per month or total
+  managerCommissionType?: 'percentage' | 'fixed_monthly' | 'fixed_total'; // How commission is calculated
+  managerCommissionPaid?: boolean; // Whether commission has been paid
+  managerCommissionPaidAt?: Date; // When commission was paid
+  managerCommissionNotes?: string; // Additional notes about commission
+
   // Contract Terms
   terms: string; // Full contract terms and conditions
   specialConditions?: string; // Any special conditions or clauses
@@ -60,6 +68,14 @@ const ContractSchema: Schema<IContract> = new Schema({
   securityDeposit: { type: Number, required: true, min: 0 },
   currency: { type: String, enum: ['EUR', 'THB', 'USD'], default: 'EUR' },
   paymentDay: { type: Number, required: true, min: 1, max: 31 },
+
+  // Commission Terms (for managers)
+  managerCommissionRate: { type: Number, min: 0, max: 100 }, // Percentage
+  managerCommissionAmount: { type: Number, min: 0 }, // Fixed amount
+  managerCommissionType: { type: String, enum: ['percentage', 'fixed_monthly', 'fixed_total'] },
+  managerCommissionPaid: { type: Boolean, default: false },
+  managerCommissionPaidAt: { type: Date },
+  managerCommissionNotes: { type: String },
 
   // Contract Terms
   terms: { type: String, required: true },

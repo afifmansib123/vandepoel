@@ -49,6 +49,11 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Commission fields for managers
+  const [managerCommissionRate, setManagerCommissionRate] = useState('');
+  const [managerCommissionType, setManagerCommissionType] = useState<'percentage' | 'fixed_monthly' | 'fixed_total'>('percentage');
+  const [managerCommissionNotes, setManagerCommissionNotes] = useState('');
+
   // Auto-calculate end date based on duration
   React.useEffect(() => {
     if (startDate && duration !== 'custom') {
@@ -68,7 +73,7 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
     setIsLoading(true);
     setError(null);
 
-    const contractData = {
+    const contractData: any = {
       property: application.propertyId,
       tenantId: application.senderId,
       managerId: managerId,
@@ -83,6 +88,24 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
       specialConditions: specialConditions || undefined,
       status: 'draft',
     };
+
+    // Add commission data if provided
+    if (managerCommissionRate) {
+      const commissionRateNum = parseFloat(managerCommissionRate);
+      contractData.managerCommissionType = managerCommissionType;
+
+      if (managerCommissionType === 'percentage') {
+        contractData.managerCommissionRate = commissionRateNum;
+        // Calculate commission amount based on monthly rent
+        contractData.managerCommissionAmount = (parseFloat(monthlyRent) * commissionRateNum) / 100;
+      } else {
+        contractData.managerCommissionAmount = commissionRateNum;
+      }
+
+      if (managerCommissionNotes) {
+        contractData.managerCommissionNotes = managerCommissionNotes;
+      }
+    }
 
     try {
       const response = await fetch('/api/contracts', {
@@ -174,6 +197,59 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
                 <input type="number" id="paymentDay" value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)}
                   min="1" max="31" placeholder="1"
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required />
+              </div>
+            </div>
+
+            {/* Manager Commission Section */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-md font-semibold text-gray-800 mb-3">Manager Commission (Optional)</h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="managerCommissionType" className="block text-sm font-medium text-gray-700 mb-1">
+                    Commission Type
+                  </label>
+                  <select
+                    id="managerCommissionType"
+                    value={managerCommissionType}
+                    onChange={(e) => setManagerCommissionType(e.target.value as 'percentage' | 'fixed_monthly' | 'fixed_total')}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed_monthly">Fixed Monthly</option>
+                    <option value="fixed_total">Fixed Total</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="managerCommissionRate" className="block text-sm font-medium text-gray-700 mb-1">
+                    {managerCommissionType === 'percentage' ? 'Rate (%)' : 'Amount'}
+                  </label>
+                  <input
+                    type="number"
+                    id="managerCommissionRate"
+                    value={managerCommissionRate}
+                    onChange={(e) => setManagerCommissionRate(e.target.value)}
+                    placeholder={managerCommissionType === 'percentage' ? '5.0' : '100'}
+                    min="0"
+                    max={managerCommissionType === 'percentage' ? '100' : undefined}
+                    step="0.01"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <label htmlFor="managerCommissionNotes" className="block text-sm font-medium text-gray-700 mb-1">
+                  Commission Notes (Optional)
+                </label>
+                <textarea
+                  id="managerCommissionNotes"
+                  value={managerCommissionNotes}
+                  onChange={(e) => setManagerCommissionNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Additional notes about commission payment schedule..."
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
             </div>
 
