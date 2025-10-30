@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,10 +26,12 @@ import {
   User,
   Coins,
   Wallet,
+  Bell,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useGetAuthUserQuery } from "@/state/api";
 
 interface AppSidebarProps {
   userType: "manager" | "tenant" | "landlord" | "buyer" | "superadmin" | string;
@@ -38,8 +40,33 @@ interface AppSidebarProps {
 const AppSidebar = ({ userType }: AppSidebarProps) => {
   const pathname = usePathname();
   const { toggleSidebar, open } = useSidebar();
+  const { data: authUser } = useGetAuthUserQuery();
+  const [notificationCount, setNotificationCount] = useState(0);
 
-  let navLinks = [];
+  // Fetch notification count
+  useEffect(() => {
+    if (!authUser?.cognitoInfo?.userId) return;
+
+    const fetchNotificationCount = async () => {
+      try {
+        const response = await fetch('/api/notifications?isRead=false');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setNotificationCount(data.data?.unreadCount || 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching notification count:', error);
+      }
+    };
+
+    fetchNotificationCount();
+    const interval = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, [authUser]);
+
+  let navLinks: any[] = [];
   let sidebarTitle = "Dashboard";
 
   switch (userType) {
@@ -47,6 +74,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Manager View";
       navLinks = [
         { icon: User, label: "Profile", href: "/managers/profile" },
+        { icon: Bell, label: "Notifications", href: "/managers/notifications", badge: notificationCount },
         { icon: Building, label: "Properties", href: "/managers/properties" },
         {
           icon: FileText,
@@ -60,6 +88,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Renter View";
       navLinks = [
         { icon: User, label: "Profile", href: "/tenants/profile" },
+        { icon: Bell, label: "Notifications", href: "/tenants/notifications", badge: notificationCount },
         { icon: Heart, label: "Favorites", href: "/tenants/favorites" },
         {
           icon: FileText,
@@ -74,6 +103,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Landlord View";
       navLinks = [
         { icon: User, label: "Profile", href: "/landlords/profile" },
+        { icon: Bell, label: "Notifications", href: "/landlords/notifications", badge: notificationCount },
         {
           icon: Briefcase,
           label: "My Properties",
@@ -101,6 +131,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       sidebarTitle = "Buyer View";
       navLinks = [
         { icon: User, label: "Profile", href: "/buyers/profile" },
+        { icon: Bell, label: "Notifications", href: "/buyers/notifications", badge: notificationCount },
         { icon: Search, label: "Search Properties", href: "/marketplace" },
         { icon: Heart, label: "My Favorites", href: "/buyers/favorites" },
         {
@@ -144,7 +175,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         },
         { href: "/superadmins/banking", label: "Banking", icon: Building },
       ];
-      break; // Added missing break statement
+      break;
     default:
       sidebarTitle = "My Account";
       navLinks = [
@@ -202,8 +233,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       <SidebarContent className="overflow-y-auto">
         <SidebarMenu>
           {navLinks.map((link) => {
-            // Fixed active link logic
-            const isActive = pathname === link.href || 
+            const isActive = pathname === link.href ||
               (link.href !== "/" && pathname.startsWith(link.href + "/"));
 
             return (
@@ -222,21 +252,35 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
                   <Link href={link.href} className="w-full flex items-center" scroll={false}>
                     <div
                       className={cn(
-                        "flex items-center gap-3",
+                        "flex items-center gap-3 relative w-full",
                         !open && "justify-center"
                       )}
                     >
-                      <link.icon
-                        className={cn(
-                          "h-5 w-5 flex-shrink-0",
-                          isActive ? "text-primary-600" : "text-gray-500"
+                      <div className="relative">
+                        <link.icon
+                          className={cn(
+                            "h-5 w-5 flex-shrink-0",
+                            isActive ? "text-primary-600" : "text-gray-500"
+                          )}
+                          aria-hidden="true"
+                        />
+                        {link.badge !== undefined && link.badge > 0 && !open && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                            {link.badge > 9 ? '9+' : link.badge}
+                          </span>
                         )}
-                        aria-hidden="true"
-                      />
+                      </div>
                       {open && (
-                        <span className="font-medium text-sm truncate">
-                          {link.label}
-                        </span>
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium text-sm truncate">
+                            {link.label}
+                          </span>
+                          {link.badge !== undefined && link.badge > 0 && (
+                            <span className="bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center font-medium ml-2">
+                              {link.badge > 99 ? '99+' : link.badge}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </Link>
