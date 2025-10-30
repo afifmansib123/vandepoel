@@ -24,7 +24,7 @@ const Navbar = () => {
   const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
   const router = useRouter();
   const pathname = usePathname();
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(8); // HARDCODED FOR TESTING
   const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
 
   console.log("authuser object", authUser);
