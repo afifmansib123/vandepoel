@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
       .populate({
         path: 'propertyId',
         model: SellerProperty,
-        select: 'name photoUrls'
+        select: 'name photoUrls sellerCognitoId' // Include sellerCognitoId for contract creation
       })
       .sort({ createdAt: -1 });
 

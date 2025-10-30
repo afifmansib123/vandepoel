@@ -103,6 +103,7 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
         property: application.propertyId,
         tenantId: application.senderId,
         managerId: managerId,
+        landlordId: application.propertyId.sellerCognitoId, // Include landlord ID from property owner
         duration: duration,
         startDate,
         endDate,
