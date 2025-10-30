@@ -43,7 +43,8 @@ export interface IContract extends Document {
   landlordSignature?: string;
 
   // Documents
-  contractDocumentUrl?: string; // PDF or document URL
+  contractDocumentUrl?: string; // PDF or document URL (initial contract from landlord/manager)
+  signedContractDocumentUrl?: string; // PDF uploaded by tenant after signing
 
   // Status
   status: 'draft' | 'pending_signatures' | 'active' | 'expired' | 'terminated' | 'cancelled';
@@ -96,6 +97,7 @@ const ContractSchema: Schema<IContract> = new Schema({
 
   // Documents
   contractDocumentUrl: { type: String },
+  signedContractDocumentUrl: { type: String },
 
   // Status
   status: {

@@ -132,10 +132,123 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     const body = await req.json();
-    const { action, role, signature } = body;
+    const { action, role, signature, signedContractDocumentUrl } = body;
+
+    // Handle tenant signing with PDF upload
+    if (action === 'sign_with_pdf') {
+      if (role !== 'tenant') {
+        return NextResponse.json({ message: 'Only tenants can sign with PDF upload' }, { status: 400 });
+      }
+
+      if (!signedContractDocumentUrl) {
+        return NextResponse.json({ message: 'Signed contract PDF URL is required' }, { status: 400 });
+      }
+
+      const contract = await Contract.findById(id);
+      if (!contract) {
+        return NextResponse.json({ message: 'Contract not found' }, { status: 404 });
+      }
+
+      if (contract.tenantSigned) {
+        return NextResponse.json({ message: 'Tenant has already signed this contract' }, { status: 400 });
+      }
+
+      contract.signedContractDocumentUrl = signedContractDocumentUrl;
+      contract.tenantSigned = true;
+      contract.tenantSignedAt = new Date();
+      contract.status = 'pending_signatures';
+
+      await contract.save();
+
+      // Get property details for notification
+      const property = await SellerProperty.findById(contract.propertyId);
+      const propertyName = property?.name || 'the property';
+
+      // Notify manager
+      await createNotification({
+        userId: contract.managerId,
+        type: 'contract',
+        title: 'Tenant Has Signed Contract',
+        message: `The tenant has signed the rental contract for ${propertyName}. Please review the signed document and mark the property as rented.`,
+        relatedId: id,
+        relatedUrl: `/managers/contracts`,
+        priority: 'high',
+      });
+
+      // Notify landlord if present
+      if (contract.landlordId) {
+        await createNotification({
+          userId: contract.landlordId,
+          type: 'contract',
+          title: 'Tenant Has Signed Contract',
+          message: `The tenant has signed the rental contract for ${propertyName}. Please review the signed document and mark the property as rented.`,
+          relatedId: id,
+          relatedUrl: `/landlords/contracts`,
+          priority: 'high',
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Contract signed successfully',
+        data: contract,
+      }, { status: 200 });
+    }
+
+    // Handle marking property as rented
+    if (action === 'mark_as_rented') {
+      if (!['manager', 'landlord'].includes(role || '')) {
+        return NextResponse.json({ message: 'Only managers or landlords can mark property as rented' }, { status: 400 });
+      }
+
+      const contract = await Contract.findById(id);
+      if (!contract) {
+        return NextResponse.json({ message: 'Contract not found' }, { status: 404 });
+      }
+
+      if (!contract.tenantSigned) {
+        return NextResponse.json({ message: 'Tenant must sign the contract first' }, { status: 400 });
+      }
+
+      // Update contract status to active
+      contract.status = 'active';
+      contract.managerSigned = true;
+      contract.managerSignedAt = new Date();
+
+      if (contract.landlordId) {
+        contract.landlordSigned = true;
+        contract.landlordSignedAt = new Date();
+      }
+
+      await contract.save();
+
+      // Update property status to 'Rented'
+      const property = await SellerProperty.findById(contract.propertyId);
+      if (property) {
+        property.propertyStatus = 'Rented';
+        await property.save();
+
+        // Notify tenant that property is officially rented
+        await createNotification({
+          userId: contract.tenantId,
+          type: 'contract',
+          title: 'Property Rental Confirmed',
+          message: `Your rental of ${property.name} has been confirmed! The contract is now active and the property is yours.`,
+          relatedId: id,
+          relatedUrl: `/tenants/contracts`,
+          priority: 'high',
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Property marked as rented successfully',
+        data: contract,
+      }, { status: 200 });
+    }
 
     if (action !== 'sign') {
-      return NextResponse.json({ message: 'Invalid action. Only "sign" is supported.' }, { status: 400 });
+      return NextResponse.json({ message: 'Invalid action. Supported actions: sign, sign_with_pdf, mark_as_rented.' }, { status: 400 });
     }
 
     if (!role || !['tenant', 'manager', 'landlord'].includes(role)) {

@@ -5,8 +5,9 @@ import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useGetAuthUserQuery } from "@/state/api";
 import Image from "next/image";
-import { FileSignature, FileText, CheckCircle, Clock, XCircle, User, Calendar, Shield , Home } from "lucide-react";
+import { FileSignature, FileText, CheckCircle, Clock, XCircle, User, Calendar, Shield, Home, Upload, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // --- Type Definitions ---
 interface PopulatedProperty {
@@ -21,8 +22,11 @@ interface Contract {
   tenantId: string;
   managerId: string;
   duration: '6_months' | '1_year'; // Matches the model
-  status: "active" | "expired" | "terminated";
+  status: "draft" | "pending_signatures" | "active" | "expired" | "terminated";
   createdAt: string; // This will be our start date
+  contractDocumentUrl?: string; // Initial contract PDF from landlord/manager
+  signedContractDocumentUrl?: string; // Signed contract PDF from tenant
+  tenantSigned: boolean;
 }
 
 // --- Helper Functions ---
@@ -64,7 +68,9 @@ const TenantContractsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "expired">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "pending_signatures" | "active" | "expired">("all");
+  const [isSignModalOpen, setIsSignModalOpen] = useState(false);
+  const [contractToSign, setContractToSign] = useState<Contract | null>(null);
 
   useEffect(() => {
     if (currentUserCognitoId) {
@@ -92,6 +98,30 @@ const TenantContractsPage = () => {
     if (filterStatus === "all") return contracts;
     return contracts.filter(contract => contract.status === filterStatus);
   }, [contracts, filterStatus]);
+
+  const handleSignContract = (contract: Contract) => {
+    setContractToSign(contract);
+    setIsSignModalOpen(true);
+  };
+
+  const handleSignSuccess = () => {
+    setIsSignModalOpen(false);
+    setContractToSign(null);
+    // Refetch contracts
+    if (currentUserCognitoId) {
+      const fetchContracts = async () => {
+        try {
+          const response = await fetch(`/api/contracts?tenantId=${currentUserCognitoId}`);
+          if (!response.ok) throw new Error("Failed to fetch contracts");
+          const data = await response.json();
+          setContracts((data.data || []).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchContracts();
+    }
+  };
 
   const renderContent = () => {
     if (isLoading) return <Loading />;
@@ -121,6 +151,7 @@ const TenantContractsPage = () => {
             key={contract._id}
             contract={contract}
             onViewDetails={() => setSelectedContract(contract)}
+            onSignContract={handleSignContract}
           />
         ))}
       </div>
@@ -133,6 +164,8 @@ const TenantContractsPage = () => {
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-wrap gap-2">
             <FilterButton status="all" current={filterStatus} setCount={contracts.length} onClick={setFilterStatus} />
+            <FilterButton status="draft" current={filterStatus} setCount={contracts.filter(c => c.status === 'draft').length} onClick={setFilterStatus} />
+            <FilterButton status="pending_signatures" current={filterStatus} setCount={contracts.filter(c => c.status === 'pending_signatures').length} onClick={setFilterStatus} label="Pending" />
             <FilterButton status="active" current={filterStatus} setCount={contracts.filter(c => c.status === 'active').length} onClick={setFilterStatus} />
             <FilterButton status="expired" current={filterStatus} setCount={contracts.filter(c => c.status === 'expired').length} onClick={setFilterStatus} />
         </div>
@@ -144,32 +177,42 @@ const TenantContractsPage = () => {
           onClose={() => setSelectedContract(null)}
         />
       )}
+      {isSignModalOpen && contractToSign && (
+        <SignContractModal
+          contract={contractToSign}
+          onClose={() => setIsSignModalOpen(false)}
+          onSuccess={handleSignSuccess}
+        />
+      )}
     </div>
   );
 };
 
 // --- Sub-Components ---
 
-const FilterButton = ({ status, current, setCount, onClick }: { status: string, current: string, setCount: number, onClick: (s: any) => void }) => {
+const FilterButton = ({ status, current, setCount, onClick, label }: { status: string, current: string, setCount: number, onClick: (s: any) => void, label?: string }) => {
     const isActive = status === current;
     const baseClasses = "px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-2";
     const activeClasses = "bg-blue-600 text-white shadow";
     const inactiveClasses = "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200";
+    const displayLabel = label || status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
     return (
         <button onClick={() => onClick(status)} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {displayLabel}
             <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-blue-500' : 'bg-gray-200 text-gray-600'}`}>{setCount}</span>
         </button>
     )
 };
 
-const ContractCard = ({ contract, onViewDetails }: { contract: Contract; onViewDetails: () => void }) => {
-  const { propertyId, status, createdAt, duration } = contract;
+const ContractCard = ({ contract, onViewDetails, onSignContract }: { contract: Contract; onViewDetails: () => void; onSignContract: (contract: Contract) => void }) => {
+  const { propertyId, status, createdAt, duration, contractDocumentUrl, tenantSigned } = contract;
   
   const endDate = calculateEndDate(createdAt, duration);
 
   const getStatusInfo = (s: string) => {
     switch (s) {
+      case "draft": return { icon: <FileText className="text-blue-500" />, text: "Awaiting Signature", color: "text-blue-700 bg-blue-100" };
+      case "pending_signatures": return { icon: <Clock className="text-orange-500" />, text: "Pending", color: "text-orange-700 bg-orange-100" };
       case "active": return { icon: <CheckCircle className="text-green-500" />, text: "Active", color: "text-green-700 bg-green-100" };
       case "expired": return { icon: <Clock className="text-yellow-500" />, text: "Expired", color: "text-yellow-700 bg-yellow-100" };
       case "terminated": return { icon: <XCircle className="text-red-500" />, text: "Terminated", color: "text-red-700 bg-red-100" };
@@ -177,6 +220,8 @@ const ContractCard = ({ contract, onViewDetails }: { contract: Contract; onViewD
     }
   };
   const statusInfo = getStatusInfo(status);
+
+  const needsSignature = status === 'draft' && !tenantSigned && contractDocumentUrl;
 
   const router = useRouter()
 
@@ -204,11 +249,24 @@ const ContractCard = ({ contract, onViewDetails }: { contract: Contract; onViewD
         </div>
         <div className="w-full md:w-auto flex flex-col gap-2 self-stretch justify-center">
           <button onClick={onViewDetails} className="w-full text-center px-4 py-2 text-sm font-medium bg-gray-700 text-white rounded-md hover:bg-gray-800 transition">View Details</button>
-                              <button onClick={() => { router.push(`/tenants/properties/${propertyId
-}`); }}className="w-full text-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:bg-gray-300 flex items-center justify-center gap-2">
-                        <Home size={16} />
-                        View Property
-                    </button>
+          {needsSignature && (
+            <button
+              onClick={() => onSignContract(contract)}
+              className="w-full text-center px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center justify-center gap-2"
+            >
+              <FileSignature size={16} />
+              Sign Contract
+            </button>
+          )}
+          {status === 'active' && (
+            <button
+              onClick={() => { router.push(`/tenants/properties/${propertyId}`); }}
+              className="w-full text-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center justify-center gap-2"
+            >
+              <Home size={16} />
+              View Property
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -262,5 +320,201 @@ const InfoItem = ({ label, value, icon }: { label: string; value: string | undef
         <p className="text-gray-800">{value || "Not provided"}</p>
     </div>
 );
+
+// Sign Contract Modal Component
+const SignContractModal = ({
+  contract,
+  onClose,
+  onSuccess,
+}: {
+  contract: Contract;
+  onClose: () => void;
+  onSuccess: () => void;
+}) => {
+  const [signedPDF, setSignedPDF] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!signedPDF) {
+      setError('Please select a signed PDF file');
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      // Upload the signed PDF
+      const formData = new FormData();
+      formData.append('file', signedPDF);
+      formData.append('uploadType', 'signed');
+
+      const uploadResponse = await fetch('/api/contracts/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const uploadResult = await uploadResponse.json();
+      if (!uploadResponse.ok) {
+        throw new Error(uploadResult.message || 'Failed to upload signed PDF');
+      }
+
+      // Update the contract with the signed PDF URL
+      const updateResponse = await fetch(`/api/contracts/${contract._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sign_with_pdf',
+          role: 'tenant',
+          signedContractDocumentUrl: uploadResult.url,
+        }),
+      });
+
+      const updateResult = await updateResponse.json();
+      if (!updateResponse.ok) {
+        throw new Error(updateResult.message || 'Failed to sign contract');
+      }
+
+      toast.success('Contract signed successfully! The landlord/manager will be notified.');
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <FileSignature className="text-blue-600" />
+              Sign Contract
+            </h2>
+            <p className="text-gray-500 mt-1">For property: {contract.propertyId.name}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <XCircle size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 space-y-4">
+            {/* Download Original Contract */}
+            {contract.contractDocumentUrl && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                  <Download size={18} />
+                  Step 1: Download Original Contract
+                </h3>
+                <p className="text-sm text-blue-700 mb-3">
+                  Download the contract, review it carefully, sign it, and save as a PDF.
+                </p>
+                <a
+                  href={contract.contractDocumentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                >
+                  <Download size={16} />
+                  Download Contract PDF
+                </a>
+              </div>
+            )}
+
+            {/* Upload Signed Contract */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
+                <Upload size={18} />
+                Step 2: Upload Signed Contract
+              </h3>
+              <p className="text-sm text-green-700 mb-3">
+                After signing the contract, upload the signed PDF file here.
+              </p>
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.type !== 'application/pdf') {
+                      setError('Only PDF files are allowed');
+                      e.target.value = '';
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      setError('File size must be less than 10MB');
+                      e.target.value = '';
+                      return;
+                    }
+                    setSignedPDF(file);
+                    setError(null);
+                  }
+                }}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              {signedPDF && (
+                <p className="text-sm text-green-600 mt-2 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  {signedPDF.name} selected
+                </p>
+              )}
+            </div>
+
+            {/* Important Notice */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="font-semibold text-yellow-900 mb-1">Important Notice</h3>
+              <p className="text-sm text-yellow-700">
+                By uploading the signed contract, you agree to all terms and conditions stated in the document.
+                The landlord/manager will review your signed contract and mark the property as rented.
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 bg-gray-50 border-t flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100"
+              disabled={isUploading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isUploading || !signedPDF}
+              className="px-6 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 flex items-center gap-2"
+            >
+              {isUploading ? (
+                <>
+                  <Clock className="animate-spin" size={16} />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <FileSignature size={16} />
+                  Submit Signed Contract
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default TenantContractsPage;

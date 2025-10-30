@@ -53,6 +53,8 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
   const [managerCommissionRate, setManagerCommissionRate] = useState('');
   const [managerCommissionType, setManagerCommissionType] = useState<'percentage' | 'fixed_monthly' | 'fixed_total'>('percentage');
   const [managerCommissionNotes, setManagerCommissionNotes] = useState('');
+  const [contractPDF, setContractPDF] = useState<File | null>(null);
+  const [uploadingPDF, setUploadingPDF] = useState(false);
 
   // Auto-calculate end date based on duration
   React.useEffect(() => {
@@ -73,41 +75,65 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
     setIsLoading(true);
     setError(null);
 
-    const contractData: any = {
-      property: application.propertyId,
-      tenantId: application.senderId,
-      managerId: managerId,
-      duration: duration,
-      startDate,
-      endDate,
-      monthlyRent: parseFloat(monthlyRent),
-      securityDeposit: parseFloat(securityDeposit),
-      currency,
-      paymentDay: parseInt(paymentDay),
-      terms,
-      specialConditions: specialConditions || undefined,
-      status: 'draft',
-    };
-
-    // Add commission data if provided
-    if (managerCommissionRate) {
-      const commissionRateNum = parseFloat(managerCommissionRate);
-      contractData.managerCommissionType = managerCommissionType;
-
-      if (managerCommissionType === 'percentage') {
-        contractData.managerCommissionRate = commissionRateNum;
-        // Calculate commission amount based on monthly rent
-        contractData.managerCommissionAmount = (parseFloat(monthlyRent) * commissionRateNum) / 100;
-      } else {
-        contractData.managerCommissionAmount = commissionRateNum;
-      }
-
-      if (managerCommissionNotes) {
-        contractData.managerCommissionNotes = managerCommissionNotes;
-      }
-    }
-
     try {
+      let contractDocumentUrl = '';
+
+      // Upload PDF if provided
+      if (contractPDF) {
+        setUploadingPDF(true);
+        const pdfFormData = new FormData();
+        pdfFormData.append('file', contractPDF);
+        pdfFormData.append('uploadType', 'initial');
+
+        const uploadResponse = await fetch('/api/contracts/upload', {
+          method: 'POST',
+          body: pdfFormData,
+        });
+
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResponse.ok) {
+          throw new Error(uploadResult.message || 'Failed to upload PDF');
+        }
+
+        contractDocumentUrl = uploadResult.url;
+        setUploadingPDF(false);
+      }
+
+      const contractData: any = {
+        property: application.propertyId,
+        tenantId: application.senderId,
+        managerId: managerId,
+        duration: duration,
+        startDate,
+        endDate,
+        monthlyRent: parseFloat(monthlyRent),
+        securityDeposit: parseFloat(securityDeposit),
+        currency,
+        paymentDay: parseInt(paymentDay),
+        terms,
+        specialConditions: specialConditions || undefined,
+        status: 'draft',
+        contractDocumentUrl: contractDocumentUrl || undefined,
+      };
+
+      // Add commission data if provided
+      if (managerCommissionRate) {
+        const commissionRateNum = parseFloat(managerCommissionRate);
+        contractData.managerCommissionType = managerCommissionType;
+
+        if (managerCommissionType === 'percentage') {
+          contractData.managerCommissionRate = commissionRateNum;
+          // Calculate commission amount based on monthly rent
+          contractData.managerCommissionAmount = (parseFloat(monthlyRent) * commissionRateNum) / 100;
+        } else {
+          contractData.managerCommissionAmount = commissionRateNum;
+        }
+
+        if (managerCommissionNotes) {
+          contractData.managerCommissionNotes = managerCommissionNotes;
+        }
+      }
+
       const response = await fetch('/api/contracts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,6 +146,7 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
       setError(err.message);
     } finally {
       setIsLoading(false);
+      setUploadingPDF(false);
     }
   };
 
@@ -264,6 +291,46 @@ const CreateContractModal: React.FC<CreateContractModalProps> = ({ application, 
               <textarea id="specialConditions" value={specialConditions} onChange={(e) => setSpecialConditions(e.target.value)} rows={2}
                 placeholder="Any special conditions or clauses..."
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+
+            {/* Contract PDF Upload */}
+            <div className="border-t pt-4 mt-4">
+              <label htmlFor="contractPDF" className="block text-sm font-medium text-gray-700 mb-1">
+                Upload Contract PDF (Required)
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Upload the signed contract document that the tenant will review and sign.
+              </p>
+              <input
+                type="file"
+                id="contractPDF"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.type !== 'application/pdf') {
+                      setError('Only PDF files are allowed');
+                      e.target.value = '';
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                      setError('File size must be less than 10MB');
+                      e.target.value = '';
+                      return;
+                    }
+                    setContractPDF(file);
+                    setError(null);
+                  }
+                }}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              {contractPDF && (
+                <p className="text-sm text-green-600 mt-2">✓ {contractPDF.name} selected</p>
+              )}
+              {uploadingPDF && (
+                <p className="text-sm text-blue-600 mt-2">Uploading PDF...</p>
+              )}
             </div>
 
             {error && <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm">{error}</div>}
