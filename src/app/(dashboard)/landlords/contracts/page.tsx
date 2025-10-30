@@ -50,9 +50,9 @@ const calculateEndDate = (createdAt: string, duration: string): Date => {
 };
 
 // --- Main Component ---
-const ManagerContractsPage = () => {
+const LandlordContractsPage = () => {
   const { data: authUser } = useGetAuthUserQuery();
-  const managerCognitoId = authUser?.cognitoInfo.userId;
+  const landlordCognitoId = authUser?.cognitoInfo.userId;
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,12 +61,12 @@ const ManagerContractsPage = () => {
   const [filterStatus, setFilterStatus] = useState<"all" | "draft" | "pending_signatures" | "active">("all");
 
   const fetchContracts = async () => {
-    if (!managerCognitoId) return;
+    if (!landlordCognitoId) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/contracts?managerId=${managerCognitoId}`);
+      const response = await fetch(`/api/contracts?landlordId=${landlordCognitoId}`);
       if (!response.ok) throw new Error("Failed to fetch contracts");
       const data = await response.json();
       setContracts((data.data || []).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
@@ -79,7 +79,7 @@ const ManagerContractsPage = () => {
 
   useEffect(() => {
     fetchContracts();
-  }, [managerCognitoId]);
+  }, [landlordCognitoId]);
 
   const filteredContracts = useMemo(() => {
     if (filterStatus === "all") return contracts;
@@ -108,7 +108,7 @@ const ManagerContractsPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'mark_as_rented',
-          role: 'manager',
+          role: 'landlord',
         }),
       });
 
@@ -162,7 +162,7 @@ const ManagerContractsPage = () => {
 
   return (
     <div className="dashboard-container bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-      <Header title="Property Contracts" subtitle="Manage rental contracts for properties you manage." />
+      <Header title="Property Contracts" subtitle="Manage rental contracts for your properties." />
       <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex flex-wrap gap-2">
           <FilterButton status="all" current={filterStatus} setCount={contracts.length} onClick={setFilterStatus} />
@@ -390,4 +390,4 @@ const InfoItem = ({ label, value }: { label: string; value: string | undefined }
   </div>
 );
 
-export default ManagerContractsPage;
+export default LandlordContractsPage;

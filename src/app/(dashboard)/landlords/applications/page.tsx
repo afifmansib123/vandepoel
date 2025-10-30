@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import CreateContractModal from "@/components/CreateContractModal";
+import { toast } from "sonner";
 
 // --- Type Definitions (Updated) ---
 interface PopulatedProperty {
@@ -144,7 +145,7 @@ const LandlordApplicationsPage = () => {
           );
         }
 
-        toast.error(
+        toast.success(
           `Successfully approved application and assigned ${application.formData.name} as the new agent.`
         );
       }
