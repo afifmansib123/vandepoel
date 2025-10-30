@@ -37,19 +37,29 @@ const Navbar = () => {
 
   // Fetch notification count from Notifications API
   useEffect(() => {
-    if (!authUser?.cognitoInfo?.userId) return;
+    if (!authUser?.cognitoInfo?.userId) {
+      console.log('Navbar: No user ID, skipping notification fetch');
+      return;
+    }
 
     const fetchNotificationCount = async () => {
       try {
+        console.log('Navbar: Fetching notifications...');
         const response = await fetch('/api/notifications?isRead=false');
+        console.log('Navbar: Response status:', response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log('Navbar: Notification data:', data);
+
           if (data.success) {
-            setNotificationCount(data.data?.unreadCount || 0);
+            const count = data.data?.unreadCount || 0;
+            console.log('Navbar: Setting notification count to:', count);
+            setNotificationCount(count);
           }
         }
       } catch (error) {
-        console.error('Error fetching notification count:', error);
+        console.error('Navbar: Error fetching notification count:', error);
       }
     };
 
