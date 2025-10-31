@@ -41,7 +41,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
   const pathname = usePathname();
   const { toggleSidebar, open } = useSidebar();
   const { data: authUser } = useGetAuthUserQuery();
-  const [notificationCount, setNotificationCount] = useState(5); // HARDCODED FOR TESTING - shows 5 notifications
+  const [notificationCount, setNotificationCount] = useState(0);
 
   // Fetch notification count
   useEffect(() => {
@@ -53,9 +53,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            // TESTING: Use hardcoded value instead
-            // setNotificationCount(data.data?.unreadCount || 0);
-            setNotificationCount(5); // HARDCODED - change this to use real data later
+            setNotificationCount(data.data?.unreadCount || 0);
           }
         }
       } catch (error) {
