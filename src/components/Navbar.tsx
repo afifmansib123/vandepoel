@@ -3,9 +3,9 @@
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { useGetAuthUserQuery } from "@/state/api";
+import { useGetAuthUserQuery, useGetNotificationsQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
 import { Bell, MessageCircle, Plus, Search, HelpCircle, X } from "lucide-react";
@@ -22,53 +22,26 @@ import TutorialModal from "./TutorialModal";
 
 const Navbar = () => {
   const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
+  const { data: notificationsData } = useGetNotificationsQuery(
+    { isRead: false },
+    {
+      skip: !authUser?.cognitoInfo?.userId,
+      pollingInterval: 30000 // Poll every 30 seconds
+    }
+  );
   const router = useRouter();
   const pathname = usePathname();
-  const [notificationCount, setNotificationCount] = useState(0);
   const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
 
   console.log("authuser object", authUser);
+
+  const notificationCount = notificationsData?.data?.unreadCount || 0;
 
   const isDashboardPage =
     pathname.includes("/managers") ||
     pathname.includes("/tenants") ||
     pathname.includes("/landlords") ||
     pathname.includes("/buyers");
-
-  // Fetch notification count from Notifications API
-  useEffect(() => {
-    if (!authUser?.cognitoInfo?.userId) {
-      console.log('Navbar: No user ID, skipping notification fetch');
-      return;
-    }
-
-    const fetchNotificationCount = async () => {
-      try {
-        console.log('Navbar: Fetching notifications...');
-        const response = await fetch('/api/notifications?isRead=false');
-        console.log('Navbar: Response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Navbar: Notification data:', data);
-
-          if (data.success) {
-            const count = data.data?.unreadCount || 0;
-            console.log('Navbar: Setting notification count to:', count);
-            setNotificationCount(count);
-          }
-        }
-      } catch (error) {
-        console.error('Navbar: Error fetching notification count:', error);
-      }
-    };
-
-    fetchNotificationCount();
-
-    // Poll every 30 seconds
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, [authUser]);
 
   const handleSignOut = async () => {
     await signOut();
