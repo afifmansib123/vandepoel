@@ -51,8 +51,9 @@ export async function POST(req: NextRequest) {
                     await Manager.findOne({ cognitoId: senderId }).select('name email phoneNumber');
 
     // Try to find receiver in different user models
-    receiverDetails = await Landlord.findOne({ cognitoId: receiverId }).select('name email phoneNumber') ||
-                      await Manager.findOne({ cognitoId: receiverId }).select('name email phoneNumber');
+    const landlordReceiver = await Landlord.findOne({ cognitoId: receiverId }).select('name email phoneNumber');
+    const managerReceiver = await Manager.findOne({ cognitoId: receiverId }).select('name email phoneNumber');
+    receiverDetails = landlordReceiver || managerReceiver;
 
     const newApplication = new Application({
       propertyId,
@@ -77,26 +78,29 @@ export async function POST(req: NextRequest) {
     let notificationMessage = '';
     let notificationUrl = '';
 
+    // Determine the base URL based on receiver type
+    const baseApplicationsUrl = managerReceiver ? '/managers/applications' : '/landlords/applications';
+
     if (applicationType === 'ScheduleVisit') {
       notificationTitle = 'New Property Visit Request';
       notificationMessage = `Someone has requested to visit ${propertyName}.`;
-      notificationUrl = '/landlords/applications';
+      notificationUrl = baseApplicationsUrl;
     } else if (applicationType === 'AgentApplication') {
       notificationTitle = 'New Agent Application';
       notificationMessage = `A manager has applied to be an agent for ${propertyName}.`;
-      notificationUrl = '/landlords/applications';
+      notificationUrl = baseApplicationsUrl;
     } else if (applicationType === 'RentRequest') {
       notificationTitle = 'New Rental Application';
       notificationMessage = `Someone has applied to rent ${propertyName}.`;
-      notificationUrl = '/landlords/applications';
+      notificationUrl = baseApplicationsUrl;
     } else if (applicationType === 'FinancialInquiry') {
       notificationTitle = 'New Financial Inquiry';
       notificationMessage = `Someone has submitted a financial inquiry for ${propertyName}.`;
-      notificationUrl = '/landlords/applications';
+      notificationUrl = baseApplicationsUrl;
     } else {
       notificationTitle = 'New Application';
       notificationMessage = `You have a new application for ${propertyName}.`;
-      notificationUrl = '/landlords/applications';
+      notificationUrl = baseApplicationsUrl;
     }
 
     await createNotification({
