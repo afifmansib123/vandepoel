@@ -3,7 +3,7 @@ import dbConnect from '@/app/lib/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
 import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
-import { getCurrentUser } from '@/app/lib/auth';
+import { getUserFromToken } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { sendNotification } from '@/app/lib/notifications';
 
@@ -27,8 +27,8 @@ export async function POST(
   try {
     await dbConnect();
 
-    const user = await getCurrentUser();
-    if (!user || user.userType !== 'buyer') {
+    const user = await getUserFromToken(request);
+    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
       await session.abortTransaction();
       session.endSession();
       return NextResponse.json(
@@ -36,6 +36,10 @@ export async function POST(
         { status: 401 }
       );
     }
+
+    // Get buyer profile for name and email
+    const Buyer = (await import('@/app/models/Buyer')).default;
+    const buyerProfile = await Buyer.findOne({ cognitoId: user.userId });
 
     const body = await request.json();
     const { tokensToPurchase, paymentMethod = 'P2P Transfer' } = body;
@@ -66,7 +70,7 @@ export async function POST(
     }
 
     // Check if trying to buy own listing
-    if (listing.sellerId === user.cognitoId) {
+    if (listing.sellerId === user.userId) {
       await session.abortTransaction();
       session.endSession();
       return NextResponse.json(
@@ -159,7 +163,7 @@ export async function POST(
 
     // 2. Create or update buyer's investment
     let buyerInvestment = await TokenInvestment.findOne({
-      investorId: user.cognitoId,
+      investorId: user.userId,
       tokenId: listing.tokenOfferingId,
       status: 'active',
     }).session(session);
@@ -174,8 +178,8 @@ export async function POST(
     } else {
       // Create new investment
       buyerInvestment = new TokenInvestment({
-        investorId: user.cognitoId,
-        investorEmail: user.email,
+        investorId: user.userId,
+        investorEmail: buyerProfile?.email || '',
         propertyId: listing.propertyId,
         tokenId: listing.tokenOfferingId,
         tokensOwned: tokensQty,
@@ -195,9 +199,9 @@ export async function POST(
       // All tokens sold, mark listing as sold
       listing.status = 'sold';
       listing.soldAt = new Date();
-      listing.buyerId = user.cognitoId;
-      listing.buyerName = user.name || user.email;
-      listing.buyerEmail = user.email;
+      listing.buyerId = user.userId;
+      listing.buyerName = buyerProfile?.name || buyerProfile?.email || 'Unknown';
+      listing.buyerEmail = buyerProfile?.email || '';
     } else {
       // Partial purchase, reduce available tokens
       listing.tokensForSale -= tokensQty;
@@ -215,7 +219,7 @@ export async function POST(
       await sendNotification({
         userId: listing.sellerId,
         title: 'Token Sold!',
-        message: `${user.name || user.email} purchased ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}`,
+        message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} purchased ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}`,
         type: 'token_sale',
         link: '/buyers/portfolio',
       });
