@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +31,7 @@ import {
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useGetAuthUserQuery } from "@/state/api";
+import { useGetAuthUserQuery, useGetNotificationsQuery } from "@/state/api";
 
 interface AppSidebarProps {
   userType: "manager" | "tenant" | "landlord" | "buyer" | "superadmin" | string;
@@ -41,30 +41,15 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
   const pathname = usePathname();
   const { toggleSidebar, open } = useSidebar();
   const { data: authUser } = useGetAuthUserQuery();
-  const [notificationCount, setNotificationCount] = useState(0);
+  const { data: notificationsData } = useGetNotificationsQuery(
+    { isRead: false },
+    {
+      skip: !authUser?.cognitoInfo?.userId,
+      pollingInterval: 30000 // Poll every 30 seconds
+    }
+  );
 
-  // Fetch notification count
-  useEffect(() => {
-    if (!authUser?.cognitoInfo?.userId) return;
-
-    const fetchNotificationCount = async () => {
-      try {
-        const response = await fetch('/api/notifications?isRead=false');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setNotificationCount(data.data?.unreadCount || 0);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching notification count:', error);
-      }
-    };
-
-    fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 30000);
-    return () => clearInterval(interval);
-  }, [authUser]);
+  const notificationCount = notificationsData?.data?.unreadCount || 0;
 
   let navLinks: any[] = [];
   let sidebarTitle = "Dashboard";
