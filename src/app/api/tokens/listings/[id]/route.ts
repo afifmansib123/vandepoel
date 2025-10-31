@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/app/lib/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
-import { getCurrentUser } from '@/app/lib/auth';
+import { getUserFromToken } from '@/lib/auth';
 
 /**
  * GET /api/tokens/listings/[id]
@@ -54,7 +54,7 @@ export async function DELETE(
   try {
     await dbConnect();
 
-    const user = await getCurrentUser();
+    const user = await getUserFromToken(request);
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'Authentication required' },
@@ -72,7 +72,7 @@ export async function DELETE(
     }
 
     // Verify ownership
-    if (listing.sellerId !== user.cognitoId) {
+    if (listing.sellerId !== user.userId) {
       return NextResponse.json(
         { success: false, message: 'You can only cancel your own listings' },
         { status: 403 }
@@ -128,7 +128,7 @@ export async function PATCH(
   try {
     await dbConnect();
 
-    const user = await getCurrentUser();
+    const user = await getUserFromToken(request);
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'Authentication required' },
@@ -149,7 +149,7 @@ export async function PATCH(
     }
 
     // Verify ownership
-    if (listing.sellerId !== user.cognitoId) {
+    if (listing.sellerId !== user.userId) {
       return NextResponse.json(
         { success: false, message: 'You can only update your own listings' },
         { status: 403 }

@@ -4,7 +4,7 @@ import TokenListing from '@/app/models/TokenListing';
 import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
 import SellerProperty from '@/app/models/SellerProperty';
-import { getCurrentUser } from '@/app/lib/auth';
+import { getUserFromToken } from '@/lib/auth';
 
 /**
  * POST /api/tokens/listings
@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const user = await getCurrentUser();
-    if (!user || user.userType !== 'buyer') {
+    const user = await getUserFromToken(request);
+    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
       return NextResponse.json(
         { success: false, message: 'Unauthorized. Only buyers can create listings.' },
         { status: 401 }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify ownership
-    if (purchaseRequest.buyerId !== user.cognitoId) {
+    if (purchaseRequest.buyerId !== user.userId) {
       return NextResponse.json(
         { success: false, message: 'You do not own this investment' },
         { status: 403 }
@@ -133,11 +133,15 @@ export async function POST(request: NextRequest) {
       expiresAt.setDate(expiresAt.getDate() + expiresInDays);
     }
 
+    // Get buyer profile for name and email
+    const Buyer = (await import('@/app/models/Buyer')).default;
+    const buyerProfile = await Buyer.findOne({ cognitoId: user.userId });
+
     // Create the listing
     const listing = new TokenListing({
-      sellerId: user.cognitoId,
-      sellerName: user.name || user.email,
-      sellerEmail: user.email,
+      sellerId: user.userId,
+      sellerName: buyerProfile?.name || buyerProfile?.email || 'Unknown',
+      sellerEmail: buyerProfile?.email || '',
       tokenInvestmentId: purchaseRequestId, // Store the purchase request ID
       propertyId: purchaseRequest.propertyId,
       tokenOfferingId: purchaseRequest.tokenOfferingId,
@@ -201,14 +205,14 @@ export async function GET(request: NextRequest) {
 
     // If requesting own listings, require authentication
     if (myListings) {
-      const user = await getCurrentUser();
+      const user = await getUserFromToken(request);
       if (!user) {
         return NextResponse.json(
           { success: false, message: 'Authentication required' },
           { status: 401 }
         );
       }
-      filter.sellerId = user.cognitoId;
+      filter.sellerId = user.userId;
     }
 
     if (status) {
