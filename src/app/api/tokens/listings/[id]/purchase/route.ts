@@ -28,15 +28,6 @@ export async function POST(
     await dbConnect();
 
     const user = await getUserFromToken(request);
-    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
-      await session.abortTransaction();
-      session.endSession();
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized. Only buyers can purchase tokens.' },
-        { status: 401 }
-      );
-    }
-
     // Get buyer profile for name and email
     const Buyer = (await import('@/app/models/Buyer')).default;
     const buyerProfile = await Buyer.findOne({ cognitoId: user.userId });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/app/lib/dbConnect';
+import dbConnect from "@/utils/dbConnect";
 import PropertyToken from '@/app/models/PropertyToken';
 import TokenListing from '@/app/models/TokenListing';
 import SellerProperty from '@/app/models/SellerProperty';

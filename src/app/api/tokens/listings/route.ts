@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/app/lib/dbConnect';
+import dbConnect from "@/utils/dbConnect";
 import TokenListing from '@/app/models/TokenListing';
 import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
@@ -24,12 +24,6 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const user = await getUserFromToken(request);
-    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized. Only buyers can create listings.' },
-        { status: 401 }
-      );
-    }
 
     const body = await request.json();
     const {
