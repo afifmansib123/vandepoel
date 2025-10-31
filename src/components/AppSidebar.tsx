@@ -27,6 +27,8 @@ import {
   Coins,
   Wallet,
   Bell,
+  Tag,
+  TrendingUp,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
@@ -125,9 +127,19 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
           href: "/buyers/tokens",
         },
         {
+          icon: TrendingUp,
+          label: "P2P Token Market",
+          href: "/token-marketplace",
+        },
+        {
           icon: Wallet,
           label: "My Portfolio",
           href: "/buyers/portfolio",
+        },
+        {
+          icon: Tag,
+          label: "My Listings",
+          href: "/buyers/my-listings",
         },
         {
           icon: FileText,
