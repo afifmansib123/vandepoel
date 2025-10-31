@@ -28,11 +28,11 @@ export async function POST(
     await dbConnect();
 
     const user = await getUserFromToken(request);
-    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
+    if (!user) {
       await session.abortTransaction();
       session.endSession();
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Only buyers can purchase tokens.' },
+        { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }

@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const user = await getUserFromToken(request);
-    if (!user || user.userRole?.toLowerCase() !== 'buyer') {
+    if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized. Only buyers can create listings.' },
+        { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
