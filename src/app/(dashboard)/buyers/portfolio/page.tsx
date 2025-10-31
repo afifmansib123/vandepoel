@@ -3,7 +3,7 @@
 import React from "react";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
-import { useGetAuthUserQuery, useGetInvestorPortfolioQuery } from "@/state/api";
+import { useGetAuthUserQuery, useGetInvestorPortfolioQuery, useGetTokenListingsQuery } from "@/state/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,10 +15,12 @@ import {
   ArrowUpRight,
   Building,
   Wallet,
+  Tag,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import ListTokenForSaleDialog from "@/components/ListTokenForSaleDialog";
 
 const BuyerPortfolio = () => {
   const { data: authUser } = useGetAuthUserQuery();
@@ -33,7 +35,14 @@ const BuyerPortfolio = () => {
     skip: !investorId,
   });
 
+  // Fetch user's active listings
+  const { data: listingsResponse } = useGetTokenListingsQuery({
+    myListings: true,
+    status: 'active',
+  });
+
   const portfolio = portfolioResponse?.data;
+  const myListings = listingsResponse?.data || [];
 
   // Helper to format currency - using EUR as default for portfolio stats
   const formatPortfolioCurrency = (amount: number) => {
@@ -249,12 +258,26 @@ const BuyerPortfolio = () => {
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 space-y-2">
                   <Link href={`/buyers/tokens/${tokenOffering?._id}`}>
                     <Button variant="outline" className="w-full">
                       View Token Details
                     </Button>
                   </Link>
+                  {investment.investments && investment.investments.length > 0 && (
+                    <ListTokenForSaleDialog
+                      investment={investment.investments[0]}
+                      existingListings={myListings.filter((l: any) =>
+                        l.tokenInvestmentId === investment.investments[0]._id
+                      )}
+                      trigger={
+                        <Button variant="default" className="w-full bg-purple-600 hover:bg-purple-700">
+                          <Tag className="w-4 h-4 mr-2" />
+                          List Tokens for Sale
+                        </Button>
+                      }
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>

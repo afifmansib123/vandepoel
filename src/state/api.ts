@@ -207,6 +207,78 @@ interface TokenPurchaseRequest {
   createdAt: Date;
   updatedAt: Date;
 }
+
+interface TokenListing {
+  _id: string;
+  // Seller Info
+  sellerId: string;
+  sellerName: string;
+  sellerEmail: string;
+  // References
+  tokenInvestmentId: string;
+  propertyId: string | Property;
+  tokenOfferingId: string | PropertyToken;
+  // Listing Details
+  tokensForSale: number;
+  pricePerToken: number;
+  totalPrice: number;
+  currency: 'EUR' | 'THB';
+  // Property & Token Info
+  propertyName?: string;
+  tokenName: string;
+  tokenSymbol: string;
+  propertyType?: string;
+  riskLevel?: 'low' | 'medium' | 'high';
+  // Status
+  status: 'active' | 'sold' | 'cancelled' | 'expired';
+  // Timestamps
+  listedAt: Date;
+  expiresAt?: Date;
+  soldAt?: Date;
+  cancelledAt?: Date;
+  // Buyer Info (when sold)
+  buyerId?: string;
+  buyerName?: string;
+  buyerEmail?: string;
+  // Additional
+  description?: string;
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface TokenMarketplaceItem {
+  _id: string;
+  type: 'official' | 'p2p';
+  tokenName: string;
+  tokenSymbol: string;
+  tokenPrice: number;
+  tokensAvailable: number;
+  currency: string;
+  riskLevel?: 'low' | 'medium' | 'high';
+  propertyType?: string;
+  description?: string;
+  property: any;
+  expectedReturn?: string;
+  dividendFrequency?: string;
+  propertyValue?: number;
+  // P2P specific fields
+  listingId?: string;
+  sellerName?: string;
+  sellerId?: string;
+  listedAt?: Date;
+  tags?: string[];
+  // Official specific fields
+  totalTokens?: number;
+  tokensSold?: number;
+  minPurchase?: number;
+  maxPurchase?: number;
+  fundingProgress?: number;
+  offeringStartDate?: Date;
+  offeringEndDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 // --- END Token Types ---
 // --- END Admin Panel Types ---
 // --- END Hardcoded Types ---
@@ -226,7 +298,9 @@ export type AppTag =
   | "BankingServices"
   | "TokenOfferings"
   | "TokenInvestments"
-  | "TokenPurchaseRequests";
+  | "TokenPurchaseRequests"
+  | "TokenListings"
+  | "TokenMarketplace";
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
@@ -258,6 +332,8 @@ export const api = createApi({
     "TokenOfferings",
     "TokenInvestments",
     "TokenPurchaseRequests",
+    "TokenListings",
+    "TokenMarketplace",
     "Notifications",
   ] as AppTag[],
   endpoints: (build) => ({
@@ -1052,6 +1128,153 @@ export const api = createApi({
 
     // --- END Token Purchase Request Endpoints ---
 
+    // --- START P2P Token Marketplace Endpoints ---
+
+    // Get combined marketplace (official + P2P listings)
+    getTokenMarketplace: build.query<{ success: boolean; data: TokenMarketplaceItem[]; pagination: any }, { page?: number; limit?: number; propertyType?: string; riskLevel?: string; source?: 'official' | 'p2p' | 'all'; sortBy?: 'newest' | 'price-low' | 'price-high' }>({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.propertyType) queryParams.append('propertyType', params.propertyType);
+        if (params.riskLevel) queryParams.append('riskLevel', params.riskLevel);
+        if (params.source) queryParams.append('source', params.source);
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+        return `tokens/marketplace?${queryParams.toString()}`;
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: "TokenMarketplace" as AppTag, id: _id })),
+              { type: "TokenMarketplace" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "TokenMarketplace" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch token marketplace.",
+        });
+      },
+    }),
+
+    // Get token listings (for seller's management view)
+    getTokenListings: build.query<{ success: boolean; data: TokenListing[]; pagination: any }, { myListings?: boolean; status?: string; page?: number; limit?: number }>({
+      query: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.myListings) queryParams.append('myListings', 'true');
+        if (params.status) queryParams.append('status', params.status);
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        return `tokens/listings?${queryParams.toString()}`;
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ _id }) => ({ type: "TokenListings" as AppTag, id: _id })),
+              { type: "TokenListings" as AppTag, id: "LIST" },
+            ]
+          : [{ type: "TokenListings" as AppTag, id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch token listings.",
+        });
+      },
+    }),
+
+    // Get specific token listing
+    getTokenListing: build.query<{ success: boolean; data: TokenListing }, string>({
+      query: (listingId) => `tokens/listings/${listingId}`,
+      providesTags: (result, error, listingId) => [
+        { type: "TokenListings" as AppTag, id: listingId },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load listing details.",
+        });
+      },
+    }),
+
+    // Create a P2P token listing
+    createTokenListing: build.mutation<{ success: boolean; data: TokenListing }, any>({
+      query: (body) => ({
+        url: 'tokens/listings',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        { type: "TokenListings" as AppTag, id: "LIST" },
+        { type: "TokenMarketplace" as AppTag, id: "LIST" },
+        { type: "TokenInvestments" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Token listing created successfully!",
+          error: "Failed to create token listing.",
+        });
+      },
+    }),
+
+    // Update token listing (price, description)
+    updateTokenListing: build.mutation<{ success: boolean; data: TokenListing }, { listingId: string; pricePerToken?: number; description?: string }>({
+      query: ({ listingId, ...body }) => ({
+        url: `tokens/listings/${listingId}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { listingId }) => [
+        { type: "TokenListings" as AppTag, id: listingId },
+        { type: "TokenListings" as AppTag, id: "LIST" },
+        { type: "TokenMarketplace" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Listing updated successfully!",
+          error: "Failed to update listing.",
+        });
+      },
+    }),
+
+    // Cancel token listing
+    cancelTokenListing: build.mutation<{ success: boolean; data: TokenListing }, string>({
+      query: (listingId) => ({
+        url: `tokens/listings/${listingId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, listingId) => [
+        { type: "TokenListings" as AppTag, id: listingId },
+        { type: "TokenListings" as AppTag, id: "LIST" },
+        { type: "TokenMarketplace" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Listing cancelled successfully!",
+          error: "Failed to cancel listing.",
+        });
+      },
+    }),
+
+    // Purchase tokens from P2P listing
+    purchaseFromListing: build.mutation<{ success: boolean; data: any }, { listingId: string; tokensToPurchase?: number; paymentMethod?: string }>({
+      query: ({ listingId, ...body }) => ({
+        url: `tokens/listings/${listingId}/purchase`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, error, { listingId }) => [
+        { type: "TokenListings" as AppTag, id: listingId },
+        { type: "TokenListings" as AppTag, id: "LIST" },
+        { type: "TokenMarketplace" as AppTag, id: "LIST" },
+        { type: "TokenInvestments" as AppTag, id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Tokens purchased successfully!",
+          error: "Failed to purchase tokens.",
+        });
+      },
+    }),
+
+    // --- END P2P Token Marketplace Endpoints ---
+
     // --- END Token Endpoints ---
 
     // --- Notification Endpoints ---
@@ -1175,6 +1398,14 @@ export const {
   useGetTokenPurchaseRequestQuery,
   useSubmitTokenPurchaseRequestMutation,
   useUpdateTokenPurchaseRequestMutation,
+  // P2P Token marketplace hooks
+  useGetTokenMarketplaceQuery,
+  useGetTokenListingsQuery,
+  useGetTokenListingQuery,
+  useCreateTokenListingMutation,
+  useUpdateTokenListingMutation,
+  useCancelTokenListingMutation,
+  usePurchaseFromListingMutation,
   // Notification hooks
   useGetNotificationsQuery,
   useMarkNotificationAsReadMutation,
