@@ -13,7 +13,7 @@ import { getCurrentUser } from '@/app/lib/auth';
  * Buyer lists their owned tokens for sale
  *
  * Body:
- * - tokenInvestmentId: string
+ * - purchaseRequestId: string (TokenPurchaseRequest ID)
  * - tokensForSale: number
  * - pricePerToken: number
  * - description?: string
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
-      tokenInvestmentId,
+      purchaseRequestId,
       tokensForSale,
       pricePerToken,
       description,
@@ -41,11 +41,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!tokenInvestmentId || !tokensForSale || !pricePerToken) {
+    if (!purchaseRequestId || !tokensForSale || !pricePerToken) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Missing required fields: tokenInvestmentId, tokensForSale, pricePerToken',
+          message: 'Missing required fields: purchaseRequestId, tokensForSale, pricePerToken',
         },
         { status: 400 }
       );
@@ -61,32 +61,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the token investment
-    const investment = await TokenInvestment.findById(tokenInvestmentId)
-      .populate('propertyId')
-      .populate('tokenId');
+    // Import TokenPurchaseRequest model
+    const TokenPurchaseRequest = (await import('@/app/models/TokenPurchaseRequest')).default;
 
-    if (!investment) {
+    // Get the purchase request (which represents the investment)
+    const purchaseRequest = await TokenPurchaseRequest.findById(purchaseRequestId)
+      .populate('propertyId')
+      .populate('tokenOfferingId');
+
+    if (!purchaseRequest) {
       return NextResponse.json(
-        { success: false, message: 'Token investment not found' },
+        { success: false, message: 'Purchase request not found' },
         { status: 404 }
       );
     }
 
     // Verify ownership
-    if (investment.investorId !== user.cognitoId) {
+    if (purchaseRequest.buyerId !== user.cognitoId) {
       return NextResponse.json(
-        { success: false, message: 'You do not own this token investment' },
+        { success: false, message: 'You do not own this investment' },
         { status: 403 }
       );
     }
 
-    // Verify token status is active
-    if (investment.status !== 'active') {
+    // Verify tokens have been assigned
+    if (purchaseRequest.status !== 'tokens_assigned' && purchaseRequest.status !== 'completed') {
       return NextResponse.json(
         {
           success: false,
-          message: `Cannot list tokens with status: ${investment.status}`,
+          message: `Cannot list tokens with status: ${purchaseRequest.status}. Tokens must be assigned first.`,
         },
         { status: 400 }
       );
@@ -94,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Check available tokens (owned - already listed)
     const existingListings = await TokenListing.find({
-      tokenInvestmentId,
+      tokenInvestmentId: purchaseRequestId, // Using same field for both types
       status: 'active',
     });
 
@@ -103,24 +106,25 @@ export async function POST(request: NextRequest) {
       0
     );
 
-    const availableToList = investment.tokensOwned - tokensAlreadyListed;
+    const tokensOwned = purchaseRequest.tokensRequested;
+    const availableToList = tokensOwned - tokensAlreadyListed;
 
     if (tokensForSale > availableToList) {
       return NextResponse.json(
         {
           success: false,
-          message: `Insufficient tokens. You own ${investment.tokensOwned} tokens, ${tokensAlreadyListed} already listed. Available: ${availableToList}`,
+          message: `Insufficient tokens. You own ${tokensOwned} tokens, ${tokensAlreadyListed} already listed. Available: ${availableToList}`,
         },
         { status: 400 }
       );
     }
 
     // Get property and token offering details
-    const property: any = investment.propertyId;
-    const tokenOffering: any = investment.tokenId;
+    const property: any = purchaseRequest.propertyId;
+    const tokenOffering: any = purchaseRequest.tokenOfferingId;
 
-    // Determine currency from property location
-    const currency = property?.location?.country === 'Thailand' ? 'THB' : 'EUR';
+    // Use currency from purchase request or determine from property location
+    const currency = purchaseRequest.currency || (property?.location?.country === 'Thailand' ? 'THB' : 'EUR');
 
     // Calculate expiration date if provided
     let expiresAt;
@@ -134,9 +138,9 @@ export async function POST(request: NextRequest) {
       sellerId: user.cognitoId,
       sellerName: user.name || user.email,
       sellerEmail: user.email,
-      tokenInvestmentId,
-      propertyId: investment.propertyId,
-      tokenOfferingId: investment.tokenId,
+      tokenInvestmentId: purchaseRequestId, // Store the purchase request ID
+      propertyId: purchaseRequest.propertyId,
+      tokenOfferingId: purchaseRequest.tokenOfferingId,
       tokensForSale,
       pricePerToken,
       totalPrice: tokensForSale * pricePerToken,
@@ -144,7 +148,7 @@ export async function POST(request: NextRequest) {
       propertyName: property?.propertyTitle,
       tokenName: tokenOffering?.tokenName,
       tokenSymbol: tokenOffering?.tokenSymbol,
-      propertyType: tokenOffering?.propertyType,
+      propertyType: tokenOffering?.propertyType || property?.propertyType,
       riskLevel: tokenOffering?.riskLevel,
       description,
       expiresAt,

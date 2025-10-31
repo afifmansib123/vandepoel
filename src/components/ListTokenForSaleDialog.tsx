@@ -22,11 +22,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface ListTokenForSaleDialogProps {
   investment: {
     _id: string;
-    tokensOwned: number;
-    tokenId: any;
+    tokensRequested?: number; // From TokenPurchaseRequest
+    tokensOwned?: number; // From TokenInvestment
+    tokenOfferingId?: any; // From TokenPurchaseRequest
+    tokenId?: any; // From TokenInvestment
     propertyId: any;
-    purchasePrice: number;
-    totalInvestment: number;
+    pricePerToken?: number; // From TokenPurchaseRequest
+    purchasePrice?: number; // From TokenInvestment
+    totalAmount?: number; // From TokenPurchaseRequest
+    totalInvestment?: number; // From TokenInvestment
+    currency?: string; // From TokenPurchaseRequest
   };
   existingListings?: any[];
   trigger?: React.ReactNode;
@@ -38,9 +43,16 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
   trigger,
 }) => {
   const [open, setOpen] = useState(false);
+
+  // Handle both TokenPurchaseRequest and TokenInvestment data structures
+  const tokensOwned = investment.tokensOwned || investment.tokensRequested || 0;
+  const purchasePrice = investment.purchasePrice || investment.pricePerToken || 0;
+  const tokenOffering = investment.tokenId || investment.tokenOfferingId;
+  const currency = investment.currency || (investment.propertyId?.location?.country === 'Thailand' ? 'THB' : 'EUR');
+
   const [formData, setFormData] = useState({
     tokensForSale: 1,
-    pricePerToken: investment.purchasePrice, // Default to purchase price
+    pricePerToken: purchasePrice, // Default to purchase price
     description: "",
     expiresInDays: 30,
   });
@@ -52,11 +64,11 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
     .filter((listing: any) => listing.status === 'active')
     .reduce((sum: number, listing: any) => sum + listing.tokensForSale, 0);
 
-  const availableToList = investment.tokensOwned - tokensAlreadyListed;
+  const availableToList = tokensOwned - tokensAlreadyListed;
 
   const totalPrice = formData.tokensForSale * formData.pricePerToken;
-  const potentialProfit = totalPrice - (formData.tokensForSale * investment.purchasePrice);
-  const profitPercentage = ((formData.pricePerToken - investment.purchasePrice) / investment.purchasePrice) * 100;
+  const potentialProfit = totalPrice - (formData.tokensForSale * purchasePrice);
+  const profitPercentage = purchasePrice > 0 ? ((formData.pricePerToken - purchasePrice) / purchasePrice) * 100 : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +85,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
 
     try {
       await createListing({
-        tokenInvestmentId: investment._id,
+        purchaseRequestId: investment._id, // Can be TokenPurchaseRequest or TokenInvestment ID
         tokensForSale: formData.tokensForSale,
         pricePerToken: formData.pricePerToken,
         description: formData.description || undefined,
@@ -84,7 +96,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
       // Reset form
       setFormData({
         tokensForSale: 1,
-        pricePerToken: investment.purchasePrice,
+        pricePerToken: purchasePrice,
         description: "",
         expiresInDays: 30,
       });
@@ -92,10 +104,6 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
       console.error('Failed to create listing:', error);
       alert(error?.data?.message || 'Failed to create listing');
     }
-  };
-
-  const getCurrency = () => {
-    return investment.propertyId?.location?.country === 'Thailand' ? 'THB' : 'EUR';
   };
 
   return (
@@ -112,7 +120,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
         <DialogHeader>
           <DialogTitle>List Tokens for Sale</DialogTitle>
           <DialogDescription>
-            Create a P2P listing to sell your {investment.tokenId?.tokenName} tokens to other buyers
+            Create a P2P listing to sell your {tokenOffering?.tokenName || 'tokens'} to other buyers
           </DialogDescription>
         </DialogHeader>
 
@@ -122,12 +130,12 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Token</span>
               <span className="font-semibold">
-                {investment.tokenId?.tokenName} ({investment.tokenId?.tokenSymbol})
+                {tokenOffering?.tokenName || 'N/A'} ({tokenOffering?.tokenSymbol || 'N/A'})
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Tokens Owned</span>
-              <span className="font-semibold">{investment.tokensOwned}</span>
+              <span className="font-semibold">{tokensOwned}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Already Listed</span>
@@ -140,7 +148,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Your Purchase Price</span>
               <span className="font-semibold">
-                {getCurrency()} {investment.purchasePrice.toLocaleString()}
+                {currency} {purchasePrice.toLocaleString()}
               </span>
             </div>
           </div>
@@ -176,7 +184,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
 
           {/* Price Per Token */}
           <div>
-            <Label htmlFor="pricePerToken">Price Per Token ({getCurrency()}) *</Label>
+            <Label htmlFor="pricePerToken">Price Per Token ({currency}) *</Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
@@ -208,13 +216,13 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-700">Total Listing Value</span>
               <span className="font-bold text-lg">
-                {getCurrency()} {totalPrice.toLocaleString()}
+                {currency} {totalPrice.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-700">Your Original Cost</span>
               <span className="font-semibold">
-                {getCurrency()} {(formData.tokensForSale * investment.purchasePrice).toLocaleString()}
+                {currency} {(formData.tokensForSale * purchasePrice).toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center border-t pt-2">
@@ -223,7 +231,7 @@ const ListTokenForSaleDialog: React.FC<ListTokenForSaleDialogProps> = ({
                 Potential {potentialProfit >= 0 ? 'Profit' : 'Loss'}
               </span>
               <span className={`font-bold ${potentialProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {potentialProfit >= 0 ? '+' : ''}{getCurrency()} {potentialProfit.toLocaleString()}
+                {potentialProfit >= 0 ? '+' : ''}{currency} {potentialProfit.toLocaleString()}
               </span>
             </div>
           </div>
