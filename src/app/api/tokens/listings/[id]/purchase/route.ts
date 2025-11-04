@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/app/lib/dbConnect';
+import dbConnect from '@/utils/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
 import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
 import { getUserFromToken } from '@/lib/auth';
 import mongoose from 'mongoose';
-import { sendNotification } from '@/app/lib/notifications';
+import { sendNotification } from '@/lib/notifications';
 
 /**
  * POST /api/tokens/listings/[id]/purchase
