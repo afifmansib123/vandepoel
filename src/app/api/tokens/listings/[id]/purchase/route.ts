@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/utils/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
-import TokenInvestment from '@/app/models/TokenInvestment';
+import TokenPurchaseRequest from '@/app/models/TokenPurchaseRequest';
 import PropertyToken from '@/app/models/PropertyToken';
 import { getUserFromToken } from '@/lib/auth';
 import mongoose from 'mongoose';
@@ -98,22 +98,22 @@ export async function POST(
     // Calculate purchase amount
     const totalPurchaseAmount = tokensQty * listing.pricePerToken;
 
-    // Get seller's token investment
-    const sellerInvestment = await TokenInvestment.findById(
+    // Get seller's token purchase request
+    const sellerPurchaseRequest = await TokenPurchaseRequest.findById(
       listing.tokenInvestmentId
     ).session(session);
 
-    if (!sellerInvestment) {
+    if (!sellerPurchaseRequest) {
       await session.abortTransaction();
       session.endSession();
       return NextResponse.json(
-        { success: false, message: 'Seller token investment not found' },
+        { success: false, message: 'Seller token purchase request not found' },
         { status: 404 }
       );
     }
 
     // Verify seller still owns enough tokens
-    if (sellerInvestment.tokensOwned < tokensQty) {
+    if (sellerPurchaseRequest.tokensRequested < tokensQty) {
       await session.abortTransaction();
       session.endSession();
       return NextResponse.json(
@@ -141,49 +141,48 @@ export async function POST(
 
     // --- Execute the transfer ---
 
-    // 1. Update seller's investment (reduce tokens)
-    sellerInvestment.tokensOwned -= tokensQty;
-    sellerInvestment.ownershipPercentage =
-      (sellerInvestment.tokensOwned / tokenOffering.totalTokens) * 100;
+    // 1. Update seller's purchase request (reduce tokens)
+    sellerPurchaseRequest.tokensRequested -= tokensQty;
 
-    // If seller has no more tokens, mark as sold
-    if (sellerInvestment.tokensOwned === 0) {
-      sellerInvestment.status = 'sold';
+    // If seller has no more tokens, mark as completed/transferred
+    if (sellerPurchaseRequest.tokensRequested === 0) {
+      sellerPurchaseRequest.status = 'completed';
     }
 
-    await sellerInvestment.save({ session });
+    await sellerPurchaseRequest.save({ session });
 
-    // 2. Create or update buyer's investment
-    let buyerInvestment = await TokenInvestment.findOne({
-      investorId: user.userId,
-      tokenId: listing.tokenOfferingId,
-      status: 'active',
+    // 2. Create or update buyer's purchase request
+    let buyerPurchaseRequest = await TokenPurchaseRequest.findOne({
+      buyerId: user.userId,
+      propertyId: listing.propertyId,
+      tokenOfferingId: listing.tokenOfferingId,
+      status: { $in: ['tokens_assigned', 'completed'] },
     }).session(session);
 
-    if (buyerInvestment) {
-      // Update existing investment
-      buyerInvestment.tokensOwned += tokensQty;
-      buyerInvestment.totalInvestment += totalPurchaseAmount;
-      buyerInvestment.ownershipPercentage =
-        (buyerInvestment.tokensOwned / tokenOffering.totalTokens) * 100;
-      await buyerInvestment.save({ session });
+    if (buyerPurchaseRequest) {
+      // Update existing purchase request
+      buyerPurchaseRequest.tokensRequested += tokensQty;
+      buyerPurchaseRequest.totalAmount += totalPurchaseAmount;
+      await buyerPurchaseRequest.save({ session });
     } else {
-      // Create new investment
-      buyerInvestment = new TokenInvestment({
-        investorId: user.userId,
-        investorEmail: buyerProfile?.email || '',
+      // Create new purchase request for P2P purchase
+      buyerPurchaseRequest = new TokenPurchaseRequest({
+        buyerId: user.userId,
+        buyerName: buyerProfile?.name || buyerProfile?.email || 'Unknown',
+        buyerEmail: buyerProfile?.email || '',
         propertyId: listing.propertyId,
-        tokenId: listing.tokenOfferingId,
-        tokensOwned: tokensQty,
-        purchasePrice: listing.pricePerToken,
-        totalInvestment: totalPurchaseAmount,
-        ownershipPercentage: (tokensQty / tokenOffering.totalTokens) * 100,
-        paymentMethod,
-        paymentStatus: 'success',
-        status: 'active',
-        purchaseDate: new Date(),
+        tokenOfferingId: listing.tokenOfferingId,
+        tokensRequested: tokensQty,
+        pricePerToken: listing.pricePerToken,
+        totalAmount: totalPurchaseAmount,
+        currency: listing.currency,
+        requestType: 'p2p_purchase',
+        status: 'tokens_assigned',
+        tokensAssignedAt: new Date(),
+        approvedAt: new Date(),
+        paymentConfirmedAt: new Date(),
       });
-      await buyerInvestment.save({ session });
+      await buyerPurchaseRequest.save({ session });
     }
 
     // 3. Update listing status
@@ -225,7 +224,7 @@ export async function POST(
       message: 'Tokens purchased successfully',
       data: {
         listing,
-        buyerInvestment,
+        buyerPurchaseRequest,
         tokensPurchased: tokensQty,
         totalAmount: totalPurchaseAmount,
         currency: listing.currency,
