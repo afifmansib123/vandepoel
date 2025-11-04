@@ -157,12 +157,6 @@ export async function POST(
     // --- Reserve the listing for this buyer ---
     // Note: Tokens will be transferred later when seller confirms payment and assigns tokens
 
-    // Check if the LISTING seller (not property owner) is a landlord or buyer (for notification routing)
-    const Landlord = (await import('@/app/models/Landlord')).default;
-    const listingSellerProfile = await Landlord.findOne({ cognitoId: listing.sellerId });
-    const isListingSellerLandlord = !!listingSellerProfile;
-    const sellerDashboardUrl = isListingSellerLandlord ? '/landlords/token-requests' : '/buyers/token-requests';
-
     // 2. Create or update buyer's purchase request
     let buyerPurchaseRequest = await TokenPurchaseRequest.findOne({
       buyerId: user.userId,
@@ -191,9 +185,9 @@ export async function POST(
         buyerId: user.userId,
         buyerName: buyerProfile?.name || buyerProfile?.email || 'Unknown',
         buyerEmail: buyerProfile?.email || '',
-        sellerId: property.sellerCognitoId,
-        sellerName: sellerProfile?.name || property.managedBy || '',
-        sellerEmail: sellerProfile?.email || '',
+        sellerId: listing.sellerId,  // P2P seller (Buyer who listed the tokens)
+        sellerName: listing.sellerName,
+        sellerEmail: listing.sellerEmail,
         propertyId: listing.propertyId,
         tokenOfferingId: listing.tokenOfferingId,
         tokensRequested: tokensQty,
@@ -204,7 +198,7 @@ export async function POST(
         message: `P2P purchase from listing ${listing._id}. Seller request: ${listing.tokenInvestmentId}`,
         status: 'approved',
         approvedAt: new Date(),
-        approvedBy: property.sellerCognitoId,
+        approvedBy: listing.sellerId,  // Approved by the P2P seller
         sellerPaymentInstructions: 'Please upload proof of payment after completing the transfer.',
       });
       await buyerPurchaseRequest.save({ session });
@@ -227,14 +221,14 @@ export async function POST(
 
     // Send notifications (outside transaction)
     try {
-      // Notify seller about purchase request
+      // Notify P2P seller (the buyer who listed tokens) about purchase request
       await createNotification({
         userId: listing.sellerId,
         type: 'token_request',
         title: 'P2P Token Purchase Request',
         message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Waiting for payment proof.`,
         relatedId: buyerPurchaseRequest._id.toString(),
-        relatedUrl: sellerDashboardUrl,
+        relatedUrl: '/buyers/token-requests',
         priority: 'high',
       });
 
