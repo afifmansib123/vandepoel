@@ -157,6 +157,12 @@ export async function POST(
     // --- Reserve the listing for this buyer ---
     // Note: Tokens will be transferred later when seller confirms payment and assigns tokens
 
+    // Check if seller is a landlord or buyer (for notification routing)
+    const Landlord = (await import('@/app/models/Landlord')).default;
+    const sellerProfile = await Landlord.findOne({ cognitoId: property.sellerCognitoId });
+    const isSellerLandlord = !!sellerProfile;
+    const sellerDashboardUrl = isSellerLandlord ? '/landlords/token-requests' : '/buyers/token-requests';
+
     // 2. Create or update buyer's purchase request
     let buyerPurchaseRequest = await TokenPurchaseRequest.findOne({
       buyerId: user.userId,
@@ -176,10 +182,6 @@ export async function POST(
         .sort({ requestId: -1 })
         .session(session);
       const requestId = latestRequest ? latestRequest.requestId + 1 : 1000;
-
-      // Fetch seller information for proper notification
-      const Landlord = (await import('@/app/models/Landlord')).default;
-      const sellerProfile = await Landlord.findOne({ cognitoId: property.sellerCognitoId });
 
       // Create new purchase request for P2P purchase
       // Status is 'approved' since the listing itself represents seller approval
@@ -232,7 +234,7 @@ export async function POST(
         title: 'P2P Token Purchase Request',
         message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Waiting for payment proof.`,
         relatedId: buyerPurchaseRequest._id.toString(),
-        relatedUrl: '/buyers/token-requests',
+        relatedUrl: sellerDashboardUrl,
         priority: 'high',
       });
 
