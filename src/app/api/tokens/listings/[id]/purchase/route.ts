@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/app/lib/dbConnect';
+import dbConnect from '@/utils/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
 import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
 import { getUserFromToken } from '@/lib/auth';
 import mongoose from 'mongoose';
-import { sendNotification } from '@/app/lib/notifications';
+import { createNotification } from '@/lib/notifications';
 
 /**
  * POST /api/tokens/listings/[id]/purchase
@@ -208,12 +208,12 @@ export async function POST(
 
     // Send notification to seller (outside transaction)
     try {
-      await sendNotification({
+      await createNotification({
         userId: listing.sellerId,
+        type: 'system',
         title: 'Token Sold!',
         message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} purchased ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}`,
-        type: 'token_sale',
-        link: '/buyers/portfolio',
+        relatedUrl: '/buyers/portfolio',
       });
     } catch (notifError) {
       console.error('Error sending notification:', notifError);
