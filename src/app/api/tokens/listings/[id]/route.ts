@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/utils/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
-import TokenInvestment from '@/app/models/TokenInvestment';
 import PropertyToken from '@/app/models/PropertyToken';
 import SellerProperty from '@/app/models/SellerProperty';
 import { getUserFromToken } from '@/lib/auth';
@@ -21,8 +20,7 @@ export async function GET(
 
     const listing = await TokenListing.findById(id)
       .populate('propertyId')
-      .populate('tokenOfferingId')
-      .populate('tokenInvestmentId');
+      .populate('tokenOfferingId');
 
     if (!listing) {
       return NextResponse.json(
