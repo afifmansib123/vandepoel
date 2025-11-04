@@ -19,6 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Users,
   Shield,
   DollarSign,
@@ -40,6 +47,7 @@ const P2PTokenDetailPage = () => {
 
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [tokensToPurchase, setTokensToPurchase] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
 
   const {
     data: listingResponse,
@@ -102,6 +110,7 @@ const P2PTokenDetailPage = () => {
       await purchaseFromListing({
         listingId: listing._id,
         tokensToPurchase,
+        proposedPaymentMethod: paymentMethod,
       }).unwrap();
 
       setIsPurchaseModalOpen(false);
@@ -330,6 +339,25 @@ const P2PTokenDetailPage = () => {
               />
               <p className="text-sm text-gray-500 mt-1">
                 Available: {listing.tokensForSale} tokens
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger id="paymentMethod">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Credit Card">Credit Card</SelectItem>
+                  <SelectItem value="Cryptocurrency">Cryptocurrency</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-500 mt-1">
+                How you plan to complete payment
               </p>
             </div>
 

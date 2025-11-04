@@ -3,6 +3,7 @@ import dbConnect from '@/utils/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
 import TokenPurchaseRequest from '@/app/models/TokenPurchaseRequest';
 import PropertyToken from '@/app/models/PropertyToken';
+import SellerProperty from '@/app/models/SellerProperty';
 import { getUserFromToken } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { createNotification } from '@/lib/notifications';
@@ -33,7 +34,7 @@ export async function POST(
     const buyerProfile = await Buyer.findOne({ cognitoId: user.userId });
 
     const body = await request.json();
-    const { tokensToPurchase, paymentMethod = 'P2P Transfer' } = body;
+    const { tokensToPurchase, proposedPaymentMethod = 'P2P Transfer' } = body;
 
     // Get the listing
     const { id } = await params;
@@ -139,6 +140,20 @@ export async function POST(
       );
     }
 
+    // Get property details for sellerId
+    const property = await SellerProperty.findById(
+      listing.propertyId
+    ).session(session);
+
+    if (!property) {
+      await session.abortTransaction();
+      session.endSession();
+      return NextResponse.json(
+        { success: false, message: 'Property not found' },
+        { status: 404 }
+      );
+    }
+
     // --- Execute the transfer ---
 
     // 1. Update seller's purchase request (reduce tokens)
@@ -170,14 +185,17 @@ export async function POST(
         buyerId: user.userId,
         buyerName: buyerProfile?.name || buyerProfile?.email || 'Unknown',
         buyerEmail: buyerProfile?.email || '',
+        sellerId: property.sellerCognitoId,
+        sellerName: property.managedBy || '',
         propertyId: listing.propertyId,
         tokenOfferingId: listing.tokenOfferingId,
         tokensRequested: tokensQty,
         pricePerToken: listing.pricePerToken,
         totalAmount: totalPurchaseAmount,
         currency: listing.currency,
-        requestType: 'p2p_purchase',
+        proposedPaymentMethod: proposedPaymentMethod,
         status: 'tokens_assigned',
+        tokensAssigned: tokensQty,
         tokensAssignedAt: new Date(),
         approvedAt: new Date(),
         paymentConfirmedAt: new Date(),
