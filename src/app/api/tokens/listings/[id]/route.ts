@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/app/lib/dbConnect';
 import TokenListing from '@/app/models/TokenListing';
+import TokenInvestment from '@/app/models/TokenInvestment';
+import PropertyToken from '@/app/models/PropertyToken';
+import SellerProperty from '@/app/models/SellerProperty';
 import { getUserFromToken } from '@/lib/auth';
 
 /**
@@ -9,12 +12,14 @@ import { getUserFromToken } from '@/lib/auth';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
 
-    const listing = await TokenListing.findById(params.id)
+    const { id } = await params;
+
+    const listing = await TokenListing.findById(id)
       .populate('propertyId')
       .populate('tokenOfferingId')
       .populate('tokenInvestmentId');
@@ -49,7 +54,7 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -62,7 +67,8 @@ export async function DELETE(
       );
     }
 
-    const listing = await TokenListing.findById(params.id);
+    const { id } = await params;
+    const listing = await TokenListing.findById(id);
 
     if (!listing) {
       return NextResponse.json(
@@ -123,7 +129,7 @@ export async function DELETE(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -139,7 +145,8 @@ export async function PATCH(
     const body = await request.json();
     const { pricePerToken, description } = body;
 
-    const listing = await TokenListing.findById(params.id);
+    const { id } = await params;
+    const listing = await TokenListing.findById(id);
 
     if (!listing) {
       return NextResponse.json(

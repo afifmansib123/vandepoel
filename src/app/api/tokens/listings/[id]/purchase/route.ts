@@ -19,7 +19,7 @@ import { sendNotification } from '@/app/lib/notifications';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -36,7 +36,8 @@ export async function POST(
     const { tokensToPurchase, paymentMethod = 'P2P Transfer' } = body;
 
     // Get the listing
-    const listing = await TokenListing.findById(params.id).session(session);
+    const { id } = await params;
+    const listing = await TokenListing.findById(id).session(session);
 
     if (!listing) {
       await session.abortTransaction();
