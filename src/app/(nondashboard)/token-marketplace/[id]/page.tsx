@@ -107,15 +107,15 @@ const P2PTokenDetailPage = () => {
     }
 
     try {
-      await purchaseFromListing({
+      const result = await purchaseFromListing({
         listingId: listing._id,
         tokensToPurchase,
         proposedPaymentMethod: paymentMethod,
       }).unwrap();
 
       setIsPurchaseModalOpen(false);
-      alert('Tokens purchased successfully! Check your portfolio.');
-      router.push('/buyers/portfolio');
+      alert(result.message + '\n\nPlease check your token requests to upload payment proof.');
+      router.push('/buyers/token-requests');
     } catch (error: any) {
       console.error('Purchase failed:', error);
       alert(error?.data?.message || 'Failed to purchase tokens');

@@ -303,61 +303,116 @@ export async function PATCH(
           );
         }
 
-        // Update token offering - increment tokensSold
-        const tokenOffering = await PropertyToken.findById(purchaseRequest.tokenOfferingId);
-        if (!tokenOffering) {
-          return NextResponse.json(
-            { success: false, message: "Token offering not found" },
-            { status: 404 }
+        // Check if this is a P2P purchase (message contains "P2P purchase from listing")
+        const isP2PPurchase = purchaseRequest.message?.includes('P2P purchase from listing');
+
+        if (isP2PPurchase) {
+          // P2P Transfer: Transfer tokens from seller to buyer
+          // Extract seller's request ID from message
+          const sellerRequestIdMatch = purchaseRequest.message?.match(/Seller request: ([a-f0-9]{24})/);
+
+          if (sellerRequestIdMatch) {
+            const sellerRequestId = sellerRequestIdMatch[1];
+            const sellerRequest = await TokenPurchaseRequest.findById(sellerRequestId);
+
+            if (sellerRequest) {
+              // Reduce seller's tokens
+              sellerRequest.tokensRequested -= purchaseRequest.tokensRequested;
+
+              // If seller has no tokens left, mark as completed
+              if (sellerRequest.tokensRequested === 0) {
+                sellerRequest.status = 'completed';
+                sellerRequest.completedAt = new Date();
+              }
+
+              await sellerRequest.save();
+            }
+          }
+
+          // Update buyer's request
+          purchaseRequest.status = "tokens_assigned";
+          purchaseRequest.tokensAssigned = purchaseRequest.tokensRequested;
+          purchaseRequest.tokensAssignedAt = new Date();
+          await purchaseRequest.save();
+
+          // Send notification to buyer
+          const tokensAssignedMsg = TokenNotificationMessages.TOKENS_ASSIGNED(
+            purchaseRequest.tokensRequested,
+            property.name || 'the property'
           );
-        }
+          await createNotification({
+            userId: purchaseRequest.buyerId,
+            type: 'token_request',
+            title: tokensAssignedMsg.title,
+            message: tokensAssignedMsg.message,
+            relatedId: purchaseRequest._id.toString(),
+            relatedUrl: `/buyers/portfolio`,
+            priority: 'high',
+          });
 
-        // Check if tokens are still available
-        const availableTokens = tokenOffering.totalTokens - tokenOffering.tokensSold;
-        if (purchaseRequest.tokensRequested > availableTokens) {
-          return NextResponse.json(
-            { success: false, message: "Not enough tokens available" },
-            { status: 400 }
+          return NextResponse.json({
+            success: true,
+            message: "Tokens transferred successfully from seller to buyer",
+            data: purchaseRequest,
+          });
+        } else {
+          // Regular property purchase: increment tokensSold
+          const tokenOffering = await PropertyToken.findById(purchaseRequest.tokenOfferingId);
+          if (!tokenOffering) {
+            return NextResponse.json(
+              { success: false, message: "Token offering not found" },
+              { status: 404 }
+            );
+          }
+
+          // Check if tokens are still available
+          const availableTokens = tokenOffering.totalTokens - tokenOffering.tokensSold;
+          if (purchaseRequest.tokensRequested > availableTokens) {
+            return NextResponse.json(
+              { success: false, message: "Not enough tokens available" },
+              { status: 400 }
+            );
+          }
+
+          // Increment tokensSold
+          tokenOffering.tokensSold += purchaseRequest.tokensRequested;
+          tokenOffering.investorCount += 1;
+
+          // Check if fully funded
+          if (tokenOffering.tokensSold >= tokenOffering.totalTokens) {
+            tokenOffering.status = "funded";
+          }
+
+          await tokenOffering.save();
+
+          // Update request status
+          purchaseRequest.status = "tokens_assigned";
+          purchaseRequest.tokensAssigned = purchaseRequest.tokensRequested;
+          purchaseRequest.tokensAssignedAt = new Date();
+
+          await purchaseRequest.save();
+
+          // Send notification to buyer
+          const tokensAssignedMsg = TokenNotificationMessages.TOKENS_ASSIGNED(
+            purchaseRequest.tokensRequested,
+            property.name || 'the property'
           );
+          await createNotification({
+            userId: purchaseRequest.buyerId,
+            type: 'token_request',
+            title: tokensAssignedMsg.title,
+            message: tokensAssignedMsg.message,
+            relatedId: purchaseRequest._id.toString(),
+            relatedUrl: `/buyers/portfolio`,
+            priority: 'high',
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: "Tokens assigned successfully",
+            data: purchaseRequest,
+          });
         }
-
-        // Increment tokensSold
-        tokenOffering.tokensSold += purchaseRequest.tokensRequested;
-        tokenOffering.investorCount += 1;
-
-        // Check if fully funded
-        if (tokenOffering.tokensSold >= tokenOffering.totalTokens) {
-          tokenOffering.status = "funded";
-        }
-
-        await tokenOffering.save();
-
-        // Update request status
-        purchaseRequest.status = "tokens_assigned";
-        purchaseRequest.tokensAssignedAt = new Date();
-
-        await purchaseRequest.save();
-
-        // Send notification to buyer
-        const tokensAssignedMsg = TokenNotificationMessages.TOKENS_ASSIGNED(
-          purchaseRequest.tokensRequested,
-          property.name || 'the property'
-        );
-        await createNotification({
-          userId: purchaseRequest.buyerId,
-          type: 'token_request',
-          title: tokensAssignedMsg.title,
-          message: tokensAssignedMsg.message,
-          relatedId: purchaseRequest._id.toString(),
-          relatedUrl: `/buyers/portfolio`,
-          priority: 'high',
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: "Tokens assigned successfully",
-          data: purchaseRequest,
-        });
 
       case "complete":
         // Mark as completed (final step)

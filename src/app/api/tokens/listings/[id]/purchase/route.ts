@@ -154,17 +154,8 @@ export async function POST(
       );
     }
 
-    // --- Execute the transfer ---
-
-    // 1. Update seller's purchase request (reduce tokens)
-    sellerPurchaseRequest.tokensRequested -= tokensQty;
-
-    // If seller has no more tokens, mark as completed/transferred
-    if (sellerPurchaseRequest.tokensRequested === 0) {
-      sellerPurchaseRequest.status = 'completed';
-    }
-
-    await sellerPurchaseRequest.save({ session });
+    // --- Reserve the listing for this buyer ---
+    // Note: Tokens will be transferred later when seller confirms payment and assigns tokens
 
     // 2. Create or update buyer's purchase request
     let buyerPurchaseRequest = await TokenPurchaseRequest.findOne({
@@ -180,13 +171,27 @@ export async function POST(
       buyerPurchaseRequest.totalAmount += totalPurchaseAmount;
       await buyerPurchaseRequest.save({ session });
     } else {
+      // Generate requestId manually (pre-save hook doesn't work well with transactions)
+      const latestRequest = await TokenPurchaseRequest.findOne()
+        .sort({ requestId: -1 })
+        .session(session);
+      const requestId = latestRequest ? latestRequest.requestId + 1 : 1000;
+
+      // Fetch seller information for proper notification
+      const Landlord = (await import('@/app/models/Landlord')).default;
+      const sellerProfile = await Landlord.findOne({ cognitoId: property.sellerCognitoId });
+
       // Create new purchase request for P2P purchase
+      // Status is 'approved' since the listing itself represents seller approval
+      // Buyer will need to upload payment proof and seller will confirm payment
       buyerPurchaseRequest = new TokenPurchaseRequest({
+        requestId,
         buyerId: user.userId,
         buyerName: buyerProfile?.name || buyerProfile?.email || 'Unknown',
         buyerEmail: buyerProfile?.email || '',
         sellerId: property.sellerCognitoId,
-        sellerName: property.managedBy || '',
+        sellerName: sellerProfile?.name || property.managedBy || '',
+        sellerEmail: sellerProfile?.email || '',
         propertyId: listing.propertyId,
         tokenOfferingId: listing.tokenOfferingId,
         tokensRequested: tokensQty,
@@ -194,28 +199,23 @@ export async function POST(
         totalAmount: totalPurchaseAmount,
         currency: listing.currency,
         proposedPaymentMethod: proposedPaymentMethod,
-        status: 'tokens_assigned',
-        tokensAssigned: tokensQty,
-        tokensAssignedAt: new Date(),
+        message: `P2P purchase from listing ${listing._id}. Seller request: ${listing.tokenInvestmentId}`,
+        status: 'approved',
         approvedAt: new Date(),
-        paymentConfirmedAt: new Date(),
+        approvedBy: property.sellerCognitoId,
+        sellerPaymentInstructions: 'Please upload proof of payment after completing the transfer.',
       });
       await buyerPurchaseRequest.save({ session });
     }
 
-    // 3. Update listing status
-    if (tokensQty === listing.tokensForSale) {
-      // All tokens sold, mark listing as sold
-      listing.status = 'sold';
-      listing.soldAt = new Date();
-      listing.buyerId = user.userId;
-      listing.buyerName = buyerProfile?.name || buyerProfile?.email || 'Unknown';
-      listing.buyerEmail = buyerProfile?.email || '';
-    } else {
-      // Partial purchase, reduce available tokens
-      listing.tokensForSale -= tokensQty;
-      listing.totalPrice = listing.tokensForSale * listing.pricePerToken;
-    }
+    // 3. Update listing status - reserve it for this buyer
+    // Mark as sold to prevent other buyers from purchasing
+    // Tokens will actually transfer when payment is confirmed
+    listing.status = 'sold';
+    listing.soldAt = new Date();
+    listing.buyerId = user.userId;
+    listing.buyerName = buyerProfile?.name || buyerProfile?.email || 'Unknown';
+    listing.buyerEmail = buyerProfile?.email || '';
 
     await listing.save({ session });
 
@@ -223,29 +223,43 @@ export async function POST(
     await session.commitTransaction();
     session.endSession();
 
-    // Send notification to seller (outside transaction)
+    // Send notifications (outside transaction)
     try {
+      // Notify seller about purchase request
       await createNotification({
         userId: listing.sellerId,
-        type: 'system',
-        title: 'Token Sold!',
-        message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} purchased ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}`,
-        relatedUrl: '/buyers/portfolio',
+        type: 'token_request',
+        title: 'P2P Token Purchase Request',
+        message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Waiting for payment proof.`,
+        relatedId: buyerPurchaseRequest._id.toString(),
+        relatedUrl: '/landlords/token-requests',
+        priority: 'high',
+      });
+
+      // Notify buyer about next steps
+      await createNotification({
+        userId: user.userId,
+        type: 'token_request',
+        title: 'Purchase Request Approved',
+        message: `Your purchase request for ${tokensQty} ${listing.tokenSymbol} tokens has been approved. Please upload proof of payment to complete the transaction.`,
+        relatedId: buyerPurchaseRequest._id.toString(),
+        relatedUrl: '/buyers/token-requests',
+        priority: 'high',
       });
     } catch (notifError) {
-      console.error('Error sending notification:', notifError);
-      // Don't fail the request if notification fails
+      console.error('Error sending notifications:', notifError);
+      // Don't fail the request if notifications fail
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Tokens purchased successfully',
+      message: 'Purchase request created successfully. Please upload proof of payment to complete the transaction.',
       data: {
-        listing,
-        buyerPurchaseRequest,
+        purchaseRequest: buyerPurchaseRequest,
         tokensPurchased: tokensQty,
         totalAmount: totalPurchaseAmount,
         currency: listing.currency,
+        nextStep: 'Upload payment proof in your token requests dashboard',
       },
     });
   } catch (error: any) {
