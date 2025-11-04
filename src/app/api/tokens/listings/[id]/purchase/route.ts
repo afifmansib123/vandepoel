@@ -157,11 +157,11 @@ export async function POST(
     // --- Reserve the listing for this buyer ---
     // Note: Tokens will be transferred later when seller confirms payment and assigns tokens
 
-    // Check if seller is a landlord or buyer (for notification routing)
+    // Check if the LISTING seller (not property owner) is a landlord or buyer (for notification routing)
     const Landlord = (await import('@/app/models/Landlord')).default;
-    const sellerProfile = await Landlord.findOne({ cognitoId: property.sellerCognitoId });
-    const isSellerLandlord = !!sellerProfile;
-    const sellerDashboardUrl = isSellerLandlord ? '/landlords/token-requests' : '/buyers/token-requests';
+    const listingSellerProfile = await Landlord.findOne({ cognitoId: listing.sellerId });
+    const isListingSellerLandlord = !!listingSellerProfile;
+    const sellerDashboardUrl = isListingSellerLandlord ? '/landlords/token-requests' : '/buyers/token-requests';
 
     // 2. Create or update buyer's purchase request
     let buyerPurchaseRequest = await TokenPurchaseRequest.findOne({
