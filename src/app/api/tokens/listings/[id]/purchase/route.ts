@@ -232,7 +232,7 @@ export async function POST(
         title: 'P2P Token Purchase Request',
         message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Waiting for payment proof.`,
         relatedId: buyerPurchaseRequest._id.toString(),
-        relatedUrl: '/landlords/token-requests',
+        relatedUrl: '/buyers/token-requests',
         priority: 'high',
       });
 
