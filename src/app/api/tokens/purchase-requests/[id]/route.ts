@@ -46,7 +46,8 @@ export async function GET(
     // Check authorization - buyer or seller can view
     const property = purchaseRequest.propertyId as any;
     const isBuyer = purchaseRequest.buyerId === user.userId;
-    const isSeller = property?.sellerCognitoId === user.userId;
+    // Seller can be either property owner (official sale) OR P2P seller (listing creator)
+    const isSeller = property?.sellerCognitoId === user.userId || purchaseRequest.sellerId === user.userId;
 
     if (!isBuyer && !isSeller) {
       return NextResponse.json(
@@ -108,7 +109,10 @@ export async function PATCH(
 
     const property = purchaseRequest.propertyId as any;
     const isBuyer = purchaseRequest.buyerId === user.userId;
-    const isSeller = property?.sellerCognitoId === user.userId;
+    // Seller can be either property owner (official sale) OR P2P seller (listing creator)
+    const isSeller = property?.sellerCognitoId === user.userId || purchaseRequest.sellerId === user.userId;
+    // Check if this is a P2P transaction
+    const isP2PTransaction = purchaseRequest.sellerId !== property?.sellerCognitoId;
 
     // Handle different actions
     switch (action) {
@@ -226,7 +230,7 @@ export async function PATCH(
 
         await purchaseRequest.save();
 
-        // Send notification to seller
+        // Send notification to seller (use correct URL for P2P vs official)
         const paymentProofMsg = TokenNotificationMessages.PAYMENT_PROOF_SUBMITTED(
           purchaseRequest.buyerName,
           property.name || 'the property'
@@ -237,7 +241,7 @@ export async function PATCH(
           title: paymentProofMsg.title,
           message: paymentProofMsg.message,
           relatedId: purchaseRequest._id.toString(),
-          relatedUrl: `/landlords/token-requests`,
+          relatedUrl: isP2PTransaction ? `/buyers/token-requests` : `/landlords/token-requests`,
           priority: 'high',
         });
 

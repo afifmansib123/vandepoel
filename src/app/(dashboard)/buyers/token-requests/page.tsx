@@ -7,7 +7,15 @@ import { useGetAuthUserQuery, useGetTokenPurchaseRequestsQuery, useUpdateTokenPu
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Clock,
   CheckCircle,
@@ -36,6 +44,12 @@ const BuyerTokenRequests = () => {
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  // State for approve/reject dialogs (for P2P sales where buyer is the seller)
+  const [approveDialog, setApproveDialog] = useState<{ open: boolean; requestId: string | null }>({ open: false, requestId: null });
+  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; requestId: string | null }>({ open: false, requestId: null });
+  const [paymentInstructions, setPaymentInstructions] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const requests = requestsResponse?.data || [];
 
@@ -172,8 +186,84 @@ const BuyerTokenRequests = () => {
         action: "cancel",
       }).unwrap();
       refetch();
+      toast.success("Request cancelled successfully");
     } catch (error) {
       console.error("Failed to cancel request:", error);
+      toast.error("Failed to cancel request. Please try again.");
+    }
+  };
+
+  // Handlers for P2P sales (when buyer is acting as seller)
+  const handleApprove = async () => {
+    if (!approveDialog.requestId) return;
+
+    try {
+      await updateRequest({
+        requestId: approveDialog.requestId,
+        action: "approve",
+        paymentInstructions: paymentInstructions,
+      }).unwrap();
+      setApproveDialog({ open: false, requestId: null });
+      setPaymentInstructions("");
+      refetch();
+      toast.success("Request approved successfully");
+    } catch (error) {
+      console.error("Failed to approve request:", error);
+      toast.error("Failed to approve request. Please try again.");
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectDialog.requestId || !rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      await updateRequest({
+        requestId: rejectDialog.requestId,
+        action: "reject",
+        rejectionReason: rejectionReason,
+      }).unwrap();
+      setRejectDialog({ open: false, requestId: null });
+      setRejectionReason("");
+      refetch();
+      toast.success("Request rejected");
+    } catch (error) {
+      console.error("Failed to reject request:", error);
+      toast.error("Failed to reject request. Please try again.");
+    }
+  };
+
+  const handleConfirmPayment = async (requestId: string) => {
+    if (!confirm("Confirm that you have received payment from the buyer?")) return;
+
+    try {
+      await updateRequest({
+        requestId,
+        action: "confirmPayment",
+      }).unwrap();
+      refetch();
+      toast.success("Payment confirmed successfully");
+    } catch (error) {
+      console.error("Failed to confirm payment:", error);
+      toast.error("Failed to confirm payment. Please try again.");
+    }
+  };
+
+  const handleAssignTokens = async (requestId: string) => {
+    if (!confirm("Assign tokens to the buyer? This will transfer tokens from your portfolio.")) return;
+
+    try {
+      await updateRequest({
+        requestId,
+        action: "assignTokens",
+      }).unwrap();
+      refetch();
+      toast.success("Tokens assigned successfully");
+    } catch (error) {
+      console.error("Failed to assign tokens:", error);
+      toast.error("Failed to assign tokens. Please try again.");
     }
   };
 
@@ -279,6 +369,9 @@ const BuyerTokenRequests = () => {
           {requests.map((request: any) => {
             const offering = request.tokenOfferingId;
             const property = request.propertyId;
+            // Check if current user is the seller (for P2P sales)
+            const isSeller = request.sellerId === buyerId;
+            const isP2P = request.message?.includes('P2P purchase');
 
             return (
               <Card key={request._id} className="overflow-hidden">
@@ -323,8 +416,123 @@ const BuyerTokenRequests = () => {
                     </div>
                   </div>
 
-                  {/* Status-specific content */}
-                  {request.status === "approved" && (
+                  {/* P2P Sale: Show buyer info when current user is the seller */}
+                  {isSeller && isP2P && (
+                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-4">
+                      <p className="font-semibold text-purple-900 mb-2">P2P Sale Request</p>
+                      <p className="text-sm text-purple-700 mb-2">
+                        <strong>Buyer:</strong> {request.buyerName} ({request.buyerEmail})
+                      </p>
+                      <p className="text-sm text-purple-700">
+                        This is a request to purchase tokens from your P2P listing.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Status-specific content for SELLERS (P2P) */}
+                  {isSeller && request.status === "pending" && (
+                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-yellow-900">Pending Your Approval</p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Review this request and approve or reject it.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex gap-3">
+                        <Button
+                          onClick={() => setApproveDialog({ open: true, requestId: request._id })}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Approve Request
+                        </Button>
+                        <Button
+                          onClick={() => setRejectDialog({ open: true, requestId: request._id })}
+                          variant="outline"
+                          className="border-red-500 text-red-600 hover:bg-red-50"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject Request
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isSeller && request.status === "payment_pending" && (
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                      <div className="flex items-start gap-3">
+                        <DollarSign className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-blue-900">Payment Proof Submitted</p>
+                          <p className="text-sm text-blue-700 mt-1">
+                            The buyer has uploaded payment proof. Review and confirm payment.
+                          </p>
+                          {request.paymentProof && (
+                            <a
+                              href={request.paymentProof}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline mt-2 block"
+                            >
+                              View Payment Proof →
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => handleConfirmPayment(request._id)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Confirm Payment Received
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isSeller && request.status === "payment_confirmed" && (
+                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-4">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-purple-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-purple-900">Payment Confirmed - Ready to Transfer</p>
+                          <p className="text-sm text-purple-700 mt-1">
+                            Assign tokens to complete this P2P sale.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => handleAssignTokens(request._id)}
+                          className="bg-purple-600 hover:bg-purple-700"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Assign Tokens to Buyer
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status-specific content for BUYERS */}
+                  {!isSeller && request.status === "pending" && (
+                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-yellow-900">Pending Approval</p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Your request is awaiting approval from the seller.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isSeller && request.status === "approved" && (
                     <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-4">
                       <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
@@ -367,14 +575,14 @@ const BuyerTokenRequests = () => {
                     </div>
                   )}
 
-                  {request.status === "payment_pending" && (
+                  {!isSeller && request.status === "payment_pending" && (
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
                       <div className="flex items-start gap-3">
                         <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
                           <p className="font-semibold text-blue-900">Awaiting Payment Confirmation</p>
                           <p className="text-sm text-blue-700 mt-1">
-                            The property owner is reviewing your payment proof.
+                            The seller is reviewing your payment proof.
                           </p>
                           {request.paymentSubmittedAt && (
                             <p className="text-xs text-blue-600 mt-2">
@@ -386,7 +594,7 @@ const BuyerTokenRequests = () => {
                     </div>
                   )}
 
-                  {request.status === "payment_confirmed" && (
+                  {!isSeller && request.status === "payment_confirmed" && (
                     <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-4">
                       <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-purple-600 mt-0.5" />
@@ -450,7 +658,7 @@ const BuyerTokenRequests = () => {
                         View Offering
                       </Button>
                     </Link>
-                    {request.status === "pending" && (
+                    {!isSeller && request.status === "pending" && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -467,6 +675,78 @@ const BuyerTokenRequests = () => {
           })}
         </div>
       )}
+
+      {/* Approve Dialog */}
+      <Dialog open={approveDialog.open} onOpenChange={(open) => setApproveDialog({ ...approveDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Purchase Request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="paymentInstructions">Payment Instructions (Optional)</Label>
+              <Textarea
+                id="paymentInstructions"
+                placeholder="Provide payment details or instructions for the buyer..."
+                value={paymentInstructions}
+                onChange={(e) => setPaymentInstructions(e.target.value)}
+                rows={4}
+                className="mt-2"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setApproveDialog({ open: false, requestId: null })}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleApprove}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Approve Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectDialog.open} onOpenChange={(open) => setRejectDialog({ ...rejectDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Purchase Request</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="rejectionReason">Reason for Rejection *</Label>
+              <Textarea
+                id="rejectionReason"
+                placeholder="Please provide a reason for rejecting this request..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                className="mt-2"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRejectDialog({ open: false, requestId: null })}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReject}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Reject Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

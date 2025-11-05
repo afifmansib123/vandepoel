@@ -178,8 +178,8 @@ export async function POST(
       const requestId = latestRequest ? latestRequest.requestId + 1 : 1000;
 
       // Create new purchase request for P2P purchase
-      // Status is 'approved' since the listing itself represents seller approval
-      // Buyer will need to upload payment proof and seller will confirm payment
+      // Status starts as 'pending' so the P2P seller can manually approve the request
+      // After approval, buyer will upload payment proof and seller will confirm payment
       buyerPurchaseRequest = new TokenPurchaseRequest({
         requestId,
         buyerId: user.userId,
@@ -196,10 +196,8 @@ export async function POST(
         currency: listing.currency,
         proposedPaymentMethod: proposedPaymentMethod,
         message: `P2P purchase from listing ${listing._id}. Seller request: ${listing.tokenInvestmentId}`,
-        status: 'approved',
-        approvedAt: new Date(),
-        approvedBy: listing.sellerId,  // Approved by the P2P seller
-        sellerPaymentInstructions: 'Please upload proof of payment after completing the transfer.',
+        status: 'pending',
+        sellerPaymentInstructions: 'The seller will review your request. After approval, please upload proof of payment.',
       });
       await buyerPurchaseRequest.save({ session });
     }
@@ -226,7 +224,7 @@ export async function POST(
         userId: listing.sellerId,
         type: 'token_request',
         title: 'P2P Token Purchase Request',
-        message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Waiting for payment proof.`,
+        message: `${buyerProfile?.name || buyerProfile?.email || 'A buyer'} wants to purchase ${tokensQty} ${listing.tokenSymbol} tokens from your listing for ${totalPurchaseAmount} ${listing.currency}. Please review and approve this request.`,
         relatedId: buyerPurchaseRequest._id.toString(),
         relatedUrl: '/buyers/token-requests',
         priority: 'high',
@@ -236,8 +234,8 @@ export async function POST(
       await createNotification({
         userId: user.userId,
         type: 'token_request',
-        title: 'Purchase Request Approved',
-        message: `Your purchase request for ${tokensQty} ${listing.tokenSymbol} tokens has been approved. Please upload proof of payment to complete the transaction.`,
+        title: 'Purchase Request Submitted',
+        message: `Your purchase request for ${tokensQty} ${listing.tokenSymbol} tokens has been submitted. Waiting for the seller to review and approve your request.`,
         relatedId: buyerPurchaseRequest._id.toString(),
         relatedUrl: '/buyers/token-requests',
         priority: 'high',
@@ -249,13 +247,13 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Purchase request created successfully. Please upload proof of payment to complete the transaction.',
+      message: 'Purchase request submitted successfully. Waiting for seller approval.',
       data: {
         purchaseRequest: buyerPurchaseRequest,
         tokensPurchased: tokensQty,
         totalAmount: totalPurchaseAmount,
         currency: listing.currency,
-        nextStep: 'Upload payment proof in your token requests dashboard',
+        nextStep: 'Wait for seller to approve your request in their token requests dashboard',
       },
     });
   } catch (error: any) {
