@@ -39,8 +39,13 @@ export async function GET(request: NextRequest) {
     let filter: any = {};
 
     if (role === "buyer" || !role) {
-      // Buyers see only their own requests
-      filter.buyerId = user.userId;
+      // Buyers see:
+      // 1. Requests where they are the buyer
+      // 2. P2P requests where they are the seller (someone buying from their listing)
+      filter.$or = [
+        { buyerId: user.userId },           // Their purchase requests
+        { sellerId: user.userId }           // P2P sales (they listed tokens)
+      ];
     } else if (role === "seller") {
       // Sellers see requests for their properties AND P2P requests where they are the seller
       // 1. Find properties owned by this seller (official token sales)
