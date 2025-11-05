@@ -42,14 +42,19 @@ export async function GET(request: NextRequest) {
       // Buyers see only their own requests
       filter.buyerId = user.userId;
     } else if (role === "seller") {
-      // Sellers see requests for their properties
-      // We need to find properties owned by this seller
+      // Sellers see requests for their properties AND P2P requests where they are the seller
+      // 1. Find properties owned by this seller (official token sales)
       const sellerProperties = await SellerProperty.find({
         sellerCognitoId: user.userId,
       }).select("_id");
 
       const propertyIds = sellerProperties.map((p) => p._id);
-      filter.propertyId = { $in: propertyIds };
+
+      // 2. Include both: properties they own OR where they are the P2P seller
+      filter.$or = [
+        { propertyId: { $in: propertyIds } },  // Official sales (landlord owns property)
+        { sellerId: user.userId }               // P2P sales (buyer is seller)
+      ];
     }
 
     // Add status filter if provided
