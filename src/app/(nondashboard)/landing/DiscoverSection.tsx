@@ -82,8 +82,8 @@ const DiscoverCard = ({
   title: string;
   description: string;
 }) => (
-  <div className="px-4 py-12 shadow-lg rounded-lg bg-primary-50 md:h-72">
-    <div className="bg-primary-700 p-[0.6rem] rounded-full mb-4 h-10 w-10 mx-auto">
+  <div className="px-4 py-12 shadow-lg rounded-lg bg-primary-50 md:h-72 hover:bg-slate-100">
+    <div className="bg-primary-700 p-[0.6rem] rounded-full mb-4 h-10 w-10 mx-auto hover:bg-secondary-500">
       <Image
         src={imageSrc}
         width={30}
