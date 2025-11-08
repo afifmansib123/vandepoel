@@ -20,7 +20,7 @@
     "success": "Succes"
   },
   "navbar": {
-    "tagline": "Begin uw reis naar het vinden van de perfecte woning.",
+    "tagline": "Neem controle over uw Vastgoed: Traceer- Volg- Verbind",
     "addProperty": "Nieuw Pand Toevoegen",
     "searchProperties": "Panden Zoeken",
     "goToDashboard": "Naar Dashboard",
@@ -91,8 +91,8 @@
   },
   "landing": {
     "hero": {
-      "title": "Vadepoel – uw 360° partner in vastgoedsucces",
-      "subtitle": "compleet vastgoedecosysteem voor moderne kopers, verkopers en makelaars.",
+      "title": "AssetXToekn - Uw 360° vastgoedbeheersplatform ",
+      "subtitle": "Toekomstbereide huiseigenaren, agenten en huurders",
       "searchPlaceholder": "Zoeken op stad, wijk of adres",
       "searchButton": "Zoeken"
     },
