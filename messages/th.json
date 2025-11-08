@@ -1,0 +1,92 @@
+{
+  "common": {
+    "signIn": "เข้าสู่ระบบ",
+    "signUp": "สมัครสมาชิก",
+    "signOut": "ออกจากระบบ",
+    "settings": "การตั้งค่า",
+    "search": "ค้นหา",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "submit": "ส่ง",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "view": "ดู",
+    "close": "ปิด",
+    "back": "กลับ",
+    "next": "ถัดไป",
+    "previous": "ก่อนหน้า",
+    "loading": "กำลังโหลด...",
+    "error": "ข้อผิดพลาด",
+    "success": "สำเร็จ"
+  },
+  "navbar": {
+    "tagline": "เริ่มต้นการเดินทางของคุณเพื่อค้นหาบ้านในฝัน",
+    "addProperty": "เพิ่มอสังหาริมทรัพย์ใหม่",
+    "searchProperties": "ค้นหาอสังหาริมทรัพย์",
+    "goToDashboard": "ไปที่แดชบอร์ด",
+    "openTutorial": "เปิดคู่มือ",
+    "closeTutorial": "ปิดคู่มือ"
+  },
+  "property": {
+    "title": "อสังหาริมทรัพย์",
+    "properties": "อสังหาริมทรัพย์ทั้งหมด",
+    "propertyType": "ประเภท",
+    "price": "ราคา",
+    "bedrooms": "ห้องนอน",
+    "bathrooms": "ห้องน้ำ",
+    "area": "พื้นที่",
+    "location": "ที่ตั้ง",
+    "description": "รายละเอียด",
+    "amenities": "สิ่งอำนวยความสะดวก",
+    "status": "สถานะ",
+    "available": "ว่าง",
+    "rented": "ให้เช่าแล้ว",
+    "sold": "ขายแล้ว"
+  },
+  "application": {
+    "applications": "ใบสมัคร",
+    "apply": "สมัคร",
+    "viewApplication": "ดูใบสมัคร",
+    "pending": "รอดำเนินการ",
+    "approved": "อนุมัติ",
+    "rejected": "ปฏิเสธ"
+  },
+  "contract": {
+    "contracts": "สัญญา",
+    "createContract": "สร้างสัญญา",
+    "viewContract": "ดูสัญญา",
+    "active": "ใช้งานอยู่",
+    "expired": "หมดอายุ"
+  },
+  "token": {
+    "tokens": "โทเค็น",
+    "tokenize": "แปลงเป็นโทเค็น",
+    "tokenOfferings": "ข้อเสนอโทเค็น",
+    "tokenRequests": "คำขอโทเค็น",
+    "tokenMarketplace": "ตลาดโทเค็น",
+    "myTokens": "โทเค็นของฉัน",
+    "portfolio": "พอร์ตโฟลิโอ",
+    "buyTokens": "ซื้อโทเค็น",
+    "sellTokens": "ขายโทเค็น"
+  },
+  "dashboard": {
+    "dashboard": "แดชบอร์ด",
+    "profile": "โปรไฟล์",
+    "notifications": "การแจ้งเตือน",
+    "favorites": "รายการโปรด",
+    "myListings": "รายการของฉัน"
+  },
+  "maintenance": {
+    "maintenance": "การบำรุงรักษา",
+    "maintenanceRequests": "คำขอซ่อมบำรุง",
+    "createRequest": "สร้างคำขอ",
+    "viewRequest": "ดูคำขอ"
+  },
+  "user": {
+    "tenant": "ผู้เช่า",
+    "landlord": "เจ้าของ",
+    "manager": "ผู้จัดการ",
+    "buyer": "ผู้ซื้อ",
+    "superAdmin": "ผู้ดูแลระบบ"
+  }
+}

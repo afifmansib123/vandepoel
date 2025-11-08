@@ -1,0 +1,92 @@
+{
+  "common": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign out",
+    "settings": "Settings",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "navbar": {
+    "tagline": "Start your journey to finding the perfect place to call home.",
+    "addProperty": "Add New Property",
+    "searchProperties": "Search Properties",
+    "goToDashboard": "Go to Dashboard",
+    "openTutorial": "Open Tutorial",
+    "closeTutorial": "Close Tutorial"
+  },
+  "property": {
+    "title": "Property",
+    "properties": "Properties",
+    "propertyType": "Property Type",
+    "price": "Price",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "area": "Area",
+    "location": "Location",
+    "description": "Description",
+    "amenities": "Amenities",
+    "status": "Status",
+    "available": "Available",
+    "rented": "Rented",
+    "sold": "Sold"
+  },
+  "application": {
+    "applications": "Applications",
+    "apply": "Apply",
+    "viewApplication": "View Application",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "contract": {
+    "contracts": "Contracts",
+    "createContract": "Create Contract",
+    "viewContract": "View Contract",
+    "active": "Active",
+    "expired": "Expired"
+  },
+  "token": {
+    "tokens": "Tokens",
+    "tokenize": "Tokenize",
+    "tokenOfferings": "Token Offerings",
+    "tokenRequests": "Token Requests",
+    "tokenMarketplace": "Token Marketplace",
+    "myTokens": "My Tokens",
+    "portfolio": "Portfolio",
+    "buyTokens": "Buy Tokens",
+    "sellTokens": "Sell Tokens"
+  },
+  "dashboard": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "favorites": "Favorites",
+    "myListings": "My Listings"
+  },
+  "maintenance": {
+    "maintenance": "Maintenance",
+    "maintenanceRequests": "Maintenance Requests",
+    "createRequest": "Create Request",
+    "viewRequest": "View Request"
+  },
+  "user": {
+    "tenant": "Tenant",
+    "landlord": "Landlord",
+    "manager": "Manager",
+    "buyer": "Buyer",
+    "superAdmin": "Super Admin"
+  }
+}

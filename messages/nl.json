@@ -1,0 +1,92 @@
+{
+  "common": {
+    "signIn": "Inloggen",
+    "signUp": "Registreren",
+    "signOut": "Uitloggen",
+    "settings": "Instellingen",
+    "search": "Zoeken",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "submit": "Verzenden",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "view": "Bekijken",
+    "close": "Sluiten",
+    "back": "Terug",
+    "next": "Volgende",
+    "previous": "Vorige",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes"
+  },
+  "navbar": {
+    "tagline": "Begin uw reis naar het vinden van de perfecte woning.",
+    "addProperty": "Nieuw Pand Toevoegen",
+    "searchProperties": "Panden Zoeken",
+    "goToDashboard": "Naar Dashboard",
+    "openTutorial": "Tutorial Openen",
+    "closeTutorial": "Tutorial Sluiten"
+  },
+  "property": {
+    "title": "Pand",
+    "properties": "Panden",
+    "propertyType": "Type Pand",
+    "price": "Prijs",
+    "bedrooms": "Slaapkamers",
+    "bathrooms": "Badkamers",
+    "area": "Oppervlakte",
+    "location": "Locatie",
+    "description": "Beschrijving",
+    "amenities": "Voorzieningen",
+    "status": "Status",
+    "available": "Beschikbaar",
+    "rented": "Verhuurd",
+    "sold": "Verkocht"
+  },
+  "application": {
+    "applications": "Aanvragen",
+    "apply": "Aanvragen",
+    "viewApplication": "Aanvraag Bekijken",
+    "pending": "In Behandeling",
+    "approved": "Goedgekeurd",
+    "rejected": "Afgewezen"
+  },
+  "contract": {
+    "contracts": "Contracten",
+    "createContract": "Contract Maken",
+    "viewContract": "Contract Bekijken",
+    "active": "Actief",
+    "expired": "Verlopen"
+  },
+  "token": {
+    "tokens": "Tokens",
+    "tokenize": "Tokeniseren",
+    "tokenOfferings": "Token Aanbiedingen",
+    "tokenRequests": "Token Aanvragen",
+    "tokenMarketplace": "Token Marktplaats",
+    "myTokens": "Mijn Tokens",
+    "portfolio": "Portfolio",
+    "buyTokens": "Tokens Kopen",
+    "sellTokens": "Tokens Verkopen"
+  },
+  "dashboard": {
+    "dashboard": "Dashboard",
+    "profile": "Profiel",
+    "notifications": "Meldingen",
+    "favorites": "Favorieten",
+    "myListings": "Mijn Advertenties"
+  },
+  "maintenance": {
+    "maintenance": "Onderhoud",
+    "maintenanceRequests": "Onderhoudsverzoeken",
+    "createRequest": "Verzoek Maken",
+    "viewRequest": "Verzoek Bekijken"
+  },
+  "user": {
+    "tenant": "Huurder",
+    "landlord": "Verhuurder",
+    "manager": "Beheerder",
+    "buyer": "Koper",
+    "superAdmin": "Hoofdbeheerder"
+  }
+}
