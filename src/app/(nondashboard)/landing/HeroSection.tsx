@@ -8,11 +8,13 @@ import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { setFilters } from "@/state";
+import { useTranslations } from "next-intl";
 
 const HeroSection = () => {
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const t = useTranslations();
 
   // Function to handle search logic
   const handleSearch = async () => {
@@ -147,10 +149,10 @@ const HeroSection = () => {
       >
         <div className="max-w-4xl mx-auto px-16 sm:px-12">
           <h1 className="text-5xl font-bold text-white mb-4">
-            Vadepoel – your 360° partner in property success
+            {t('landing.hero.title')}
           </h1>
           <p className="text-xl text-white mb-8">
-            complete property ecosystem for modern buyers, sellers, and agents.
+            {t('landing.hero.subtitle')}
           </p>
 
           <div className="flex justify-center">
@@ -159,14 +161,14 @@ const HeroSection = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Search by city, neighborhood or address"
+              placeholder={t('landing.hero.searchPlaceholder')}
               className="w-full max-w-lg rounded-none rounded-l-xl border-none bg-white h-12"
             />
             <Button
               onClick={handleSearch}
               className="bg-secondary-500 text-white rounded-none rounded-r-xl border-none hover:bg-secondary-600 h-12"
             >
-              Search
+              {t('landing.hero.searchButton')}
             </Button>
           </div>
         </div>

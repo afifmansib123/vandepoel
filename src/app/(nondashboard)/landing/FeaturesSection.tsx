@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -23,6 +24,8 @@ const itemVariants = {
 };
 
 const FeaturesSection = () => {
+  const t = useTranslations();
+
   return (
     <motion.div
       initial="hidden"
@@ -36,29 +39,33 @@ const FeaturesSection = () => {
           variants={itemVariants}
           className="text-3xl font-bold text-center mb-12 w-full sm:w-2/3 mx-auto"
         >
-          Quickly find the home you want using our effective search filters!
+          {t('landing.features.title')}
         </motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 xl:gap-16">
-          {[0, 1, 2].map((index) => (
+          {[
+            {
+              key: 'listProperty',
+              imageSrc: '/landing-search3.png',
+              linkHref: '/marketplace'
+            },
+            {
+              key: 'findProperty',
+              imageSrc: '/landing-search2.png',
+              linkHref: '/marketplace'
+            },
+            {
+              key: 'growBusiness',
+              imageSrc: '/landing-search1.png',
+              linkHref: '/marketplace'
+            }
+          ].map((feature, index) => (
             <motion.div key={index} variants={itemVariants}>
               <FeatureCard
-                imageSrc={`/landing-search${3 - index}.png`}
-                title={
-                  [
-                    "List Your Property for Maximum Exposure",
-                    "Find Your Dream Property with Confidence",
-                    "Grow Your Business with Premium Tools",
-                  ][index]
-                }
-                description={
-                  [
-                    "Showcase your properties to qualified buyers and investors with professional listings and marketing tools",
-                    "Browse verified property listings with detailed information, photos, and direct contact with sellers and agents.",
-                    "Access exclusive listings, connect with serious buyers and sellers, and manage your portfolio efficiently.",
-                  ][index]
-                }
-                linkText={["List Property", "Browse Properties", "Join Network"][index]}
-                linkHref={["/marketplace", "/marketplace", "/marketplace"][index]}
+                imageSrc={feature.imageSrc}
+                title={t(`landing.features.${feature.key}.title`)}
+                description={t(`landing.features.${feature.key}.description`)}
+                linkText={t(`landing.features.${feature.key}.button`)}
+                linkHref={feature.linkHref}
               />
             </motion.div>
           ))}

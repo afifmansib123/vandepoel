@@ -4,6 +4,7 @@
 import React from "react";
 import { SellerProperty, SellerMarketplaceFilters } from "@/types/sellerMarketplaceTypes";
 import SellerPropertyCard from "@/components/SellerPropertyCard"; // Ensure path is correct
+import { useTranslations } from "next-intl";
 
 interface SellerListingsProps {
   allProperties: SellerProperty[];
@@ -12,6 +13,7 @@ interface SellerListingsProps {
 }
 
 const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters, isLoading }) => {
+  const t = useTranslations();
 
   const filteredProperties = React.useMemo(() => {
     if (!allProperties) return []; // Handle case where allProperties might be initially undefined/null
@@ -60,17 +62,17 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
     return (
       <div className="p-4 text-center text-gray-600">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-2"></div>
-        Loading properties...
+        {t('marketplace.listings.loading')}
       </div>
     );
   }
 
   if (!allProperties || allProperties.length === 0) {
-     return <div className="p-6 text-center text-gray-500">No properties available at the moment.</div>;
+     return <div className="p-6 text-center text-gray-500">{t('marketplace.listings.noProperties')}</div>;
   }
 
   if (filteredProperties.length === 0 && !isLoading) { // Check !isLoading here
-    return <div className="p-6 text-center text-gray-500">No properties match your current filters. Try adjusting your search.</div>;
+    return <div className="p-6 text-center text-gray-500">{t('marketplace.listings.noMatch')}</div>;
   }
 
   // Construct location string for display, more robustly
@@ -80,11 +82,15 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
   if (filters.country) locationParts.push(filters.country);
   const locationFilterString = locationParts.join(', ');
 
+  const propertyCountText = filteredProperties.length === 1
+    ? t('marketplace.listings.propertyFound', { count: filteredProperties.length })
+    : t('marketplace.listings.propertiesFound', { count: filteredProperties.length });
+
   return (
     <div className="w-full h-full">
       <h3 className="text-base px-4 py-3 font-semibold sticky top-0 bg-gray-50 z-10 border-b border-gray-200 text-gray-700">
-        {filteredProperties.length} Propert{filteredProperties.length === 1 ? "y" : "ies"} Found
-        {locationFilterString && <span className="font-normal text-gray-600"> in {locationFilterString}</span>}
+        {propertyCountText}
+        {locationFilterString && <span className="font-normal text-gray-600"> {t('marketplace.listings.inLocation', { location: locationFilterString })}</span>}
       </h3>
       <div className="p-3 md:p-4 space-y-4">
         {filteredProperties.map((property) => (

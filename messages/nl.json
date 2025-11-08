@@ -88,5 +88,141 @@
     "manager": "Beheerder",
     "buyer": "Koper",
     "superAdmin": "Hoofdbeheerder"
+  },
+  "landing": {
+    "hero": {
+      "title": "Vadepoel – uw 360° partner in vastgoedsucces",
+      "subtitle": "compleet vastgoedecosysteem voor moderne kopers, verkopers en makelaars.",
+      "searchPlaceholder": "Zoeken op stad, wijk of adres",
+      "searchButton": "Zoeken"
+    },
+    "features": {
+      "title": "Vind snel het huis dat u zoekt met onze effectieve zoekfilters!",
+      "listProperty": {
+        "title": "Adverteer Uw Pand voor Maximale Zichtbaarheid",
+        "description": "Toon uw panden aan gekwalificeerde kopers en investeerders met professionele advertenties en marketingtools",
+        "button": "Pand Adverteren"
+      },
+      "findProperty": {
+        "title": "Vind Uw Droompand met Vertrouwen",
+        "description": "Bekijk geverifieerde pandenlijsten met gedetailleerde informatie, foto's en direct contact met verkopers en makelaars.",
+        "button": "Panden Bekijken"
+      },
+      "growBusiness": {
+        "title": "Laat Uw Bedrijf Groeien met Premium Tools",
+        "description": "Toegang tot exclusieve advertenties, verbind met serieuze kopers en verkopers, en beheer uw portfolio efficiënt.",
+        "button": "Word Lid van Netwerk"
+      }
+    },
+    "discover": {
+      "title": "Over Ons",
+      "subtitle": "Vind Vandaag Uw Droompand!",
+      "description": "Zoeken naar uw droompand is nog nooit zo eenvoudig geweest. Met onze gebruiksvriendelijke zoekfunctie kunt u snel het perfecte huis vinden dat aan al uw behoeften voldoet. Begin vandaag met zoeken en ontdek uw droompand! Voor makelaars bieden wij een uitgebreid platform om uw panden te adverteren en te beheren, waardoor het gemakkelijker dan ooit is om contact te maken met potentiële huurders en kopers. Of u nu wilt huren, kopen of verkopen, ons platform heeft alles. Word vandaag lid en ervaar de toekomst van vastgoedbeheer.",
+      "step1": {
+        "title": "Vind Vandaag Uw Droompand te Koop!",
+        "description": "Blader door onze uitgebreide collectie panden te koop op uw gewenste locatie"
+      },
+      "step2": {
+        "title": "Plan Uw Bezichtiging",
+        "description": "Zodra u het perfecte pand heeft gevonden, kunt u eenvoudig een bezichtiging plannen of contact opnemen met de verkoper met slechts een paar klikken"
+      },
+      "step3": {
+        "title": "Bezit Uw Nieuwe Woning",
+        "description": "Voltooi uw aankoop en trek in uw nieuwe pand om te genieten van uw droomhuis."
+      }
+    },
+    "cta": {
+      "title": "uw 360° partner in vastgoedsucces",
+      "description": "Ontdek een breed scala aan panden op uw gewenste locatie.",
+      "searchButton": "Zoeken",
+      "signUpButton": "Registreren"
+    },
+    "footer": {
+      "aboutUs": "Over Ons",
+      "contactUs": "Contact",
+      "faq": "Veelgestelde Vragen",
+      "terms": "Voorwaarden",
+      "privacy": "Privacy",
+      "privacyPolicy": "Privacybeleid",
+      "termsOfService": "Servicevoorwaarden",
+      "cookiePolicy": "Cookiebeleid",
+      "copyright": "© AssetXToken. Alle rechten voorbehouden."
+    }
+  },
+  "marketplace": {
+    "filters": {
+      "searchPlaceholder": "Panden zoeken...",
+      "country": "Land",
+      "stateProvince": "Provincie/Staat",
+      "city": "Stad",
+      "anyStateProvince": "Elke Provincie/Staat",
+      "anyCity": "Elke Stad",
+      "forSaleOrRent": "Te Koop of Te Huur",
+      "forSale": "Te Koop",
+      "forRent": "Te Huur",
+      "minPrice": "Min. Prijs",
+      "maxPrice": "Max. Prijs",
+      "propertyType": "Type Pand",
+      "anyType": "Elk Type",
+      "condoApartment": "Appartement",
+      "houseVilla": "Huis/Villa",
+      "townhouse": "Rijtjeshuis",
+      "land": "Grond",
+      "commercial": "Commercieel",
+      "other": "Andere",
+      "anyBeds": "Elke Aantal Slaapkamers",
+      "oneBedPlus": "1+ Slaapkamer",
+      "twoBedsPlus": "2+ Slaapkamers",
+      "threeBedsPlus": "3+ Slaapkamers",
+      "fourBedsPlus": "4+ Slaapkamers",
+      "fiveBedsPlus": "5+ Slaapkamers"
+    },
+    "listings": {
+      "loading": "Panden laden...",
+      "noProperties": "Momenteel zijn er geen panden beschikbaar.",
+      "noMatch": "Geen panden komen overeen met uw huidige filters. Probeer uw zoekopdracht aan te passen.",
+      "propertiesFound": "{count} Panden Gevonden",
+      "propertyFound": "{count} Pand Gevonden",
+      "inLocation": "in {location}"
+    }
+  },
+  "propertyCard": {
+    "beds": "Slaapkamers",
+    "baths": "Badkamers",
+    "sqft": "m²",
+    "posted": "Geplaatst",
+    "manage": "Beheren"
+  },
+  "pages": {
+    "buyerProperties": {
+      "title": "Mijn Panden",
+      "subtitle": "Bekijk uw getokeniseerde vastgoedinvesteringen",
+      "yourInvestment": "Uw Investering",
+      "tokens": "Tokens",
+      "ownership": "Eigendom",
+      "investment": "Investering",
+      "investmentSummary": "Investeringsoverzicht",
+      "totalProperties": "Totaal Panden",
+      "totalTokens": "Totaal Tokens",
+      "totalInvestment": "Totale Investering",
+      "noPropertiesYet": "Nog Geen Panden",
+      "noPropertiesDescription": "U heeft nog geen getokeniseerde panden gekocht. Bekijk de {marketplace} om te beginnen met investeren.",
+      "marketplace": "marktplaats",
+      "errorLoading": "Fout bij Laden van Panden",
+      "errorDescription": "We hebben een probleem ondervonden bij het ophalen van uw panden. Controleer uw verbinding en probeer het later opnieuw."
+    },
+    "favorites": {
+      "title": "Favoriete Panden",
+      "subtitle": "Bekijk en beheer uw opgeslagen pandenlijsten",
+      "youHave": "U heeft {count} favoriet {properties}",
+      "property": "pand",
+      "properties": "panden",
+      "onlyBuyersTenants": "Alleen kopers en huurders kunnen favoriete panden opslaan.",
+      "noFavoritesYet": "Nog geen favoriete panden",
+      "noFavoritesDescription": "Begin met het bekijken van panden en klik op het hartpictogram om uw favorieten hier op te slaan.",
+      "browseProperties": "Panden Bekijken",
+      "errorLoading": "Fout bij laden van favorieten: {error}",
+      "tryAgain": "Probeer Opnieuw"
+    }
   }
 }

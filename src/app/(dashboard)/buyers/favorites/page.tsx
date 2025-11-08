@@ -7,6 +7,7 @@ import { useGetAuthUserQuery } from "@/state/api";
 import React, { useState, useEffect } from "react";
 import { SellerPropertyLocation } from "@/types/sellerMarketplaceTypes";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 // Types for the API response
 interface FavoriteProperty {
@@ -32,6 +33,7 @@ interface BuyerWithFavorites {
 }
 
 const Favorites = () => {
+  const t = useTranslations();
   const { data: authUser, refetch: refetchAuthUser } = useGetAuthUserQuery();
   const [favoriteProperties, setFavoriteProperties] = useState<FavoriteProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,16 +104,16 @@ const Favorites = () => {
     return (
       <div className="dashboard-container">
         <Header
-          title="Favorited Properties"
-          subtitle="Browse and manage your saved property listings"
+          title={t('pages.favorites.title')}
+          subtitle={t('pages.favorites.subtitle')}
         />
         <div className="text-center py-8">
-          <p className="text-red-600 mb-4">Error loading favorites: {error}</p>
-          <button 
+          <p className="text-red-600 mb-4">{t('pages.favorites.errorLoading', { error })}</p>
+          <button
             onClick={fetchFavorites}
             className="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700"
           >
-            Try Again
+            {t('pages.favorites.tryAgain')}
           </button>
         </div>
       </div>
@@ -123,12 +125,12 @@ const Favorites = () => {
     return (
       <div className="dashboard-container">
         <Header
-          title="Favorited Properties"
-          subtitle="Browse and manage your saved property listings"
+          title={t('pages.favorites.title')}
+          subtitle={t('pages.favorites.subtitle')}
         />
         <div className="text-center py-8">
           <p className="text-gray-600">
-            Only buyers and tenants can save favorite properties.
+            {t('pages.favorites.onlyBuyersTenants')}
           </p>
         </div>
       </div>
@@ -138,15 +140,18 @@ const Favorites = () => {
   return (
     <div className="dashboard-container">
       <Header
-        title="Favorited Properties"
-        subtitle="Browse and manage your saved property listings"
+        title={t('pages.favorites.title')}
+        subtitle={t('pages.favorites.subtitle')}
       />
-      
+
       {/* Show favorites count */}
       {favoriteProperties.length > 0 && (
         <div className="mb-6">
           <p className="text-gray-600">
-            You have {favoriteProperties.length} favorite {favoriteProperties.length === 1 ? 'property' : 'properties'}
+            {t('pages.favorites.youHave', {
+              count: favoriteProperties.length,
+              properties: favoriteProperties.length === 1 ? t('pages.favorites.property') : t('pages.favorites.properties')
+            })}
           </p>
         </div>
       )}
@@ -168,30 +173,30 @@ const Favorites = () => {
       {favoriteProperties.length === 0 && (
         <div className="text-center py-12">
           <div className="max-w-md mx-auto">
-            <svg 
-              className="mx-auto h-16 w-16 text-gray-400 mb-4" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              className="mx-auto h-16 w-16 text-gray-400 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1} 
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
               />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No favorite properties yet
+              {t('pages.favorites.noFavoritesYet')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Start browsing properties and click the heart icon to save your favorites here.
+              {t('pages.favorites.noFavoritesDescription')}
             </p>
             <Link
               href="/marketplace"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
-              Browse Properties
+              {t('pages.favorites.browseProperties')}
             </Link>
           </div>
         </div>

@@ -88,5 +88,141 @@
     "manager": "Manager",
     "buyer": "Buyer",
     "superAdmin": "Super Admin"
+  },
+  "landing": {
+    "hero": {
+      "title": "Vadepoel – your 360° partner in property success",
+      "subtitle": "complete property ecosystem for modern buyers, sellers, and agents.",
+      "searchPlaceholder": "Search by city, neighborhood or address",
+      "searchButton": "Search"
+    },
+    "features": {
+      "title": "Quickly find the home you want using our effective search filters!",
+      "listProperty": {
+        "title": "List Your Property for Maximum Exposure",
+        "description": "Showcase your properties to qualified buyers and investors with professional listings and marketing tools",
+        "button": "List Property"
+      },
+      "findProperty": {
+        "title": "Find Your Dream Property with Confidence",
+        "description": "Browse verified property listings with detailed information, photos, and direct contact with sellers and agents.",
+        "button": "Browse Properties"
+      },
+      "growBusiness": {
+        "title": "Grow Your Business with Premium Tools",
+        "description": "Access exclusive listings, connect with serious buyers and sellers, and manage your portfolio efficiently.",
+        "button": "Join Network"
+      }
+    },
+    "discover": {
+      "title": "About Us",
+      "subtitle": "Find your Dream Property Today!",
+      "description": "Searching for your dream property has never been easier. With our user-friendly search feature, you can quickly find the perfect home that meets all your needs. Start your search today and discover your dream property! For Real estate agents, we offer a comprehensive platform to list and manage your properties, making it easier than ever to connect with potential renters and buyers. Whether you're looking to rent, buy, or sell, our platform has you covered. Join us today and experience the future of real estate management.",
+      "step1": {
+        "title": "Find your Dream Property for Sale Today!",
+        "description": "Browse through our extensive collection of properties for sale in your desired location"
+      },
+      "step2": {
+        "title": "Schedule Your Viewing",
+        "description": "Once you've found the perfect property, easily schedule a viewing or contact the seller with just a few clicks"
+      },
+      "step3": {
+        "title": "Own your New Home",
+        "description": "Complete your purchase and move into your new property to start enjoying your dream home."
+      }
+    },
+    "cta": {
+      "title": "your 360° partner in property success",
+      "description": "Discover a wide range of properties in your desired location.",
+      "searchButton": "Search",
+      "signUpButton": "Sign Up"
+    },
+    "footer": {
+      "aboutUs": "About Us",
+      "contactUs": "Contact Us",
+      "faq": "FAQ",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy",
+      "copyright": "© AssetXToken. All rights reserved."
+    }
+  },
+  "marketplace": {
+    "filters": {
+      "searchPlaceholder": "Search properties...",
+      "country": "Country",
+      "stateProvince": "State/Province",
+      "city": "City",
+      "anyStateProvince": "Any State/Province",
+      "anyCity": "Any City",
+      "forSaleOrRent": "For Sale or Rent",
+      "forSale": "For Sale",
+      "forRent": "For Rent",
+      "minPrice": "Min Price",
+      "maxPrice": "Max Price",
+      "propertyType": "Property Type",
+      "anyType": "Any Type",
+      "condoApartment": "Condo/Apartment",
+      "houseVilla": "House/Villa",
+      "townhouse": "Townhouse",
+      "land": "Land",
+      "commercial": "Commercial",
+      "other": "Other",
+      "anyBeds": "Any Beds",
+      "oneBedPlus": "1+ Bed",
+      "twoBedsPlus": "2+ Beds",
+      "threeBedsPlus": "3+ Beds",
+      "fourBedsPlus": "4+ Beds",
+      "fiveBedsPlus": "5+ Beds"
+    },
+    "listings": {
+      "loading": "Loading properties...",
+      "noProperties": "No properties available at the moment.",
+      "noMatch": "No properties match your current filters. Try adjusting your search.",
+      "propertiesFound": "{count} Properties Found",
+      "propertyFound": "{count} Property Found",
+      "inLocation": "in {location}"
+    }
+  },
+  "propertyCard": {
+    "beds": "Beds",
+    "baths": "Baths",
+    "sqft": "sqft",
+    "posted": "Posted",
+    "manage": "Manage"
+  },
+  "pages": {
+    "buyerProperties": {
+      "title": "My Properties",
+      "subtitle": "View your tokenized property investments",
+      "yourInvestment": "Your Investment",
+      "tokens": "Tokens",
+      "ownership": "Ownership",
+      "investment": "Investment",
+      "investmentSummary": "Investment Summary",
+      "totalProperties": "Total Properties",
+      "totalTokens": "Total Tokens",
+      "totalInvestment": "Total Investment",
+      "noPropertiesYet": "No Properties Yet",
+      "noPropertiesDescription": "You haven't purchased any tokenized properties yet. Browse the {marketplace} to start investing.",
+      "marketplace": "marketplace",
+      "errorLoading": "Error Loading Properties",
+      "errorDescription": "We encountered an issue while trying to fetch your properties. Please check your connection and try again later."
+    },
+    "favorites": {
+      "title": "Favorited Properties",
+      "subtitle": "Browse and manage your saved property listings",
+      "youHave": "You have {count} favorite {properties}",
+      "property": "property",
+      "properties": "properties",
+      "onlyBuyersTenants": "Only buyers and tenants can save favorite properties.",
+      "noFavoritesYet": "No favorite properties yet",
+      "noFavoritesDescription": "Start browsing properties and click the heart icon to save your favorites here.",
+      "browseProperties": "Browse Properties",
+      "errorLoading": "Error loading favorites: {error}",
+      "tryAgain": "Try Again"
+    }
   }
 }
