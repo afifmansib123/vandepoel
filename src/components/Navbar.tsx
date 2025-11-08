@@ -9,6 +9,7 @@ import { useGetAuthUserQuery, useGetNotificationsQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
 import { Bell, MessageCircle, Plus, Search, HelpCircle, X } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,8 +20,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { SidebarTrigger } from "./ui/sidebar";
 import TutorialModal from "./TutorialModal";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const Navbar = () => {
+  const t = useTranslations();
   const { data: authUser, isLoading: authLoading } = useGetAuthUserQuery();
   const { data: notificationsData } = useGetNotificationsQuery(
     { isRead: false },
@@ -99,13 +102,13 @@ const Navbar = () => {
               authUser.userRole?.toLowerCase() === "landlord" ? (
                 <>
                   <Plus className="h-4 w-4" />
-                  <span className="hidden md:block ml-2">Add New Property</span>
+                  <span className="hidden md:block ml-2">{t('navbar.addProperty')}</span>
                 </>
               ) : (
                 <>
                   <Search className="h-4 w-4" />
                   <span className="hidden md:block ml-2">
-                    Search Properties
+                    {t('navbar.searchProperties')}
                   </span>
                 </>
               )}
@@ -114,10 +117,11 @@ const Navbar = () => {
         </div>
         {!isDashboardPage && (
           <p className="text-primary-200 hidden md:block">
-            Start your journey to finding the perfect place to call home.
+            {t('navbar.tagline')}
           </p>
         )}
         <div className="flex items-center gap-5">
+          <LanguageSwitcher />
           {authLoading ? (
             <div className="flex items-center gap-2">
               <div className="animate-pulse bg-primary-600 rounded-full h-10 w-10"></div>
@@ -129,7 +133,7 @@ const Navbar = () => {
                 <div
                   className="w-6 h-6 cursor-pointer text-primary-200 hover:text-primary-400 transition-colors"
                   onClick={() => setIsTutorialModalOpen(!isTutorialModalOpen)}
-                  title={isTutorialModalOpen ? "Close Tutorial" : "Open Tutorial"}
+                  title={isTutorialModalOpen ? t('navbar.closeTutorial') : t('navbar.openTutorial')}
                 >
                   {isTutorialModalOpen ? (
                     <X className="w-6 h-6" />
@@ -178,7 +182,7 @@ const Navbar = () => {
                       )
                     }
                   >
-                    Go to Dashboard
+                    {t('navbar.goToDashboard')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-primary-200" />
                   <DropdownMenuItem
@@ -190,13 +194,13 @@ const Navbar = () => {
                       )
                     }
                   >
-                    Settings
+                    {t('common.settings')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer hover:!bg-primary-700 hover:!text-primary-100"
                     onClick={handleSignOut}
                   >
-                    Sign out
+                    {t('common.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -208,7 +212,7 @@ const Navbar = () => {
                   variant="outline"
                   className="text-white border-white bg-transparent hover:bg-white hover:text-primary-700 rounded-lg"
                 >
-                  Sign In
+                  {t('common.signIn')}
                 </Button>
               </Link>
               <Link href="/signup">
@@ -216,7 +220,7 @@ const Navbar = () => {
                   variant="secondary"
                   className="text-white bg-secondary-600 hover:bg-white hover:text-primary-700 rounded-lg"
                 >
-                  Sign Up
+                  {t('common.signUp')}
                 </Button>
               </Link>
             </>
