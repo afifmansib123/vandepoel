@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SellerMarketplaceFilters } from "@/types/sellerMarketplaceTypes"; // Adjust path if necessary
+import { useTranslations } from "next-intl";
 
 // Define location data structures locally or import if shared
 interface Province {
@@ -25,30 +26,6 @@ interface Country {
   code: string;
   provinces: Province[];
 }
-const ListingTypeOptions: Record<string, string> = {
-  any: "For Sale or Rent",
-  Sell: "For Sale",
-  Rent: "For Rent",
-};
-const SellerPropertyTypeOptions: Record<string, string> = {
-  any: "Any Type",
-  "Condominium / Apartment": "Condo/Apartment",
-  "House / Villa": "House/Villa",
-  Townhouse: "Townhouse",
-  Land: "Land",
-  "Commercial Property (Shop/Office/Warehouse)": "Commercial",
-  // Add more based on your PROPERTY_TYPES_OPTIONS from the form page
-  Other: "Other",
-};
-
-const BedOptions: Record<string, string> = {
-  any: "Any Beds",
-  "1": "1+ Bed",
-  "2": "2+ Beds",
-  "3": "3+ Beds",
-  "4": "4+ Beds",
-  "5": "5+ Beds", // Added for more options
-};
 
 interface SellerFiltersBarProps {
   onFiltersChange: (filters: SellerMarketplaceFilters) => void;
@@ -59,6 +36,34 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
   onFiltersChange,
   initialFilters,
 }) => {
+  const t = useTranslations();
+
+  // Helper functions to get translated options
+  const getListingTypeOptions = (): Record<string, string> => ({
+    any: t('marketplace.filters.forSaleOrRent'),
+    Sell: t('marketplace.filters.forSale'),
+    Rent: t('marketplace.filters.forRent'),
+  });
+
+  const getPropertyTypeOptions = (): Record<string, string> => ({
+    any: t('marketplace.filters.anyType'),
+    "Condominium / Apartment": t('marketplace.filters.condoApartment'),
+    "House / Villa": t('marketplace.filters.houseVilla'),
+    Townhouse: t('marketplace.filters.townhouse'),
+    Land: t('marketplace.filters.land'),
+    "Commercial Property (Shop/Office/Warehouse)": t('marketplace.filters.commercial'),
+    Other: t('marketplace.filters.other'),
+  });
+
+  const getBedOptions = (): Record<string, string> => ({
+    any: t('marketplace.filters.anyBeds'),
+    "1": t('marketplace.filters.oneBedPlus'),
+    "2": t('marketplace.filters.twoBedsPlus'),
+    "3": t('marketplace.filters.threeBedsPlus'),
+    "4": t('marketplace.filters.fourBedsPlus'),
+    "5": t('marketplace.filters.fiveBedsPlus'),
+  });
+
   // Search state
   const [searchInput, setSearchInput] = useState<string>(
     initialFilters.search || ""
@@ -262,11 +267,11 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
       {/* Search Input */}
       <Input
         type="text"
-        placeholder="Search properties..."
+        placeholder={t('marketplace.filters.searchPlaceholder')}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         className="w-full sm:w-auto min-w-[200px] md:min-w-[250px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500"
-        aria-label="Search properties"
+        aria-label={t('marketplace.filters.searchPlaceholder')}
       />
 
       {/* Country Select */}
@@ -275,7 +280,7 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
         onValueChange={(value) => setSelectedCountry(value)}
       >
         <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[150px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
-          <SelectValue placeholder="Country" />
+          <SelectValue placeholder={t('marketplace.filters.country')} />
         </SelectTrigger>
         <SelectContent>
           {allCountriesData.map((country) => (
@@ -295,10 +300,10 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
         disabled={!selectedCountry || currentProvinces.length === 0}
       >
         <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[160px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
-          <SelectValue placeholder="State/Province" />
+          <SelectValue placeholder={t('marketplace.filters.stateProvince')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="any-province">Any State/Province</SelectItem>
+          <SelectItem value="any-province">{t('marketplace.filters.anyStateProvince')}</SelectItem>
           {currentProvinces.map((province) => (
             <SelectItem key={province.name} value={province.name}>
               {province.name}
@@ -316,10 +321,10 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
         disabled={!selectedProvince || currentCities.length === 0}
       >
         <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[160px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
-          <SelectValue placeholder="City" />
+          <SelectValue placeholder={t('marketplace.filters.city')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="any-city">Any City</SelectItem>
+          <SelectItem value="any-city">{t('marketplace.filters.anyCity')}</SelectItem>
           {currentCities.map((cityName) => (
             <SelectItem key={cityName} value={cityName}>
               {cityName}
@@ -329,15 +334,15 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
       </Select>
 
       {/*rent or sell*/}
-            <Select
+      <Select
         value={listingTypeSelect}
         onValueChange={(value) => setListingTypeSelect(value)}
       >
         <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[150px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
-          <SelectValue placeholder="For Sale or Rent" />
+          <SelectValue placeholder={t('marketplace.filters.forSaleOrRent')} />
         </SelectTrigger>
         <SelectContent>
-          {Object.entries(ListingTypeOptions).map(([key, name]) => (
+          {Object.entries(getListingTypeOptions()).map(([key, name]) => (
             <SelectItem key={key} value={key}>
               {name}
             </SelectItem>
@@ -350,22 +355,22 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
       <div className="flex items-center gap-1 w-full sm:w-auto">
         <Input
           type="number"
-          placeholder="Min Price"
+          placeholder={t('marketplace.filters.minPrice')}
           value={minPriceInput}
           onChange={(e) => setMinPriceInput(e.target.value)}
           min="0"
           className="w-1/2 sm:w-24 md:w-28 rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500"
-          aria-label="Minimum price"
+          aria-label={t('marketplace.filters.minPrice')}
         />
         <span className="text-gray-400 px-1">-</span>
         <Input
           type="number"
-          placeholder="Max Price"
+          placeholder={t('marketplace.filters.maxPrice')}
           value={maxPriceInput}
           onChange={(e) => setMaxPriceInput(e.target.value)}
           min="0"
           className="w-1/2 sm:w-24 md:w-28 rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500"
-          aria-label="Maximum price"
+          aria-label={t('marketplace.filters.maxPrice')}
         />
       </div>
 
@@ -375,10 +380,10 @@ const SellerFiltersBar: React.FC<SellerFiltersBarProps> = ({
         onValueChange={(value) => setPropertyTypeSelect(value)}
       >
         <SelectTrigger className="w-full sm:w-auto min-w-[130px] md:min-w-[140px] rounded-lg border-gray-300 h-10 text-sm focus:ring-primary-500 focus:border-primary-500">
-          <SelectValue placeholder="Property Type" />
+          <SelectValue placeholder={t('marketplace.filters.propertyType')} />
         </SelectTrigger>
         <SelectContent>
-          {Object.entries(SellerPropertyTypeOptions).map(([key, name]) => (
+          {Object.entries(getPropertyTypeOptions()).map(([key, name]) => (
             <SelectItem key={key} value={key}>
               {name}
             </SelectItem>

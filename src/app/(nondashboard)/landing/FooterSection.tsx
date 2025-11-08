@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,8 +10,11 @@ import {
   faLinkedin,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { useTranslations } from "next-intl";
 
 const FooterSection = () => {
+  const t = useTranslations();
+
   return (
     <footer className="border-t border-gray-200 py-20">
       <div className="max-w-4xl mx-auto px-6 sm:px-8">
@@ -22,19 +27,19 @@ const FooterSection = () => {
           <nav className="mb-4">
             <ul className="flex space-x-6">
               <li>
-                <Link href="/about">About Us</Link>
+                <Link href="/about">{t('landing.footer.aboutUs')}</Link>
               </li>
               <li>
-                <Link href="/contact">Contact Us</Link>
+                <Link href="/contact">{t('landing.footer.contactUs')}</Link>
               </li>
               <li>
-                <Link href="/faq">FAQ</Link>
+                <Link href="/faq">{t('landing.footer.faq')}</Link>
               </li>
               <li>
-                <Link href="/terms">Terms</Link>
+                <Link href="/terms">{t('landing.footer.terms')}</Link>
               </li>
               <li>
-                <Link href="/privacy">Privacy</Link>
+                <Link href="/privacy">{t('landing.footer.privacy')}</Link>
               </li>
             </ul>
           </nav>
@@ -69,10 +74,10 @@ const FooterSection = () => {
           </div>
         </div>
         <div className="mt-8 text-center text-sm text-gray-500 flex justify-center space-x-4">
-          <span>© AssetXToken. All rights reserved.</span>
-          <Link href="/privacy">Privacy Policy</Link>
-          <Link href="/terms">Terms of Service</Link>
-          <Link href="/cookies">Cookie Policy</Link>
+          <span>{t('landing.footer.copyright')}</span>
+          <Link href="/privacy">{t('landing.footer.privacyPolicy')}</Link>
+          <Link href="/terms">{t('landing.footer.termsOfService')}</Link>
+          <Link href="/cookies">{t('landing.footer.cookiePolicy')}</Link>
         </div>
       </div>
     </footer>

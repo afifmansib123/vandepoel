@@ -7,6 +7,7 @@ import Loading from "@/components/Loading";
 import PropertyCard, { Property } from "@/components/properyCard";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 interface TokenInvestment {
   _id: string;
@@ -19,6 +20,7 @@ interface TokenInvestment {
 }
 
 const BuyerProperties = () => {
+  const t = useTranslations();
   const { data: authUser } = useGetAuthUserQuery();
   const [properties, setProperties] = useState<Property[]>([]);
   const [investments, setInvestments] = useState<TokenInvestment[]>([]);
@@ -97,11 +99,10 @@ const BuyerProperties = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <h2 className="text-2xl font-semibold text-red-600 mb-4">
-            Error Loading Properties
+            {t('pages.buyerProperties.errorLoading')}
           </h2>
           <p className="text-gray-700">
-            We encountered an issue while trying to fetch your properties.
-            Please check your connection and try again later.
+            {t('pages.buyerProperties.errorDescription')}
           </p>
         </div>
       </div>
@@ -111,8 +112,8 @@ const BuyerProperties = () => {
   return (
     <div className="dashboard-container bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
       <Header
-        title="My Properties"
-        subtitle="View your tokenized property investments"
+        title={t('pages.buyerProperties.title')}
+        subtitle={t('pages.buyerProperties.subtitle')}
       />
 
       {properties && properties.length > 0 ? (
@@ -132,16 +133,16 @@ const BuyerProperties = () => {
                   {investment && (
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm font-semibold text-blue-900">
-                        Your Investment
+                        {t('pages.buyerProperties.yourInvestment')}
                       </p>
                       <p className="text-xs text-blue-700">
-                        Tokens: {investment.tokensOwned}
+                        {t('pages.buyerProperties.tokens')}: {investment.tokensOwned}
                       </p>
                       <p className="text-xs text-blue-700">
-                        Ownership: {investment.ownershipPercentage.toFixed(2)}%
+                        {t('pages.buyerProperties.ownership')}: {investment.ownershipPercentage.toFixed(2)}%
                       </p>
                       <p className="text-xs text-blue-700">
-                        Investment: ${investment.totalInvestment.toLocaleString()}
+                        {t('pages.buyerProperties.investment')}: ${investment.totalInvestment.toLocaleString()}
                       </p>
                     </div>
                   )}
@@ -152,20 +153,20 @@ const BuyerProperties = () => {
 
           {/* Investment Summary */}
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-xl font-semibold mb-4">Investment Summary</h3>
+            <h3 className="text-xl font-semibold mb-4">{t('pages.buyerProperties.investmentSummary')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-gray-600">Total Properties</p>
+                <p className="text-sm text-gray-600">{t('pages.buyerProperties.totalProperties')}</p>
                 <p className="text-2xl font-bold text-green-600">{properties.length}</p>
               </div>
               <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-gray-600">Total Tokens</p>
+                <p className="text-sm text-gray-600">{t('pages.buyerProperties.totalTokens')}</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {investments.reduce((sum, inv) => sum + inv.tokensOwned, 0)}
                 </p>
               </div>
               <div className="p-4 bg-purple-50 rounded-lg">
-                <p className="text-sm text-gray-600">Total Investment</p>
+                <p className="text-sm text-gray-600">{t('pages.buyerProperties.totalInvestment')}</p>
                 <p className="text-2xl font-bold text-purple-600">
                   ${investments.reduce((sum, inv) => sum + inv.totalInvestment, 0).toLocaleString()}
                 </p>
@@ -190,14 +191,14 @@ const BuyerProperties = () => {
             />
           </svg>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">
-            No Properties Yet
+            {t('pages.buyerProperties.noPropertiesYet')}
           </h3>
           <p className="text-gray-500 mb-6">
-            You haven't purchased any tokenized properties yet. Browse the{" "}
-            <Link href="/marketplace" className="text-blue-500 underline">
-              marketplace
-            </Link>{" "}
-            to start investing.
+            {t('pages.buyerProperties.noPropertiesDescription', {
+              marketplace: <Link href="/marketplace" className="text-blue-500 underline">
+                {t('pages.buyerProperties.marketplace')}
+              </Link>
+            })}
           </p>
         </div>
       )}
