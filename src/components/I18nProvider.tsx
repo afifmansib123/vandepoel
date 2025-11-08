@@ -3,21 +3,26 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { defaultLocale, type Locale } from '@/lib/i18n-config';
+import enMessages from '../../messages/en.json';
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Locale>(defaultLocale);
-  const [messages, setMessages] = useState<any>(null);
+  const [messages, setMessages] = useState<any>(enMessages);
 
   useEffect(() => {
     // Load locale from localStorage
     const savedLocale = localStorage.getItem('locale') as Locale;
     const initialLocale = savedLocale || defaultLocale;
 
-    // Load messages
-    import(`../../messages/${initialLocale}.json`).then((msgs) => {
-      setMessages(msgs.default);
+    // Load messages for the saved locale if it's not English
+    if (initialLocale !== defaultLocale) {
+      import(`../../messages/${initialLocale}.json`).then((msgs) => {
+        setMessages(msgs.default);
+        setLocale(initialLocale);
+      });
+    } else {
       setLocale(initialLocale);
-    });
+    }
 
     // Listen for locale changes
     const handleStorageChange = (e: StorageEvent) => {
@@ -33,10 +38,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  if (!messages) {
-    return <>{children}</>;
-  }
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
