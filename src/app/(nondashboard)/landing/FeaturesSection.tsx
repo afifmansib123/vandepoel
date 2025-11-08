@@ -1,10 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -87,27 +95,57 @@ const FeatureCard = ({
   description: string;
   linkText: string;
   linkHref: string;
-}) => (
-  <div className="text-center">
-    <div className="p-4 rounded-lg mb-4 flex items-center justify-center h-48">
-      <Image
-        src={imageSrc}
-        width={400}
-        height={400}
-        className="w-full h-full object-contain"
-        alt={title}
-      />
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Truncate description to first 150 characters
+  const truncatedDescription = description.length > 150
+    ? description.substring(0, 150) + "..."
+    : description;
+
+  return (
+    <div className="text-center h-full flex flex-col">
+      <div className="p-4 rounded-lg mb-4 flex items-center justify-center h-48">
+        <Image
+          src={imageSrc}
+          width={400}
+          height={400}
+          className="w-full h-full object-contain"
+          alt={title}
+        />
+      </div>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="mb-4 whitespace-pre-line">{truncatedDescription}</p>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <button className="text-primary-600 hover:text-primary-700 font-medium mb-4">
+            Read more
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{title}</DialogTitle>
+          </DialogHeader>
+          <DialogDescription asChild>
+            <div className="space-y-4">
+              <p className="whitespace-pre-line text-base text-gray-700">{description}</p>
+              <div className="pt-4">
+                <Link
+                  href={linkHref}
+                  className="inline-block bg-primary-600 text-white rounded px-6 py-3 hover:bg-primary-700 transition-colors"
+                  scroll={false}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {linkText}
+                </Link>
+              </div>
+            </div>
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
-    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-    <p className="mb-4">{description}</p>
-    <Link
-      href={linkHref}
-      className="inline-block border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
-      scroll={false}
-    >
-      {linkText}
-    </Link>
-  </div>
-);
+  );
+};
 
 export default FeaturesSection;
