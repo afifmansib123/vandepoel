@@ -97,38 +97,38 @@
       "searchButton": "Search"
     },
     "features": {
-      "title": "Quickly find the home you want using our effective search filters!",
+      "title": "We have got you covered",
       "listProperty": {
-        "title": "List Your Property for Maximum Exposure",
-        "description": "Showcase your properties to qualified buyers and investors with professional listings and marketing tools",
-        "button": "List Property"
+        "title": "Landlords: Track & List your properties",
+        "description": "Track your properties and List them to qualified Buyers/Tenants/Agents\n\nFor Landlords/Property Managers:\nWhether you're looking to Track, Rent, Buy, or Sell, our platform has you covered.\n\n\"AssetXToken\" Your comprehensive \"360° property management platform\"\n\n\"AssetXToken\" If you are looking to centralize information related to your properties, issue logging.\n\nJoin us today and experience the future of real estate management",
+        "button": "Add your property here"
       },
       "findProperty": {
-        "title": "Find Your Dream Property with Confidence",
-        "description": "Browse verified property listings with detailed information, photos, and direct contact with sellers and agents.",
-        "button": "Browse Properties"
+        "title": "For Tenants:",
+        "description": "Searching the web for your off-market dream property has never been easier. With our user-friendly search feature, you can quickly find the perfect home that meets all your needs.\n\n• You can also reach out to agents/landlords directly and inform them of what you are looking for. Catch those off-market gems.\n• Avoid discussions when issues arrive and request your agent to use our tool to complete a move-in and move-out reports.\n• Nothing can be more frustrating than a Landlord/Agent that can't be reached. Our Troubleshooting tool connects you with the pre-selected repairmen or maintenance crew for a hassle free resolution of most issues that can occur during a rental contract.\n\nJoin us today and ensure your next house can feel like home.",
+        "button": "Start your search here"
       },
       "growBusiness": {
-        "title": "Grow Your Business with Premium Tools",
-        "description": "Access exclusive listings, connect with serious buyers and sellers, and manage your portfolio efficiently.",
-        "button": "Join Network"
+        "title": "Agents: Grow Your Network",
+        "description": "Access exclusive/Off-market listings, get connected and manage properties efficiently.\n\nFor Real Estate Agents:\nOur core goal is to offer a comprehensive \"360° property management platform\". So as an Agent benefit from this as you can list, track and manage properties within your portfolio, making it easier than ever to service your customer base whether they are landlords, tenants or buyers. Imagine having all the details of properties within your portfolio accessible wherever you are. Within a few clicks knowing which contractors you can call for a particular property. Hence relieving administrative burden and being able to provide a log towards landlords of issues which emerged.\n\nAs AssetXToken is focused on Asset Management we leave the selling and renting to you. Discover Off-Market or Co-Agent properties. As soon as a landlord flags availability of a property you can ask them to become a (co-)agent. Our tool has standard contracts available and it allows you to make a detailed (easy) inspection report.",
+        "button": "Check us out"
       }
     },
     "discover": {
       "title": "About Us",
       "subtitle": "Find your Dream Property Today!",
-      "description": "Searching for your dream property has never been easier. With our user-friendly search feature, you can quickly find the perfect home that meets all your needs. Start your search today and discover your dream property! For Real estate agents, we offer a comprehensive platform to list and manage your properties, making it easier than ever to connect with potential renters and buyers. Whether you're looking to rent, buy, or sell, our platform has you covered. Join us today and experience the future of real estate management.",
+      "description": "Modern times command a systematic and centralized application which covers all relevant property information ranging from; inspection reports; rental and sales-agreements, agent assignments, maintenance crew details, issue escalation and more.\n\nWe are not a 'property website', but a property management platform assisting landlords to manage their assets, for Realty Agents to contact property owners/buyers, for tenants to ensure their rental place is followed up and administered according to international norms even with issue-escalation flow which documents and archives issues arising during your stay.",
       "step1": {
         "title": "Find your Dream Property for Sale Today!",
         "description": "Browse through our extensive collection of properties for sale in your desired location"
       },
       "step2": {
-        "title": "Schedule Your Viewing",
-        "description": "Once you've found the perfect property, easily schedule a viewing or contact the seller with just a few clicks"
+        "title": "Found the perfect property",
+        "description": "Schedule a viewing with just a few clicks. Our streamlined booking system makes it easy to arrange property viewings at your convenience. Connect directly with landlords or agents, choose your preferred time slot, and receive instant confirmation. No more back-and-forth emails or phone calls – just simple, efficient scheduling that gets you one step closer to your dream home."
       },
       "step3": {
-        "title": "Own your New Home",
-        "description": "Complete your purchase and move into your new property to start enjoying your dream home."
+        "title": "Tokenize & Own your Property",
+        "description": "Experience the future of property ownership with AssetXToken's innovative tokenization feature. Convert your property into digital tokens, enabling fractional ownership and investment opportunities. This revolutionary approach allows you to diversify your portfolio, unlock liquidity, and participate in the digital real estate economy. Whether you're looking to invest in portions of premium properties or tokenize your own assets, our secure blockchain-based platform makes property investment more accessible and flexible than ever before."
       }
     },
     "cta": {
