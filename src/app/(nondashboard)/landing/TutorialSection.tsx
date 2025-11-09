@@ -8,15 +8,17 @@ import {
     Home, Wallet, ShoppingCart, DollarSign
 } from 'lucide-react';
 import AssetXTokenTutorialModal from "@/components/AssetXTokenTutorialModal";
+import { useTranslations } from "next-intl";
 
 const TutorialSection = () => {
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+    const t = useTranslations();
 
     const features = [
         {
             icon: Building2,
-            title: "Landlords: Tokenize Properties",
-            description: "Convert your properties into digital tokens and raise capital while maintaining control. Share rental income with token holders.",
+            title: t('tutorial.landlords.title') || "Landlords: Tokenize Properties",
+            description: t('tutorial.landlords.description') || "Convert your properties into digital tokens and raise capital while maintaining control. Share rental income with token holders.",
             color: "from-green-500 to-emerald-600",
             bgColor: "bg-green-50",
             iconBg: "bg-green-100",
@@ -24,8 +26,8 @@ const TutorialSection = () => {
         },
         {
             icon: Wallet,
-            title: "Buyers: Invest in Tokens",
-            description: "Purchase property tokens with a Buyer Account. Build a diversified portfolio and earn passive income from rental properties.",
+            title: t('tutorial.buyers.title') || "Buyers: Invest in Tokens",
+            description: t('tutorial.buyers.description') || "Purchase property tokens with a Buyer Account. Build a diversified portfolio and earn passive income from rental properties.",
             color: "from-purple-500 to-purple-600",
             bgColor: "bg-purple-50",
             iconBg: "bg-purple-100",
@@ -33,8 +35,8 @@ const TutorialSection = () => {
         },
         {
             icon: TrendingUp,
-            title: "B2B Market: Trade Tokens",
-            description: "Buy and sell tokens on our secondary marketplace. Enjoy liquidity that traditional real estate can't offer.",
+            title: t('tutorial.b2bMarket.title') || "B2B Market: Trade Tokens",
+            description: t('tutorial.b2bMarket.description') || "Buy and sell tokens on our secondary marketplace. Enjoy liquidity that traditional real estate can't offer.",
             color: "from-orange-500 to-red-600",
             bgColor: "bg-orange-50",
             iconBg: "bg-orange-100",
@@ -46,26 +48,26 @@ const TutorialSection = () => {
         {
             number: "1",
             icon: Home,
-            title: "Browse Properties",
-            description: "Explore tokenized real estate listings"
+            title: t('tutorial.steps.browse.title') || "Browse Properties",
+            description: t('tutorial.steps.browse.description') || "Explore tokenized real estate listings"
         },
         {
             number: "2",
             icon: ShoppingCart,
-            title: "Purchase Tokens",
-            description: "Buy fractional ownership shares"
+            title: t('tutorial.steps.purchase.title') || "Purchase Tokens",
+            description: t('tutorial.steps.purchase.description') || "Buy fractional ownership shares"
         },
         {
             number: "3",
             icon: DollarSign,
-            title: "Earn Income",
-            description: "Receive rental income distributions"
+            title: t('tutorial.steps.earn.title') || "Earn Income",
+            description: t('tutorial.steps.earn.description') || "Receive rental income distributions"
         },
         {
             number: "4",
             icon: TrendingUp,
-            title: "Trade & Grow",
-            description: "Resell tokens on B2B marketplace"
+            title: t('tutorial.steps.trade.title') || "Trade & Grow",
+            description: t('tutorial.steps.trade.description') || "Resell tokens on B2B marketplace"
         }
     ];
 
@@ -88,13 +90,13 @@ const TutorialSection = () => {
                 >
                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-secondary-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
                         <Coins className="w-4 h-4" />
-                        How AssetXToken Works
+                        {t('tutorial.header.badge') || "How AssetXToken Works"}
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        Tokenized Real Estate Made Simple
+                        {t('tutorial.header.title') || "Tokenized Real Estate Made Simple"}
                     </h2>
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                        Invest in real estate like never before. Buy tokens, earn rental income, and trade freely on our marketplace.
+                        {t('tutorial.header.subtitle') || "Invest in real estate like never before. Buy tokens, earn rental income, and trade freely on our marketplace."}
                     </p>
                 </motion.div>
 
@@ -127,7 +129,7 @@ const TutorialSection = () => {
                     className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-gray-200"
                 >
                     <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">
-                        Get Started in 4 Simple Steps
+                        {t('tutorial.stepsHeading') || "Get Started in 4 Simple Steps"}
                     </h3>
 
                     <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -178,11 +180,10 @@ const TutorialSection = () => {
                         </div>
                         <div className="flex-1">
                             <h4 className="text-lg font-bold text-gray-900 mb-2">
-                                ⚠️ Important: Buyer Account Required
+                                {t('tutorial.notice.title') || "⚠️ Important: Buyer Account Required"}
                             </h4>
                             <p className="text-gray-700">
-                                To participate in the tokenized marketplace, you <strong>must create a Buyer Account</strong>.
-                                This enables you to purchase tokens, earn rental income, and trade on the B2B marketplace.
+                                {t('tutorial.notice.description') || "To participate in the tokenized marketplace, you must create a Buyer Account. This enables you to purchase tokens, earn rental income, and trade on the B2B marketplace."}
                             </p>
                         </div>
                     </div>
@@ -203,7 +204,7 @@ const TutorialSection = () => {
                             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                         >
                             <Coins className="mr-2 w-5 h-5" />
-                            View Full Tutorial
+                            {t('tutorial.cta.viewTutorial') || "View Full Tutorial"}
                         </Button>
                         <Button
                             onClick={() => window.location.href = '/marketplace'}
@@ -211,12 +212,12 @@ const TutorialSection = () => {
                             variant="outline"
                             className="border-2 border-gray-300 hover:border-secondary-500 px-8 py-6 text-lg rounded-xl"
                         >
-                            Explore Marketplace
+                            {t('tutorial.cta.exploreMarketplace') || "Explore Marketplace"}
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>
                     </div>
                     <p className="mt-4 text-sm text-gray-500">
-                        New to tokenized real estate? Start with our tutorial to learn the basics.
+                        {t('tutorial.cta.helpText') || "New to tokenized real estate? Start with our tutorial to learn the basics."}
                     </p>
                 </motion.div>
             </div>
