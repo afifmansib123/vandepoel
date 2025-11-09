@@ -1,9 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+// Generate fixed positions for particles to avoid hydration mismatch
+const particlePositions = [
+  { left: 15, top: 20 },
+  { left: 85, top: 30 },
+  { left: 25, top: 70 },
+  { left: 75, top: 80 },
+  { left: 10, top: 50 },
+  { left: 90, top: 60 },
+];
+
 const TokenLoadingAnimation = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Background animated gradient */}
@@ -132,23 +148,23 @@ const TokenLoadingAnimation = () => {
         </motion.p>
       </div>
 
-      {/* Floating coin particles */}
-      {[...Array(6)].map((_, i) => (
+      {/* Floating coin particles - only render on client to avoid hydration mismatch */}
+      {mounted && particlePositions.map((pos, i) => (
         <motion.div
           key={i}
           className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-500/30"
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: `${pos.left}%`,
+            top: `${pos.top}%`,
           }}
           animate={{
             y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
+            x: [0, (i % 2 === 0 ? 10 : -10), 0],
             opacity: [0, 0.6, 0],
             scale: [0.5, 1, 0.5],
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: 3 + (i * 0.3),
             repeat: Infinity,
             delay: i * 0.5,
           }}
