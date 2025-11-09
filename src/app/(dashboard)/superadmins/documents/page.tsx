@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useGetAuthUserQuery } from "@/state/api";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 const DocumentManagement = () => {
   const { data: authUser } = useGetAuthUserQuery();
