@@ -163,48 +163,47 @@
       "emailLabel": "E-mail",
       "messageLabel": "Bericht",
       "submitButton": "Verzend Bericht"
-    },
-    "collab": {
+  },
+  "collab": {
       "title": "Samenwerking",
       "subtitle": "Laten we samen groeien",
       "intro": "AssetXToken is een merk van Vandepoel BV dat voornamelijk huurpanden in België bezit. Gebaseerd op de pijnpunten die we hebben ervaren, hebben we besloten dat het tijd was om een centraal platform te ontwikkelen om informatie over panden op te slaan en verhuurders/makelaars te ontlasten van administratieve zaken. Als nieuw Asset Management-tool realiseren we ons dat we nog maar onze eerste stappen zetten en altijd openstaan voor verbeteringen in flows en service en landspecifieke vereisten.",
       "callToAction": "Dus als u een soortgelijk portaal wilt uitrollen voor uw land of regio of als u ons functies wilt laten verbeteren voor België of Thailand, laat het ons weten.",
       "contactButton": "Neem Contact Op"
-    },
-    "faq": {
-      "title": "Veelgestelde Vragen",
-      "subtitle": "Vind antwoorden op veelgestelde vragen",
-      "q1": {
-        "question": "Wat is uw werkterrein?",
-        "answer": "AssetXToken is een merk van Vandepoel BV dat voornamelijk huurpanden in België bezit. Daarnaast werken we nu aan AssetXToken.com dat tot doel heeft de administratie voor Asset Managers, Verhuurders en Makelaars te verlichten en te faciliteren."
-      },
-      "features": {
-        "title": "Onze Kernfuncties:",
-        "feature1": "Off-Market Pand te Koop/Huur!",
-        "feature1Desc": "Blader door panden te Koop/Huur op uw gewenste locatie",
-        "feature2": "Plan Uw Bezichtiging",
-        "feature2Desc": "Plan een bezichtiging of neem contact op met de Verhuurder/Makelaar met slechts een paar klikken",
-        "feature3": "Pand Detail Centraal",
-        "feature3Desc": "Zet uw pand op de automatische piloot of beheer ze in ieder geval centraal",
-        "feature4": "Inspectierapporten Uitschrijven",
-        "feature4Desc": "Vermijd discussies en schrijf In/Uit-rapporten op de gemakkelijke manier",
-        "feature5": "Presentatiemap Creatie",
-        "feature5Desc": "Gebruik beschikbare foto's en info om een map te maken om aan klanten over te dragen",
-        "feature6": "Huurder Issue Escalatie",
-        "feature6Desc": "Stelt Huurders in staat om gemakkelijk problemen aan te kaarten en ontlast Makelaars en Verhuurders",
-        "feature7": "Pand Tracker",
-        "feature7Desc": "Monitor uw portfolio met gemak",
-        "feature8": "Financiële Besluitvorming",
-        "feature8Desc": "Besluitvorming gemakkelijker gemaakt",
-        "feature9": "Fractioneel Eigendom",
-        "feature9Desc": "Het uitwerken van co-investeringskader tot winstdeling door fractioneel eigendom/Tokenisatie"
-      },
-      "q2": {
-        "question": "Overweegt u samenwerkingen?",
-        "answer": "Zeker doen we dat. Als nieuw Asset Management-tool realiseren we ons dat we nog maar onze eerste stappen zetten en altijd openstaan voor verbeteringen in flows en service en landspecifieke vereisten. Dus als u een soortgelijk portaal wilt uitrollen voor uw land of regio of als u ons functies wilt laten verbeteren voor België of Thailand, laat het ons weten."
-      }
-    }
   },
+  "faq": {
+    "title": "Veelgestelde Vragen",
+    "subtitle": "Vind antwoorden op veelgestelde vragen",
+    "q1": {
+      "question": "Wat is uw werkterrein?",
+      "answer": "AssetXToken is een merk van Vandepoel BV dat voornamelijk huurpanden in België bezit. Daarnaast werken we nu aan AssetXToken.com dat tot doel heeft de administratie voor Asset Managers, Verhuurders en Makelaars te verlichten en te faciliteren."
+    },
+    "features": {
+      "title": "Onze Kernfuncties:",
+      "feature1": "Off-Market Pand te Koop/Huur!",
+      "feature1Desc": "Blader door panden te Koop/Huur op uw gewenste locatie",
+      "feature2": "Plan Uw Bezichtiging",
+      "feature2Desc": "Plan een bezichtiging of neem contact op met de Verhuurder/Makelaar met slechts een paar klikken",
+      "feature3": "Pand Detail Centraal",
+      "feature3Desc": "Zet uw pand op de automatische piloot of beheer ze in ieder geval centraal",
+      "feature4": "Inspectierapporten Uitschrijven",
+      "feature4Desc": "Vermijd discussies en schrijf In/Uit-rapporten op de gemakkelijke manier",
+      "feature5": "Presentatiemap Creatie",
+      "feature5Desc": "Gebruik beschikbare foto's en info om een map te maken om aan klanten over te dragen",
+      "feature6": "Huurder Issue Escalatie",
+      "feature6Desc": "Stelt Huurders in staat om gemakkelijk problemen aan te kaarten en ontlast Makelaars en Verhuurders",
+      "feature7": "Pand Tracker",
+      "feature7Desc": "Monitor uw portfolio met gemak",
+      "feature8": "Financiële Besluitvorming",
+      "feature8Desc": "Besluitvorming gemakkelijker gemaakt",
+      "feature9": "Fractioneel Eigendom",
+      "feature9Desc": "Het uitwerken van co-investeringskader tot winstdeling door fractioneel eigendom/Tokenisatie"
+    },
+    "q2": {
+      "question": "Overweegt u samenwerkingen?",
+      "answer": "Zeker doen we dat. Als nieuw Asset Management-tool realiseren we ons dat we nog maar onze eerste stappen zetten en altijd openstaan voor verbeteringen in flows en service en landspecifieke vereisten. Dus als u een soortgelijk portaal wilt uitrollen voor uw land of regio of als u ons functies wilt laten verbeteren voor België of Thailand, laat het ons weten."
+    }
+    },
   "about": {
     "title": "Over AssetXToken",
     "subtitle": "Uw uitgebreide 360° vastgoedbeheerplatform",
