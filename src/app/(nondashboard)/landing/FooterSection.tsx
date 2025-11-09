@@ -33,13 +33,16 @@ const FooterSection = () => {
                 <Link href="/contact">{t('landing.footer.contactUs')}</Link>
               </li>
               <li>
+                <Link href="/collab">{t('landing.footer.collab')}</Link>
+              </li>
+              <li>
                 <Link href="/faq">{t('landing.footer.faq')}</Link>
               </li>
               <li>
-                <Link href="/terms">{t('landing.footer.terms')}</Link>
+                <a href="/documents/terms.pdf" target="_blank" rel="noopener noreferrer">{t('landing.footer.terms')}</a>
               </li>
               <li>
-                <Link href="/privacy">{t('landing.footer.privacy')}</Link>
+                <a href="/documents/privacy.pdf" target="_blank" rel="noopener noreferrer">{t('landing.footer.privacy')}</a>
               </li>
             </ul>
           </nav>
@@ -75,9 +78,8 @@ const FooterSection = () => {
         </div>
         <div className="mt-8 text-center text-sm text-gray-500 flex justify-center space-x-4">
           <span>{t('landing.footer.copyright')}</span>
-          <Link href="/privacy">{t('landing.footer.privacyPolicy')}</Link>
-          <Link href="/terms">{t('landing.footer.termsOfService')}</Link>
-          <Link href="/cookies">{t('landing.footer.cookiePolicy')}</Link>
+          <a href="/documents/privacy.pdf" target="_blank" rel="noopener noreferrer">{t('landing.footer.privacyPolicy')}</a>
+          <a href="/documents/terms.pdf" target="_blank" rel="noopener noreferrer">{t('landing.footer.termsOfService')}</a>
         </div>
       </div>
     </footer>

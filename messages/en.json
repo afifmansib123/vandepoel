@@ -140,6 +140,7 @@
     "footer": {
       "aboutUs": "About Us",
       "contactUs": "Contact Us",
+      "collab": "Collab",
       "faq": "FAQ",
       "terms": "Terms",
       "privacy": "Privacy",
@@ -147,6 +148,66 @@
       "termsOfService": "Terms of Service",
       "cookiePolicy": "Cookie Policy",
       "copyright": "© AssetXToken. All rights reserved."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "Get in touch with us",
+      "companyName": "Vandepoel BV",
+      "address": "Runkstersteenweg 341",
+      "city": "3500 Hasselt (Belgium)",
+      "vat": "BE0438.636.268",
+      "email": "Info@AssetXToken.com",
+      "formTitle": "Email us through this form",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "messageLabel": "Message",
+      "submitButton": "Send Message"
+    },
+    "collab": {
+      "title": "Collaboration",
+      "subtitle": "Let's grow together",
+      "intro": "AssetXToken is a brand from Vandepoel BV which predominantly holds rental assets in Belgium. Based on the painpoints we experienced we decided it was time to develop a central platform to store information of properties and to relief Landlords/agents of administrative matters. As a new Asset Management tool we realize we are just taking our first steps and are always open for improvements in flows and service and country specific requirements.",
+      "callToAction": "So if you would like to roll-out a similar portal for your country or region or would like to see us enhance any features for Belgium or Thailand let us know.",
+      "contactButton": "Contact Us"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "subtitle": "Find answers to common questions",
+      "q1": {
+        "question": "What is your scope of operations?",
+        "answer": "AssetXToken is a brand from Vandepoel BV which predominantly holds rental assets in Belgium. Besides that we are now working on AssetXToken.com which aims to alleviate and facilitate the administration for Asset Managers, Landlords and Agents."
+      },
+      "features": {
+        "title": "Our Key Features:",
+        "feature1": "Off-Market Property for Sale/Rent!",
+        "feature1Desc": "Browse through properties for Sale/Rent in your desired location",
+        "feature2": "Schedule Your Viewing",
+        "feature2Desc": "Schedule a viewing or contact the Landlord/Agent with just a few clicks",
+        "feature3": "Property Detail Central",
+        "feature3Desc": "Auto-pilot your property or at least manage them centrally",
+        "feature4": "Issuing Inspection Reports",
+        "feature4Desc": "Avoid discussions and issue Move In/Out reports the easy way",
+        "feature5": "Presentation Folder Creation",
+        "feature5Desc": "Use available pictures and info to create a folder to hand over to clients",
+        "feature6": "Tenant Issue Escalation",
+        "feature6Desc": "Allows Tenants to easily raise issues and unburdens Agents and Landlords",
+        "feature7": "Property Tracker",
+        "feature7Desc": "Monitor your portfolio with ease",
+        "feature8": "Financial Decision Making",
+        "feature8Desc": "Decision making made easier",
+        "feature9": "Fractional Ownership",
+        "feature9Desc": "Laying-out co-invest framework to profit sharing through fractional ownership/Tokenization"
+      },
+      "q2": {
+        "question": "Do you consider collaborations?",
+        "answer": "Sure we do. As a new Asset Management tool we realize we are just taking our first steps and are always open for improvements in flows and service and country specific requirements. So if you would like to roll-out a similar portal for your country or region or would like to see us enhance any features for Belgium or Thailand let us know."
+      }
+    },
+    "about": {
+      "title": "About AssetXToken",
+      "subtitle": "Your comprehensive 360° property management platform",
+      "description": "Modern times command a systematic and centralized application which covers all relevant property information ranging from; inspection reports; rental and sales-agreements, agent assignments, maintenance crew details, issue escalation and more.",
+      "mission": "We are not a 'property website', but a property management platform assisting landlords to manage their assets, for Realty Agents to contact property owners/buyers, for tenants to ensure their rental place is followed up and administered according to international norms even with issue-escalation flow which documents and archives issues arising during your stay."
     }
   },
   "marketplace": {
