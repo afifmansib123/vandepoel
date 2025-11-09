@@ -148,8 +148,9 @@
       "termsOfService": "Servicevoorwaarden",
       "cookiePolicy": "Cookiebeleid",
       "copyright": "© AssetXToken. Alle rechten voorbehouden."
-    },
-    "contact": {
+    }
+  },
+  "contact": {
       "title": "Contact",
       "subtitle": "Neem contact met ons op",
       "companyName": "Vandepoel BV",
@@ -202,13 +203,13 @@
         "question": "Overweegt u samenwerkingen?",
         "answer": "Zeker doen we dat. Als nieuw Asset Management-tool realiseren we ons dat we nog maar onze eerste stappen zetten en altijd openstaan voor verbeteringen in flows en service en landspecifieke vereisten. Dus als u een soortgelijk portaal wilt uitrollen voor uw land of regio of als u ons functies wilt laten verbeteren voor België of Thailand, laat het ons weten."
       }
-    },
-    "about": {
-      "title": "Over AssetXToken",
-      "subtitle": "Uw uitgebreide 360° vastgoedbeheerplatform",
-      "description": "Moderne tijden vereisen een systematische en gecentraliseerde applicatie die alle relevante vastgoedinformatie dekt, variërend van; inspectierapporten; huur- en verkoopovereenkomsten, makelaarsassignaties, onderhoudsploegdetails, issue-escalatie en meer.",
-      "mission": "Wij zijn geen 'vastgoedwebsite', maar een vastgoedbeheerplatform dat verhuurders helpt hun assets te beheren, voor Vastgoedmakelaars om contact op te nemen met vastgoedeigenaren/kopers, voor huurders om ervoor te zorgen dat hun huurplaats wordt opgevolgd en beheerd volgens internationale normen, zelfs met issue-escalatieflow die problemen documenteert en archiveert die zich voordoen tijdens uw verblijf."
     }
+  },
+  "about": {
+    "title": "Over AssetXToken",
+    "subtitle": "Uw uitgebreide 360° vastgoedbeheerplatform",
+    "description": "Moderne tijden vereisen een systematische en gecentraliseerde applicatie die alle relevante vastgoedinformatie dekt, variërend van; inspectierapporten; huur- en verkoopovereenkomsten, makelaarsassignaties, onderhoudsploegdetails, issue-escalatie en meer.",
+    "mission": "Wij zijn geen 'vastgoedwebsite', maar een vastgoedbeheerplatform dat verhuurders helpt hun assets te beheren, voor Vastgoedmakelaars om contact op te nemen met vastgoedeigenaren/kopers, voor huurders om ervoor te zorgen dat hun huurplaats wordt opgevolgd en beheerd volgens internationale normen, zelfs met issue-escalatieflow die problemen documenteert en archiveert die zich voordoen tijdens uw verblijf."
   },
   "marketplace": {
     "filters": {

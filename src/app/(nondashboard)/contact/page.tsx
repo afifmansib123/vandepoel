@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import FooterSection from "../landing/FooterSection";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 const ContactPage = () => {
   const t = useTranslations();
