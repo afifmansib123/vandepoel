@@ -30,11 +30,14 @@ const SellerMarketplacePage = () => {
     const params = new URLSearchParams(searchParams.toString());
     const filtersFromUrl: Partial<SellerMarketplaceFilters> = {};
 
+    // Read search filter from URL
+    if (params.has('search')) filtersFromUrl.search = params.get('search')!;
+
     // Read new location filters from URL
     if (params.has('country')) filtersFromUrl.country = params.get('country')!;
     if (params.has('state')) filtersFromUrl.state = params.get('state')!;
     if (params.has('city')) filtersFromUrl.city = params.get('city')!;
-    if (params.has('listingType')) filtersFromUrl.listingType = params.get('listingType') as ('Sell' | 'Rent'); 
+    if (params.has('listingType')) filtersFromUrl.listingType = params.get('listingType') as ('Sell' | 'Rent');
 
     // Existing filter reading
     if (params.has('salePriceRange')) {
@@ -95,15 +98,25 @@ const SellerMarketplacePage = () => {
     return allProperties.filter(property => {
         let match = true;
 
-if (memoizedFilters.listingType) {
-  const expectedStatus = memoizedFilters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
-  if (property.propertyStatus !== expectedStatus) {
-    match = false;
-  }
-}
+        // Search filter - property name or description
+        if (memoizedFilters.search) {
+          const searchTerm = memoizedFilters.search.toLowerCase();
+          const propertyName = property.name?.toLowerCase() || "";
+          const propertyDescription = property.description?.toLowerCase() || "";
+          if (!propertyName.includes(searchTerm) && !propertyDescription.includes(searchTerm)) {
+            match = false;
+          }
+        }
+
+        if (match && memoizedFilters.listingType) {
+          const expectedStatus = memoizedFilters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
+          if (property.propertyStatus !== expectedStatus) {
+            match = false;
+          }
+        }
 
         // Location filtering
-        if (memoizedFilters.country && property.location.country !== memoizedFilters.country) {
+        if (match && memoizedFilters.country && property.location.country !== memoizedFilters.country) {
             match = false;
         }
         if (match && memoizedFilters.state && property.location.state !== memoizedFilters.state) {
