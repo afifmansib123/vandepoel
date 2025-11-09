@@ -29,6 +29,7 @@ import {
   Bell,
   Tag,
   TrendingUp,
+  Activity,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
@@ -157,6 +158,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
     case "superadmin":
       sidebarTitle = "Admin Panel";
       navLinks = [
+        { href: "/superadmins/activity-log", label: "Daily Activity", icon: Activity },
         { href: "/superadmins/profile", label: "User Management", icon: User },
         { href: "/superadmins/properties", label: "All Properties", icon: Home },
         { href: "/superadmins/token-approvals", label: "Token Approvals", icon: Coins },
