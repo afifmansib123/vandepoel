@@ -19,14 +19,23 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
     if (!allProperties) return []; // Handle case where allProperties might be initially undefined/null
 
     return allProperties.filter(property => {
+      // Search filter - property name or description
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        const propertyName = property.name?.toLowerCase() || "";
+        const propertyDescription = property.description?.toLowerCase() || "";
+        if (!propertyName.includes(searchTerm) && !propertyDescription.includes(searchTerm)) {
+          return false;
+        }
+      }
 
       if (filters.listingType && filters.listingType !== "any") {
-  // Map the concise filter value ("Rent") to the descriptive data value ("For Rent")
-  const expectedStatus = filters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
-  if (property.propertyStatus !== expectedStatus) {
-    return false;
-  }
-}
+        // Map the concise filter value ("Rent") to the descriptive data value ("For Rent")
+        const expectedStatus = filters.listingType === 'Rent' ? 'For Rent' : 'For Sale';
+        if (property.propertyStatus !== expectedStatus) {
+          return false;
+        }
+      }
 
       // Location filtering
       // Ensure property.location exists and has the country, state, city fields
@@ -39,7 +48,7 @@ const SellerListings: React.FC<SellerListingsProps> = ({ allProperties, filters,
       if (filters.city && (!property.location || property.location.city !== filters.city)) {
         return false;
       }
-      
+
 
       // Other filters
       if (filters.propertyType && filters.propertyType !== "any" && property.propertyType !== filters.propertyType) {
