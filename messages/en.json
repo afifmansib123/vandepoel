@@ -131,6 +131,47 @@
         "description": "Experience the future of property ownership with AssetXToken's innovative tokenization feature. Convert your property into digital tokens, enabling fractional ownership and investment opportunities. This revolutionary approach allows you to diversify your portfolio, unlock liquidity, and participate in the digital real estate economy. Whether you're looking to invest in portions of premium properties or tokenize your own assets, our secure blockchain-based platform makes property investment more accessible and flexible than ever before."
       }
     },
+    "tutorial": {
+      "badge": "How AssetXToken Works",
+      "title": "Tokenized Real Estate Made Simple",
+      "subtitle": "Invest in real estate like never before. Buy tokens, earn rental income, and trade freely on our marketplace.",
+      "landlords": {
+        "title": "Landlords: Tokenize Properties",
+        "description": "Convert your properties into digital tokens and raise capital while maintaining control. Share rental income with token holders."
+      },
+      "buyers": {
+        "title": "Buyers: Invest in Tokens",
+        "description": "Purchase property tokens with a Buyer Account. Build a diversified portfolio and earn passive income from rental properties."
+      },
+      "b2bMarket": {
+        "title": "B2B Market: Trade Tokens",
+        "description": "Buy and sell tokens on our secondary marketplace. Enjoy liquidity that traditional real estate can't offer."
+      },
+      "stepsTitle": "Get Started in 4 Simple Steps",
+      "step1": {
+        "title": "Browse Properties",
+        "description": "Explore tokenized real estate listings"
+      },
+      "step2": {
+        "title": "Purchase Tokens",
+        "description": "Buy fractional ownership shares"
+      },
+      "step3": {
+        "title": "Earn Income",
+        "description": "Receive rental income distributions"
+      },
+      "step4": {
+        "title": "Trade & Grow",
+        "description": "Resell tokens on B2B marketplace"
+      },
+      "notice": {
+        "title": "⚠️ Important: Buyer Account Required",
+        "description": "To participate in the tokenized marketplace, you <strong>must create a Buyer Account</strong>. This enables you to purchase tokens, earn rental income, and trade on the B2B marketplace."
+      },
+      "viewTutorialButton": "View Full Tutorial",
+      "exploreMarketplaceButton": "Explore Marketplace",
+      "footerText": "New to tokenized real estate? Start with our tutorial to learn the basics."
+    },
     "cta": {
       "title": "your 360° partner in property success",
       "description": "Discover a wide range of properties in your desired location.",

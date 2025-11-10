@@ -131,6 +131,47 @@
         "description": "Ervaar de toekomst van vastgoedbezit met AssetXToken's innovatieve tokenisatiefunctie. Converteer uw pand naar digitale tokens, waardoor fractioneel eigendom en investeringsmogelijkheden mogelijk worden. Deze revolutionaire aanpak stelt u in staat om uw portfolio te diversifiëren, liquiditeit te ontsluiten en deel te nemen aan de digitale vastgoedeconomie. Of u nu wilt investeren in delen van premium panden of uw eigen assets wilt tokeniseren, ons veilige blockchain-gebaseerde platform maakt vastgoedinvestering toegankelijker en flexibeler dan ooit tevoren."
       }
     },
+    "tutorial": {
+      "badge": "Hoe AssetXToken Werkt",
+      "title": "Getokeniseerd Vastgoed Simpel Gemaakt",
+      "subtitle": "Investeer in vastgoed zoals nooit tevoren. Koop tokens, verdien huurinkomsten en handel vrijelijk op onze marktplaats.",
+      "landlords": {
+        "title": "Verhuurders: Tokeniseer Panden",
+        "description": "Converteer uw panden naar digitale tokens en verzamel kapitaal terwijl u de controle behoudt. Deel huurinkomsten met tokenhouders."
+      },
+      "buyers": {
+        "title": "Kopers: Investeer in Tokens",
+        "description": "Koop pandtokens met een Kopersaccount. Bouw een gediversifieerde portfolio op en verdien passief inkomen uit huurpanden."
+      },
+      "b2bMarket": {
+        "title": "B2B Markt: Handel Tokens",
+        "description": "Koop en verkoop tokens op onze secundaire marktplaats. Geniet van liquiditeit die traditioneel vastgoed niet kan bieden."
+      },
+      "stepsTitle": "Start in 4 Eenvoudige Stappen",
+      "step1": {
+        "title": "Bekijk Panden",
+        "description": "Verken getokeniseerde vastgoedlijsten"
+      },
+      "step2": {
+        "title": "Koop Tokens",
+        "description": "Koop fractionele eigendomsaandelen"
+      },
+      "step3": {
+        "title": "Verdien Inkomen",
+        "description": "Ontvang huurinkomstenuitkeringen"
+      },
+      "step4": {
+        "title": "Handel & Groei",
+        "description": "Verkoop tokens op B2B-marktplaats"
+      },
+      "notice": {
+        "title": "⚠️ Belangrijk: Kopersaccount Vereist",
+        "description": "Om deel te nemen aan de getokeniseerde marktplaats, <strong>moet u een Kopersaccount aanmaken</strong>. Dit stelt u in staat om tokens te kopen, huurinkomsten te verdienen en te handelen op de B2B-marktplaats."
+      },
+      "viewTutorialButton": "Bekijk Volledige Tutorial",
+      "exploreMarketplaceButton": "Verken Marktplaats",
+      "footerText": "Nieuw bij getokeniseerd vastgoed? Begin met onze tutorial om de basis te leren."
+    },
     "cta": {
       "title": "uw 360° partner in vastgoedsucces",
       "description": "Ontdek een breed scala aan panden op uw gewenste locatie.",

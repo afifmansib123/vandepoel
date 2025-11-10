@@ -7,24 +7,30 @@ import FeaturesSection from "./FeaturesSection";
 import DiscoverSection from "./DiscoverSection";
 import CallToActionSection from "./CallToActionSection";
 import FooterSection from "./FooterSection";
-import AssetXTokenTutorialModal from "@/components/AssetXTokenTutorialModal";
+import TokenizedFeaturesWelcomeModal from "@/components/TokenizedFeaturesWelcomeModal";
 
 const Landing = () => {
-  const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen the tutorial before
-    const hasSeenTutorial = localStorage.getItem('assetxtoken_tutorial_seen');
+    // Check if user has seen the welcome modal before
+    const hasSeenWelcome = localStorage.getItem('assetxtoken_welcome_seen');
 
-    if (!hasSeenTutorial) {
+    if (!hasSeenWelcome) {
       // Show modal after a short delay for better UX
       const timer = setTimeout(() => {
-        setShowTutorialModal(true);
+        setShowWelcomeModal(true);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
   }, []);
+
+  const handleCloseWelcomeModal = () => {
+    setShowWelcomeModal(false);
+    // Mark as seen so it doesn't show again
+    localStorage.setItem('assetxtoken_welcome_seen', 'true');
+  };
 
   return (
     <div>
@@ -35,10 +41,10 @@ const Landing = () => {
       <CallToActionSection />
       <FooterSection />
 
-      {/* Tutorial modal for first-time visitors */}
-      <AssetXTokenTutorialModal
-        isOpen={showTutorialModal}
-        onClose={() => setShowTutorialModal(false)}
+      {/* Welcome modal for first-time visitors explaining tokenized features */}
+      <TokenizedFeaturesWelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleCloseWelcomeModal}
       />
     </div>
   );
