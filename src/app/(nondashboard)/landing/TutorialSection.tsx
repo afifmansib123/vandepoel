@@ -175,7 +175,9 @@ const TutorialSection = () => {
                             <h4 className="text-lg font-bold text-gray-900 mb-2">
                                 {t('landing.tutorial.notice.title')}
                             </h4>
-                            <p className="text-gray-700" dangerouslySetInnerHTML={{ __html: t('landing.tutorial.notice.description') }} />
+                            <p className="text-gray-700">
+                                {t('landing.tutorial.notice.description')}
+                            </p>
                         </div>
                     </div>
                 </motion.div>
