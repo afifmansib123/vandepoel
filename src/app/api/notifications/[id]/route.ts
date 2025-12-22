@@ -6,17 +6,19 @@ import { getUserFromToken } from '@/lib/auth';
 // PATCH /api/notifications/[id] - Mark notification as read
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
+
+    const { id } = await context.params;
 
     const user = await getUserFromToken(request);
     if (!user) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const notification = await Notification.findById(params.id);
+    const notification = await Notification.findById(id);
 
     if (!notification) {
       return NextResponse.json({
@@ -53,7 +55,7 @@ export async function PATCH(
 // DELETE /api/notifications/[id] - Delete specific notification
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -63,7 +65,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const notification = await Notification.findById(params.id);
+    const notification = await Notification.findById(id);
 
     if (!notification) {
       return NextResponse.json({
@@ -80,7 +82,7 @@ export async function DELETE(
       }, { status: 403 });
     }
 
-    await Notification.findByIdAndDelete(params.id);
+    await Notification.findByIdAndDelete(id);
 
     return NextResponse.json({
       success: true,

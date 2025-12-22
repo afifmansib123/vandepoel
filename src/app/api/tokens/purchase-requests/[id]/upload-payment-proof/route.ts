@@ -20,7 +20,7 @@ const S3_BUCKET_NAME = process.env.S3_SELLER_PROPERTY_BUCKET_NAME || process.env
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate user
@@ -70,10 +70,12 @@ export async function POST(
       );
     }
 
+    const { id } = await context.params;
+
     // Upload to S3
     const timestamp = Date.now();
     const sanitizedFileName = file.name.replace(/\s+/g, '_');
-    const key = `token-purchase-requests/payment-proofs/${params.id}/${timestamp}-${sanitizedFileName}`;
+    const key = `token-purchase-requests/payment-proofs/${id}/${timestamp}-${sanitizedFileName}`;
 
     const uploadParams = {
       Bucket: S3_BUCKET_NAME,

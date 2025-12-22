@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     await dbConnect();
-    
+
     const { tokenId } = await params;
 
     const tokenOffering = await PropertyToken.findById(tokenId)

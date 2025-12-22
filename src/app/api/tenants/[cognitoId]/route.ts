@@ -153,8 +153,8 @@ export async function PUT(
   const params = await Promise.resolve(context.params);
   
   if (params) {
-    console.log("Type of params.cognitoId:", typeof params.cognitoId);
-    console.log("Value of params.cognitoId:", params.cognitoId);
+    console.log("Type of cognitoId:", typeof cognitoId);
+    console.log("Value of cognitoId:", cognitoId);
   } else {
     console.log("params is undefined or null");
   }

@@ -94,7 +94,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> } // The context param is simplified here
 ) {
   await dbConnect();
-  
+
   const { id: idParam } = await params;
   
   console.log(`GET /api/seller-properties/ with parameter: ${idParam}`);
