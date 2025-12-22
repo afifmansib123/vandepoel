@@ -28,6 +28,8 @@ export async function POST(
   try {
     await dbConnect();
 
+    const { id } = await params;
+
     const user = await getUserFromToken(request);
     // Get buyer profile for name and email
     const Buyer = (await import('@/app/models/Buyer')).default;
@@ -37,7 +39,6 @@ export async function POST(
     const { tokensToPurchase, proposedPaymentMethod = 'P2P Transfer' } = body;
 
     // Get the listing
-    const { id } = await params;
     const listing = await TokenListing.findById(id).session(session);
 
     if (!listing) {

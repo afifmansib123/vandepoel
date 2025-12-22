@@ -13,7 +13,7 @@ import SellerProperty from "@/app/models/SellerProperty";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -26,7 +26,9 @@ export async function GET(
       );
     }
 
-    const purchaseRequest = await TokenPurchaseRequest.findById(params.id)
+    const { id } = await context.params;
+
+    const purchaseRequest = await TokenPurchaseRequest.findById(id)
       .populate({
         path: "propertyId",
         select: "title location price images propertyType sellerCognitoId",
@@ -83,7 +85,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
@@ -99,7 +101,9 @@ export async function PATCH(
     const body = await request.json();
     const { action, paymentProof, rejectionReason, paymentInstructions } = body;
 
-    const purchaseRequest = await TokenPurchaseRequest.findById(params.id).populate("propertyId");
+    const { id } = await context.params;
+
+    const purchaseRequest = await TokenPurchaseRequest.findById(id).populate("propertyId");
     if (!purchaseRequest) {
       return NextResponse.json(
         { success: false, message: "Purchase request not found" },

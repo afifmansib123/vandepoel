@@ -41,6 +41,7 @@ export async function POST(
   { params }: { params: Promise<{ cognitoId: string; propertyId: string }> }
 ) {
   await dbConnect();
+
   const { cognitoId, propertyId: propertyIdStr } = await params;
 
   const result = await getBuyerAndProperty(cognitoId, propertyIdStr);
