@@ -20,6 +20,10 @@ import { I18nProvider } from "@/components/I18nProvider";
 export const metadata: Metadata = {
   title: "AssetXToken - 360° Property Management & Tokenization Platform",
   description: "AssetXToken: Complete property management solution with tokenization. Manage rentals, contracts, maintenance, and invest in fractional property ownership.",
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({
