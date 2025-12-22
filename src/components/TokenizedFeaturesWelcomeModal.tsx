@@ -109,7 +109,7 @@ const TokenizedFeaturesWelcomeModal: React.FC<TokenizedFeaturesWelcomeModalProps
                                 <div className="flex items-start gap-3">
                                     <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
                                     <p className="text-gray-700">
-                                        <strong>Liquidity:</strong> Trade your tokens on our B2B marketplace - no need to wait months to sell
+                                        <strong>Liquidity:</strong> Trade your tokens on our aftermarket - no need to wait months to sell
                                     </p>
                                 </div>
                             </div>
@@ -177,7 +177,7 @@ const TokenizedFeaturesWelcomeModal: React.FC<TokenizedFeaturesWelcomeModalProps
                                     <ul className="mt-3 space-y-1 text-gray-700">
                                         <li>✅ Purchase property tokens</li>
                                         <li>✅ Receive rental income distributions</li>
-                                        <li>✅ Trade on the B2B marketplace</li>
+                                        <li>✅ Trade on the aftermarket</li>
                                         <li>✅ Build and manage your token portfolio</li>
                                     </ul>
                                 </div>

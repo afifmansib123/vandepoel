@@ -308,6 +308,55 @@ const ContractDetailsModal = ({ contract, onClose }: { contract: Contract; onClo
               <InfoItem label="Property Manager ID" value={contract.managerId} icon={<Shield size={16} className="text-gray-500"/>} />
             </div>
           </div>
+          <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+              <FileText className="text-blue-600" />
+              Contract Documents
+            </h3>
+            <div className="space-y-3">
+              {contract.contractDocumentUrl && (
+                <div className="bg-white p-3 rounded-md border border-blue-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">Original Contract</p>
+                      <p className="text-xs text-gray-500">Contract provided by landlord/manager</p>
+                    </div>
+                    <a
+                      href={contract.contractDocumentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center gap-2 text-sm"
+                    >
+                      <Download size={16} />
+                      Download
+                    </a>
+                  </div>
+                </div>
+              )}
+              {contract.signedContractDocumentUrl && (
+                <div className="bg-white p-3 rounded-md border border-green-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">Signed Contract</p>
+                      <p className="text-xs text-gray-500">Fully executed contract with your signature</p>
+                    </div>
+                    <a
+                      href={contract.signedContractDocumentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition flex items-center gap-2 text-sm"
+                    >
+                      <Download size={16} />
+                      Download
+                    </a>
+                  </div>
+                </div>
+              )}
+              {!contract.contractDocumentUrl && !contract.signedContractDocumentUrl && (
+                <p className="text-gray-500 text-sm">No documents available yet</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
