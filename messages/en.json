@@ -144,8 +144,8 @@
         "description": "Purchase property tokens with a Buyer Account. Build a diversified portfolio and earn passive income from rental properties."
       },
       "b2bMarket": {
-        "title": "B2B Market: Trade Tokens",
-        "description": "Buy and sell tokens on our secondary marketplace. Enjoy liquidity that traditional real estate can't offer."
+        "title": "Aftermarket: Trade Tokens",
+        "description": "Buy and sell tokens on our aftermarket. Enjoy liquidity that traditional real estate can't offer."
       },
       "stepsTitle": "Get Started in 4 Simple Steps",
       "step1": {
@@ -162,11 +162,11 @@
       },
       "step4": {
         "title": "Trade & Grow",
-        "description": "Resell tokens on B2B marketplace"
+        "description": "Resell tokens on aftermarket"
       },
       "notice": {
         "title": "⚠️ Important: Buyer Account Required",
-        "description": "To participate in the tokenized marketplace, you must create a Buyer Account. This enables you to purchase tokens, earn rental income, and trade on the B2B marketplace."
+        "description": "To participate in the tokenized marketplace, you must create a Buyer Account. This enables you to purchase tokens, earn rental income, and trade on the aftermarket."
       },
       "viewTutorialButton": "View Full Tutorial",
       "exploreMarketplaceButton": "Explore Marketplace",

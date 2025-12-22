@@ -127,7 +127,7 @@ const AssetXTokenTutorialModal: React.FC<AssetXTokenTutorialModalProps> = ({ isO
             )
         },
         {
-            title: "The B2B Token Market",
+            title: "The Aftermarket",
             subtitle: "Resell & Trade Your Tokens",
             icon: TrendingUp,
             color: "from-orange-500 to-red-600",
@@ -147,7 +147,7 @@ const AssetXTokenTutorialModal: React.FC<AssetXTokenTutorialModalProps> = ({ isO
                                     <ul className="space-y-2 ml-4">
                                         <li className="flex items-start gap-2">
                                             <ShoppingCart className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                                            <span><strong>List Your Tokens for Sale:</strong> Put your tokens on the B2B marketplace anytime.</span>
+                                            <span><strong>List Your Tokens for Sale:</strong> Put your tokens on the aftermarket anytime.</span>
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <Users className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -211,7 +211,7 @@ const AssetXTokenTutorialModal: React.FC<AssetXTokenTutorialModalProps> = ({ isO
                                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                                     <TrendingUp className="w-4 h-4 text-orange-600" />
                                 </div>
-                                <h4 className="font-bold text-gray-900">B2B Market</h4>
+                                <h4 className="font-bold text-gray-900">Aftermarket</h4>
                             </div>
                             <p className="text-sm text-gray-600">Trade tokens freely with other investors</p>
                         </div>

@@ -994,7 +994,7 @@ const NewSellerPropertyPage = () => {
                           General{" "}
                           {feature.replace("_", " ").charAt(0).toUpperCase() +
                             feature.replace("_", " ").slice(1)}{" "}
-                          Photos
+                          Photos (Optional)
                         </FormLabel>
                         <FormControl>
                           <FilePond
@@ -1139,7 +1139,7 @@ const NewSellerPropertyPage = () => {
               name="squareFeet"
               render={({ field }) => (
                 <FormItem className="mt-6">
-                  <FormLabel>Total squareMeters (approx.)</FormLabel>
+                  <FormLabel>Total livable area in m2 (Approx) Excl balconies and terraces</FormLabel>
                   <FormControl>
                     <Input
                       type="number"

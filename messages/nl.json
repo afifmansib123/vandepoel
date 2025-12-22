@@ -144,8 +144,8 @@
         "description": "Koop pandtokens met een Kopersaccount. Bouw een gediversifieerde portfolio op en verdien passief inkomen uit huurpanden."
       },
       "b2bMarket": {
-        "title": "B2B Markt: Handel Tokens",
-        "description": "Koop en verkoop tokens op onze secundaire marktplaats. Geniet van liquiditeit die traditioneel vastgoed niet kan bieden."
+        "title": "Secundaire Markt: Handel Tokens",
+        "description": "Koop en verkoop tokens op onze secundaire markt. Geniet van liquiditeit die traditioneel vastgoed niet kan bieden."
       },
       "stepsTitle": "Start in 4 Eenvoudige Stappen",
       "step1": {
@@ -162,11 +162,11 @@
       },
       "step4": {
         "title": "Handel & Groei",
-        "description": "Verkoop tokens op B2B-marktplaats"
+        "description": "Verkoop tokens op secundaire markt"
       },
       "notice": {
         "title": "⚠️ Belangrijk: Kopersaccount Vereist",
-        "description": "Om deel te nemen aan de getokeniseerde marktplaats, moet u een Kopersaccount aanmaken. Dit stelt u in staat om tokens te kopen, huurinkomsten te verdienen en te handelen op de B2B-marktplaats."
+        "description": "Om deel te nemen aan de getokeniseerde marktplaats, moet u een Kopersaccount aanmaken. Dit stelt u in staat om tokens te kopen, huurinkomsten te verdienen en te handelen op de secundaire markt."
       },
       "viewTutorialButton": "Bekijk Volledige Tutorial",
       "exploreMarketplaceButton": "Verken Marktplaats",
