@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       tokenSymbol,
       totalTokens,
       tokenPrice,
+      annualAppreciationRate,
       minPurchase,
       maxPurchase,
       propertyValue,
@@ -111,6 +112,8 @@ export async function POST(req: NextRequest) {
       tokenSymbol,
       totalTokens,
       tokenPrice,
+      initialTokenPrice: tokenPrice, // Set initial price
+      annualAppreciationRate: annualAppreciationRate || 0, // Default to 0 if not provided
       tokensSold: 0,
       tokensAvailable: totalTokens,
       minPurchase,

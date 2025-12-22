@@ -53,6 +53,7 @@ const TokenizePropertyModal: React.FC<TokenizePropertyModalProps> = ({
     maxPurchase: 1000,
     propertyValue: property.salePrice,
     expectedReturn: "8-12% annually",
+    annualAppreciationRate: 0, // Default 0% (no appreciation)
     dividendFrequency: "Quarterly",
     offeringStartDate: new Date().toISOString().split("T")[0],
     offeringEndDate: "",
@@ -345,6 +346,26 @@ const TokenizePropertyModal: React.FC<TokenizePropertyModalProps> = ({
                     }
                     placeholder="e.g., 8-12% annually"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Annual Token Price Appreciation (%)
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.annualAppreciationRate}
+                    onChange={(e) =>
+                      handleChange("annualAppreciationRate", parseFloat(e.target.value) || 0)
+                    }
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    placeholder="e.g., 8"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Token price increases automatically each year by this percentage (0 = no appreciation)
+                  </p>
                 </div>
 
                 <div>
