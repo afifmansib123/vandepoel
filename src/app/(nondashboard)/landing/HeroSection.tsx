@@ -148,8 +148,7 @@ const HeroSection = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Image */}
+    <div className="relative h-screen">
       <Image
         src="/landing-splash.jpg"
         alt="AssetX Platform Hero Section"
@@ -158,90 +157,20 @@ const HeroSection = () => {
         priority
       />
       <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="absolute top-1/3 transform -translate-x-1/2 -translate-y-1/2 text-center w-full"
+      >
+        <div className="max-w-4xl mx-auto px-16 sm:px-12">
+          <h1 className="text-5xl font-bold text-white mb-4">
+            {t('landing.hero.title')}
+          </h1>
+          <p className="text-xl text-white mb-8">
+            {t('landing.hero.subtitle')}
+          </p>
 
-      {/* Main Content Container */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 py-12">
-
-        {/* Two Column Layout - Asset Management & Tokens */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="w-full max-w-7xl mb-12"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-
-            {/* Left Column - Asset Management */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-center text-white px-6 py-8 rounded-lg bg-black bg-opacity-30"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">
-                {t('landing.hero.assetManagement.title')}
-              </h2>
-              <p className="text-xl md:text-2xl mb-6 text-gray-200">
-                {t('landing.hero.assetManagement.subtitle')}
-              </p>
-
-              {/* Bullets */}
-              <div className="space-y-3 mb-8 text-left max-w-md mx-auto">
-                <p className="text-base md:text-lg">• {t('landing.hero.assetManagement.bullet1')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.assetManagement.bullet2')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.assetManagement.bullet3')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.assetManagement.bullet4')}</p>
-              </div>
-
-              {/* Button */}
-              <Button
-                onClick={() => router.push('/marketplace')}
-                className="bg-secondary-500 text-white hover:bg-secondary-600 px-8 py-6 text-lg rounded-xl"
-              >
-                {t('landing.hero.assetManagement.button')}
-              </Button>
-            </motion.div>
-
-            {/* Right Column - Tokens */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-center text-white px-6 py-8 rounded-lg bg-black bg-opacity-30"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">
-                {t('landing.hero.tokenization.title')}
-              </h2>
-              <p className="text-xl md:text-2xl mb-6 text-gray-200">
-                {t('landing.hero.tokenization.subtitle')}
-              </p>
-
-              {/* Bullets */}
-              <div className="space-y-3 mb-8 text-left max-w-md mx-auto">
-                <p className="text-base md:text-lg">• {t('landing.hero.tokenization.bullet1')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.tokenization.bullet2')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.tokenization.bullet3')}</p>
-                <p className="text-base md:text-lg">• {t('landing.hero.tokenization.bullet4')}</p>
-              </div>
-
-              {/* Button */}
-              <Button
-                onClick={() => router.push('/token-marketplace')}
-                className="bg-purple-600 text-white hover:bg-purple-700 px-8 py-6 text-lg rounded-xl"
-              >
-                {t('landing.hero.tokenization.button')}
-              </Button>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        {/* Search Bar Section (Below Two Columns) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="w-full max-w-4xl mt-8"
-        >
           <div className="flex justify-center relative" ref={searchRef}>
             <div className="w-full max-w-lg relative">
               <div className="flex">
@@ -314,8 +243,8 @@ const HeroSection = () => {
               )}
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
