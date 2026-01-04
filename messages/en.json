@@ -94,7 +94,25 @@
       "title": "AssetXToken - Your 360° Asset Management Platform",
       "subtitle": "Professional property asset management for Landlords, Agents and Tenants",
       "searchPlaceholder": "Search by city, neighborhood or address",
-      "searchButton": "Search"
+      "searchButton": "Search",
+      "assetManagement": {
+        "title": "ASSET MANAGEMENT",
+        "subtitle": "360° property management",
+        "bullet1": "Centralize your rental contracts",
+        "bullet2": "Maintenance & Issue escalation flows",
+        "bullet3": "From Visit scheduling to Contract finalization flows",
+        "bullet4": "Off-market space",
+        "button": "Manage Properties"
+      },
+      "tokenization": {
+        "title": "TOKENS",
+        "subtitle": "Fractional real estate ownership",
+        "bullet1": "Invest from a fraction of the property",
+        "bullet2": "Value Clear participation rights per token",
+        "bullet3": "Automated distribution of rental income & exits",
+        "bullet4": "Aftermarket for easy re-sale",
+        "button": "Invest in Tokens"
+      }
     },
     "features": {
       "title": "We have got you covered",
