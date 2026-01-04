@@ -91,8 +91,8 @@
   },
   "landing": {
     "hero": {
-      "title": "AssetXToken - Your 360° property management platform",
-      "subtitle": "Future proof Landlords, agents and tenants",
+      "title": "AssetXToken - Your 360° Asset Management Platform",
+      "subtitle": "Professional property asset management for Landlords, Agents and Tenants",
       "searchPlaceholder": "Search by city, neighborhood or address",
       "searchButton": "Search"
     },
@@ -127,50 +127,50 @@
         "description": "Schedule a viewing with just a few clicks. Our streamlined booking system makes it easy to arrange property viewings at your convenience. Connect directly with landlords or agents, choose your preferred time slot, and receive instant confirmation. No more back-and-forth emails or phone calls – just simple, efficient scheduling that gets you one step closer to your dream home."
       },
       "step3": {
-        "title": "Tokenize & Own your Property",
-        "description": "Experience the future of property ownership with AssetXToken's innovative tokenization feature. Convert your property into digital tokens, enabling fractional ownership and investment opportunities. This revolutionary approach allows you to diversify your portfolio, unlock liquidity, and participate in the digital real estate economy. Whether you're looking to invest in portions of premium properties or tokenize your own assets, our secure blockchain-based platform makes property investment more accessible and flexible than ever before."
+        "title": "Manage & Track Your Property Assets",
+        "description": "Experience professional asset management with AssetXToken's comprehensive platform. Centralize all property information, track maintenance requests, manage contracts, and monitor your portfolio performance. Our systematic approach helps landlords maintain complete oversight of their assets, streamline operations, and make informed decisions. Whether you're managing a single property or an extensive portfolio, our platform provides the tools you need for efficient, professional real estate asset management."
       }
     },
     "tutorial": {
       "badge": "How AssetXToken Works",
-      "title": "Tokenized Real Estate Made Simple",
-      "subtitle": "Invest in real estate like never before. Buy tokens, earn rental income, and trade freely on our marketplace.",
+      "title": "Professional Asset Management Made Simple",
+      "subtitle": "Manage your real estate portfolio efficiently. Track properties, manage contracts, and streamline operations on our comprehensive platform.",
       "landlords": {
-        "title": "Landlords: Tokenize Properties",
-        "description": "Convert your properties into digital tokens and raise capital while maintaining control. Share rental income with token holders."
+        "title": "Landlords: Manage Properties Efficiently",
+        "description": "Centralize all your property information, track maintenance, manage contracts, and maintain complete control of your real estate assets."
       },
       "buyers": {
-        "title": "Buyers: Invest in Tokens",
-        "description": "Purchase property tokens with a Buyer Account. Build a diversified portfolio and earn passive income from rental properties."
+        "title": "Buyers: Find Investment Opportunities",
+        "description": "Browse available properties, connect with landlords and agents, and build a diversified real estate portfolio with professional asset tracking."
       },
       "b2bMarket": {
-        "title": "Aftermarket: Trade Tokens",
-        "description": "Buy and sell tokens on our aftermarket. Enjoy liquidity that traditional real estate can't offer."
+        "title": "Marketplace: Connect & Collaborate",
+        "description": "Connect with property owners, agents, and buyers. Access off-market listings and exclusive opportunities through our professional network."
       },
       "stepsTitle": "Get Started in 4 Simple Steps",
       "step1": {
         "title": "Browse Properties",
-        "description": "Explore tokenized real estate listings"
+        "description": "Explore comprehensive real estate listings"
       },
       "step2": {
-        "title": "Purchase Tokens",
-        "description": "Buy fractional ownership shares"
+        "title": "Connect & Schedule",
+        "description": "Contact owners and schedule viewings"
       },
       "step3": {
-        "title": "Earn Income",
-        "description": "Receive rental income distributions"
+        "title": "Manage Assets",
+        "description": "Track properties and manage contracts"
       },
       "step4": {
-        "title": "Trade & Grow",
-        "description": "Resell tokens on aftermarket"
+        "title": "Streamline Operations",
+        "description": "Centralize maintenance and documentation"
       },
       "notice": {
-        "title": "⚠️ Important: Buyer Account Required",
-        "description": "To participate in the tokenized marketplace, you must create a Buyer Account. This enables you to purchase tokens, earn rental income, and trade on the aftermarket."
+        "title": "⚠️ Important: Account Required",
+        "description": "To access the full platform features, create an account. This enables you to manage properties, connect with stakeholders, and access professional asset management tools."
       },
       "viewTutorialButton": "View Full Tutorial",
       "exploreMarketplaceButton": "Explore Marketplace",
-      "footerText": "New to tokenized real estate? Start with our tutorial to learn the basics."
+      "footerText": "New to professional asset management? Start with our tutorial to learn the basics."
     },
     "cta": {
       "title": "your 360° partner in property success",
