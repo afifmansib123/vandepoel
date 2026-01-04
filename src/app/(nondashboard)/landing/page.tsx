@@ -3,10 +3,7 @@
 import React, { useState, useEffect } from "react";
 import HeroSection from "./HeroSection";
 import SplitSection from "./SplitSection";
-import TutorialSection from "./TutorialSection";
 import FeaturesSection from "./FeaturesSection";
-import DiscoverSection from "./DiscoverSection";
-import CallToActionSection from "./CallToActionSection";
 import FooterSection from "./FooterSection";
 import TokenizedFeaturesWelcomeModal from "@/components/TokenizedFeaturesWelcomeModal";
 
@@ -37,10 +34,7 @@ const Landing = () => {
     <div>
       <HeroSection />
       <SplitSection />
-      <TutorialSection />
       <FeaturesSection />
-      <DiscoverSection />
-      <CallToActionSection />
       <FooterSection />
 
       {/* Welcome modal for first-time visitors explaining tokenized features */}
