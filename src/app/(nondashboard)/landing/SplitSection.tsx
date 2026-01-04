@@ -65,7 +65,7 @@ const SplitSection = () => {
             {/* Button */}
             <div className="text-center">
               <Button
-                onClick={() => router.push('/marketplace')}
+                onClick={() => router.push('/assetmanagement')}
                 size="lg"
                 className="bg-secondary-500 text-white hover:bg-secondary-600 px-10 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
               >
@@ -122,7 +122,7 @@ const SplitSection = () => {
             {/* Button */}
             <div className="text-center">
               <Button
-                onClick={() => router.push('/token-marketplace')}
+                onClick={() => router.push('/tokens')}
                 size="lg"
                 className="bg-purple-600 text-white hover:bg-purple-700 px-10 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
               >
