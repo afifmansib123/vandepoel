@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import HeroSection from "./HeroSection";
+import SplitSection from "./SplitSection";
 import TutorialSection from "./TutorialSection";
 import FeaturesSection from "./FeaturesSection";
 import DiscoverSection from "./DiscoverSection";
@@ -35,6 +36,7 @@ const Landing = () => {
   return (
     <div>
       <HeroSection />
+      <SplitSection />
       <TutorialSection />
       <FeaturesSection />
       <DiscoverSection />
