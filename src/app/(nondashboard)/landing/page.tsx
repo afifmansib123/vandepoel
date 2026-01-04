@@ -5,6 +5,7 @@ import HeroSection from "./HeroSection";
 import SplitSection from "./SplitSection";
 import FeaturesSection from "./FeaturesSection";
 import FooterSection from "./FooterSection";
+import CallToActionSection from "./CallToActionSection";
 import TokenizedFeaturesWelcomeModal from "@/components/TokenizedFeaturesWelcomeModal";
 
 const Landing = () => {
@@ -35,6 +36,7 @@ const Landing = () => {
       <HeroSection />
       <SplitSection />
       <FeaturesSection />
+      <CallToActionSection/>
       <FooterSection />
 
       {/* Welcome modal for first-time visitors explaining tokenized features */}
