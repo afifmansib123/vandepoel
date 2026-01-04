@@ -18,8 +18,8 @@ import { I18nProvider } from "@/components/I18nProvider";
 // });
 
 export const metadata: Metadata = {
-  title: "AssetXToken - Management & Tokenization of property",
-  description: "AssetXToken: Complete property management solution with tokenization. Manage rentals, contracts, maintenance, and invest in fractional property ownership.",
+  title: "AssetXToken - Professional Asset Management Platform",
+  description: "AssetXToken: Your comprehensive 360° property asset management platform. Manage rentals, contracts, maintenance, track properties, and streamline real estate operations efficiently.",
   icons: {
     icon: '/logo.svg',
     apple: '/logo.svg',
