@@ -94,7 +94,25 @@
       "title": "AssetXToekn - Uw 360° vastgoedbeheersplatform ",
       "subtitle": "Toekomstbereide huiseigenaren, agenten en huurders",
       "searchPlaceholder": "Zoeken op stad, wijk of adres",
-      "searchButton": "Zoeken"
+      "searchButton": "Zoeken",
+      "assetManagement": {
+        "title": "VASTGOEDBEHEER",
+        "subtitle": "360° vastgoedbeheer",
+        "bullet1": "Centraliseer uw huurcontracten",
+        "bullet2": "Onderhoud & Issue escalatiestromen",
+        "bullet3": "Van Bezichtiging plannen tot Contract afronden",
+        "bullet4": "Off-market ruimte",
+        "button": "Beheer Panden"
+      },
+      "tokenization": {
+        "title": "TOKENS",
+        "subtitle": "Fractioneel vastgoedbezit",
+        "bullet1": "Investeer vanaf een fractie van het pand",
+        "bullet2": "Duidelijke participatierechten per token",
+        "bullet3": "Automatische verdeling van huurinkomsten & exits",
+        "bullet4": "Namarkt voor gemakkelijke wederverkoop",
+        "button": "Investeer in Tokens"
+      }
     },
     "features": {
       "title": "Wij hebben alles voor u geregeld",
