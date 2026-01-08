@@ -102,11 +102,14 @@
         "bullet2": "Maintenance & Issue escalation flows",
         "bullet3": "From Visit scheduling to Contract finalization flows",
         "bullet4": "Off-market space",
+        "bullet5": "Pre-approved repair budgets for faster turnaround (future)",
+        "bullet6": "Evergreen inspection reports in one secure hub (future)",
+        "bullet7": "Warranty & deposits safeguarded via third-party escrow (future)",
         "button": "Manage Properties"
       },
       "tokenization": {
         "title": "TOKENS",
-        "subtitle": "Fractional real estate ownership",
+        "subtitle": "Fractional real estate ownership with transparent rights and automated payouts",
         "bullet1": "Invest from a fraction of the property",
         "bullet2": "Value Clear participation rights per token",
         "bullet3": "Automated distribution of rental income & exits",
