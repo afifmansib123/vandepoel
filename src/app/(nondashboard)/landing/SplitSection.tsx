@@ -60,12 +60,30 @@ const SplitSection = () => {
                   {t('landing.hero.assetManagement.bullet4')}
                 </p>
               </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-600 text-2xl flex-shrink-0 font-bold">•</span>
+                <p className="text-gray-700 text-base md:text-lg">
+                  {t('landing.hero.assetManagement.bullet5')}
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-600 text-2xl flex-shrink-0 font-bold">•</span>
+                <p className="text-gray-700 text-base md:text-lg">
+                  {t('landing.hero.assetManagement.bullet6')}
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-600 text-2xl flex-shrink-0 font-bold">•</span>
+                <p className="text-gray-700 text-base md:text-lg">
+                  {t('landing.hero.assetManagement.bullet7')}
+                </p>
+              </div>
             </div>
 
             {/* Button */}
             <div className="text-center">
               <Button
-                onClick={() => router.push('/assetmanagement')}
+                onClick={() => router.push('/AssetManagement')}
                 size="lg"
                 className="bg-secondary-500 text-white hover:bg-secondary-600 px-10 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
               >
