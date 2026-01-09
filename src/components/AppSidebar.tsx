@@ -30,6 +30,7 @@ import {
   Tag,
   TrendingUp,
   Activity,
+  Wrench,
 } from "lucide-react";
 import { NAVBAR_HEIGHT } from "../lib/constants";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
       navLinks = [
         { icon: User, label: "Profile", href: "/tenants/profile" },
         { icon: Bell, label: "Notifications", href: "/tenants/notifications", badge: notificationCount },
+        { icon: Search, label: "Search Properties", href: "/marketplace" },
         { icon: Heart, label: "Favorites", href: "/tenants/favorites" },
         {
           icon: FileText,
@@ -84,6 +86,7 @@ const AppSidebar = ({ userType }: AppSidebarProps) => {
           href: "/tenants/applications",
         },
         { icon: Home, label: "Residences", href: "/tenants/contracts" },
+        { icon: Wrench, label: "Maintenance", href: "/tenants/maintenance" },
         { icon: Settings, label: "Settings", href: "/tenants/settings" },
       ];
       break;

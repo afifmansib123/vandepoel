@@ -64,6 +64,7 @@ interface ModalProperty {
   _id: string;
   name: string;
   managedBy: string;
+  sellerCognitoId: string;
 }
 
 interface CreateMaintenanceRequestModalProps {
@@ -285,6 +286,7 @@ const CreateMaintenanceRequestModal: React.FC<CreateMaintenanceRequestModalProps
                     propertyId: property._id,
                     tenantId,
                     managerId: property.managedBy,
+                    landlordId: property.sellerCognitoId,
                     category: selectedCategory.name,
                     description: finalDescription,
                     urgency,
@@ -663,13 +665,14 @@ const TenantPropertyDetailPage: React.FC = () => {
       </div>
       
       {property && tenantId && (
-        <CreateMaintenanceRequestModal 
+        <CreateMaintenanceRequestModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          property={{ 
-            _id: property._id, 
-            name: property.name, 
-            managedBy: property.sellerCognitoId,
+          property={{
+            _id: property._id,
+            name: property.name,
+            managedBy: property.managedBy,
+            sellerCognitoId: property.sellerCognitoId,
           }}
           tenantId={tenantId}
           onSuccess={() => {
