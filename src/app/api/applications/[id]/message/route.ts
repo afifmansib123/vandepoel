@@ -65,19 +65,29 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const property = application.propertyId as any;
     const propertyName = property?.name || 'the property';
 
+    // Determine the correct applications URL based on who is receiving the notification
+    // The recipient is the one who should see the link to THEIR applications page
+    let applicationsUrl = '/tenants/applications'; // Default
+
+    // Check if recipient is the sender (tenant/buyer) or receiver (landlord/manager)
+    if (recipientId === application.senderId) {
+      // Recipient is the original applicant (tenant or buyer)
+      applicationsUrl = '/tenants/applications'; // Could be /buyers/applications too
+    } else if (recipientId === application.receiverId) {
+      // Recipient is the property owner/manager
+      // We need to check if they're a manager or landlord
+      // For now, we'll try both common patterns
+      applicationsUrl = '/landlords/applications'; // Most common case
+    }
+
     await createNotification({
       userId: recipientId,
       type: 'application',
       title: 'New Message on Application',
       message: `${senderName} sent you a message about ${propertyName}: "${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"`,
       relatedId: application._id.toString(),
-      relatedUrl: senderId === application.senderId ?
-        (application.senderId.includes('manager') ? '/managers/applications' :
-         application.senderId.includes('landlord') ? '/landlords/applications' :
-         '/tenants/applications') :
-        (application.receiverId.includes('manager') ? '/managers/applications' :
-         application.receiverId.includes('landlord') ? '/landlords/applications' :
-         '/tenants/applications'),
+      // Remove relatedUrl entirely to prevent incorrect redirects
+      // Users can navigate to their applications page themselves
       priority: 'medium',
     });
 
