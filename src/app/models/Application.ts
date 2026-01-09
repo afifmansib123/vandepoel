@@ -5,6 +5,14 @@ interface IFormData {
   [key: string]: any;
 }
 
+// Interface for messages within an application
+export interface IMessage {
+  senderId: string;
+  senderName: string;
+  message: string;
+  timestamp: Date;
+}
+
 // Interface for our Application document
 export interface IApplication extends Document {
   propertyId: mongoose.Schema.Types.ObjectId;
@@ -20,6 +28,11 @@ export interface IApplication extends Document {
   receiverName?: string;
   receiverEmail?: string;
   receiverPhone?: string;
+  // NEW: Messaging system for back-and-forth communication
+  messages?: IMessage[];
+  // NEW: Contact information sharing flags
+  senderSharedContact?: boolean;  // Has sender allowed sharing their contact?
+  receiverSharedContact?: boolean; // Has receiver allowed sharing their contact?
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +82,22 @@ const ApplicationSchema: Schema = new Schema({
   },
   receiverPhone: {
     type: String,
+  },
+  // NEW: Messaging system
+  messages: [{
+    senderId: { type: String, required: true },
+    senderName: { type: String, required: true },
+    message: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+  }],
+  // NEW: Contact sharing flags
+  senderSharedContact: {
+    type: Boolean,
+    default: false,
+  },
+  receiverSharedContact: {
+    type: Boolean,
+    default: false,
   },
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt

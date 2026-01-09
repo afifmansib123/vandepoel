@@ -13,6 +13,9 @@ import {
   Mail,
   Phone,
   User,
+  MessageSquare,
+  Send,
+  Share2,
 } from "lucide-react";
 import CreateContractModal from "@/components/CreateContractModal";
 import { toast } from "sonner";
@@ -23,6 +26,13 @@ interface PopulatedProperty {
   id: string;
   name: string;
   photoUrls: string[];
+}
+
+interface Message {
+  senderId: string;
+  senderName: string;
+  message: string;
+  timestamp: string;
 }
 
 interface Application {
@@ -37,7 +47,16 @@ interface Application {
     phone?: string;
     [key: string]: any; // Allows for other dynamic fields
   };
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "contacted";
+  senderName?: string;
+  senderEmail?: string;
+  senderPhone?: string;
+  receiverName?: string;
+  receiverEmail?: string;
+  receiverPhone?: string;
+  messages?: Message[];
+  senderSharedContact?: boolean;
+  receiverSharedContact?: boolean;
   createdAt: string;
 }
 
@@ -447,30 +466,72 @@ const ApplicationDetailsModal = ({
 }: {
   application: Application;
   onClose: () => void;
-  // --- MODIFIED: Change the type from string to Application ---
   onUpdateStatus: (
     application: Application,
     status: "approved" | "rejected"
   ) => void;
   onOpenCreateContract: (application: Application) => void;
 }) => {
+  const { data: authUser } = useGetAuthUserQuery();
+  const currentUserId = authUser?.cognitoInfo?.userId;
+  const currentUserName = authUser?.userInfo?.name || "You";
+  const isReceiver = currentUserId === application.receiverId;
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [shareContact, setShareContact] = useState(isReceiver ? application.receiverSharedContact : application.senderSharedContact);
+  const [localApp, setLocalApp] = useState(application);
+
+  const canViewSenderContact = isReceiver && localApp.senderSharedContact;
+  const canViewReceiverContact = !isReceiver && localApp.receiverSharedContact;
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !currentUserId) return;
+
+    setIsSending(true);
+    try {
+      const response = await fetch(`/api/applications/${localApp._id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: currentUserId,
+          senderName: currentUserName,
+          message: message.trim(),
+          shareContact,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+
+      const result = await response.json();
+      setLocalApp(result.data);
+      setMessage('');
+      toast.success('Message sent successfully!');
+    } catch (error) {
+      toast.error('Failed to send message');
+      console.error(error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 sticky top-0 bg-white border-b z-10">
+        {/* Header */}
+        <div className="p-6 bg-white border-b">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {formatApplicationType(application.applicationType)} Details
+                {formatApplicationType(localApp.applicationType)} Details
               </h2>
               <p className="text-gray-500">
-                For property: {application.propertyId.name}
+                For property: {localApp.propertyId.name}
               </p>
             </div>
             <button
@@ -481,33 +542,42 @@ const ApplicationDetailsModal = ({
             </button>
           </div>
         </div>
-        <div className="p-6 space-y-6">
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Applicant Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-lg mb-2">
+            <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+              <User className="w-5 h-5" />
               Applicant Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <InfoItem label="Full Name" value={application.formData.name} />
-              <InfoItem
-                label="Email Address"
-                value={application.formData.email}
-              />
-              <InfoItem
-                label="Phone Number"
-                value={application.formData?.phone}
-              />
+              <InfoItem label="Full Name" value={localApp.formData.name} />
+              {canViewSenderContact ? (
+                <>
+                  <InfoItem label="Email Address" value={localApp.senderEmail || localApp.formData.email} />
+                  <InfoItem label="Phone Number" value={localApp.senderPhone || localApp.formData.phone} />
+                </>
+              ) : (
+                <div className="col-span-2 text-sm text-gray-600 bg-blue-50 p-3 rounded border border-blue-200">
+                  <Share2 className="w-4 h-4 inline mr-2" />
+                  Contact information will be visible when the applicant shares it via messaging
+                </div>
+              )}
               <InfoItem
                 label="Application Date"
-                value={new Date(application.createdAt).toLocaleString()}
+                value={new Date(localApp.createdAt).toLocaleString()}
               />
             </div>
           </div>
+
+          {/* Submitted Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-lg mb-2">
               Submitted Information
             </h3>
             <div className="space-y-3">
-              {Object.entries(application.formData)
+              {Object.entries(localApp.formData)
                 .filter(([key]) => !["name", "email", "phone"].includes(key))
                 .map(([key, value]) => (
                   <InfoItem
@@ -520,13 +590,94 @@ const ApplicationDetailsModal = ({
                 ))}
             </div>
           </div>
+
+          {/* Messaging Section */}
+          <div className="bg-white border rounded-lg">
+            <div className="p-4 bg-blue-50 border-b flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-blue-600" />
+              <h3 className="font-semibold text-lg">Messages</h3>
+            </div>
+
+            {/* Messages Display */}
+            <div className="p-4 space-y-3 max-h-60 overflow-y-auto">
+              {localApp.messages && localApp.messages.length > 0 ? (
+                localApp.messages.map((msg, index) => {
+                  const isCurrentUser = msg.senderId === currentUserId;
+                  return (
+                    <div
+                      key={index}
+                      className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] p-3 rounded-lg ${
+                          isCurrentUser
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold">
+                            {isCurrentUser ? 'You' : msg.senderName}
+                          </span>
+                          <span className="text-xs opacity-70">
+                            {new Date(msg.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-sm">{msg.message}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-center text-gray-500 text-sm py-4">
+                  No messages yet. Start the conversation!
+                </p>
+              )}
+            </div>
+
+            {/* Message Input */}
+            <div className="p-4 border-t bg-gray-50">
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="shareContact"
+                  checked={shareContact}
+                  onChange={(e) => setShareContact(e.target.checked)}
+                  className="rounded"
+                />
+                <label htmlFor="shareContact" className="text-sm text-gray-700">
+                  Share my contact information ({isReceiver ? localApp.receiverEmail : localApp.senderEmail})
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type your message..."
+                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isSending}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={isSending || !message.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  {isSending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        {application.status === "pending" && (
-          <div className="p-6 sticky bottom-0 bg-white border-t flex gap-4">
-            {/* --- MODIFIED: Pass the whole 'application' object, not just its ID --- */}
+
+        {/* Action Buttons */}
+        {localApp.status === "pending" && (
+          <div className="p-6 bg-white border-t flex gap-4">
             <button
               onClick={() => {
-                onUpdateStatus(application, "approved");
+                onUpdateStatus(localApp, "approved");
                 onClose();
               }}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition"
@@ -535,7 +686,7 @@ const ApplicationDetailsModal = ({
             </button>
             <button
               onClick={() => {
-                onUpdateStatus(application, "rejected");
+                onUpdateStatus(localApp, "rejected");
                 onClose();
               }}
               className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition"
@@ -544,13 +695,15 @@ const ApplicationDetailsModal = ({
             </button>
           </div>
         )}
-        {application.status === "approved" && (
-          <button
-            onClick={() => onOpenCreateContract(application)}
-            className="flex-1 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 mb-5 rounded-lg transition"
-          >
-            Create Contract
-          </button>
+        {localApp.status === "approved" && (
+          <div className="p-6 bg-white border-t">
+            <button
+              onClick={() => onOpenCreateContract(localApp)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-lg transition"
+            >
+              Create Contract
+            </button>
+          </div>
         )}
       </div>
     </div>
