@@ -175,8 +175,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         priority: 'high',
       });
 
-      // Notify landlord if present
-      if (contract.landlordId) {
+      // Notify landlord if present and different from manager
+      if (contract.landlordId && contract.landlordId !== contract.managerId) {
         await createNotification({
           userId: contract.landlordId,
           type: 'contract',
@@ -321,8 +321,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         priority: 'medium',
       });
 
-      // Notify landlord if present
-      if (contract.landlordId) {
+      // Notify landlord if present and different from manager
+      if (contract.landlordId && contract.landlordId !== contract.managerId) {
         await createNotification({
           userId: contract.landlordId,
           type: 'contract',
@@ -345,8 +345,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         priority: 'medium',
       });
 
-      // Notify landlord if present
-      if (contract.landlordId) {
+      // Notify landlord if present and different from manager
+      if (contract.landlordId && contract.landlordId !== contract.managerId) {
         await createNotification({
           userId: contract.landlordId,
           type: 'contract',
@@ -403,7 +403,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         priority: 'high',
       });
 
-      if (contract.landlordId) {
+      if (contract.landlordId && contract.landlordId !== contract.managerId) {
         await createNotification({
           userId: contract.landlordId,
           type: 'contract',

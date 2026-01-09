@@ -9,6 +9,7 @@ export interface IMaintenanceRequest extends Document {
   description: string;
   urgency: 'Low' | 'Medium' | 'High';
   status: 'Pending' | 'In Progress' | 'Completed';
+  imageUrls?: string[]; // Added support for multiple images
 }
 
 const MaintenanceRequestSchema: Schema = new Schema({
@@ -20,6 +21,7 @@ const MaintenanceRequestSchema: Schema = new Schema({
   description: { type: String, required: true },
   urgency: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
   status: { type: String, enum: ['Pending', 'In Progress', 'Completed'], default: 'Pending' },
+  imageUrls: { type: [String], required: false, default: [] }, // Added support for multiple images
 }, { timestamps: true });
 
 // Add validation to ensure at least one user ID is provided
